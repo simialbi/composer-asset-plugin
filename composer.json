@@ -1,5 +1,5 @@
 {
-    "name": "fxp/composer-asset-plugin",
+    "name": "simialbi/composer-asset-plugin",
     "description": "NPM/Bower Dependency Manager for Composer",
     "keywords": [
         "npm",
