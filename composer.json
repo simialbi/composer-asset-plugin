@@ -45,8 +45,9 @@
     },
     "extra": {
         "class": "Fxp\\Composer\\AssetPlugin\\FxpAssetPlugin",
+        "plugin-modifies-downloads": true,
         "branch-alias": {
-            "dev-main": "1.4-dev"
+            "dev-main": "2.0.x-dev"
         }
     }
 }

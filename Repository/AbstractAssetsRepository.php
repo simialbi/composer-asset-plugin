@@ -115,10 +115,12 @@ abstract class AbstractAssetsRepository extends ComposerRepository
         ]);
         $this->assetRepositoryManager = $repoConfig['asset-repository-manager'];
         $this->repositoryManager = $this->assetRepositoryManager->getRepositoryManager();
-        $this->httpDownloader = $httpDownloader;
 
         parent::__construct($repoConfig, $io, $config, $httpDownloader, $eventDispatcher);
 
+        $this->httpDownloader = $httpDownloader;
+        $this->url = $repoConfig['url'];
+        $this->baseUrl = rtrim(Preg::replace('{(?:/[^/\\\\]+\.json)?(?:[?#].*)?$}', '', $this->url), '/');
         $this->assetType = Assets::createType($this->getType());
         $this->lazyProvidersUrl = $this->getPackageUrl();
         $this->providersUrl = $this->lazyProvidersUrl;
