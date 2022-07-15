@@ -26,35 +26,35 @@ class IgnoreManager
     /**
      * @var string
      */
-    protected $installDir;
+    protected string $installDir;
 
     /**
      * @var bool
      */
-    protected $enabled;
+    protected bool $enabled;
 
     /**
      * @var bool
      */
-    protected $hasPattern;
+    protected bool $hasPattern;
 
     /**
      * @var Filesystem
      */
-    private $filesystem;
+    private Filesystem $filesystem;
 
     /**
      * @var Finder
      */
-    private $finder;
+    private Finder $finder;
 
     /**
      * Constructor.
      *
-     * @param string          $installDir The install dir
+     * @param string $installDir The install dir
      * @param null|Filesystem $filesystem The filesystem
      */
-    public function __construct($installDir, Filesystem $filesystem = null)
+    public function __construct(string $installDir, Filesystem $filesystem = null)
     {
         $this->installDir = $installDir;
         $this->filesystem = $filesystem ?: new Filesystem();
@@ -68,11 +68,11 @@ class IgnoreManager
      *
      * @param bool $enabled
      *
-     * @return self
+     * @return static
      */
-    public function setEnabled($enabled)
+    public function setEnabled(bool $enabled): static
     {
-        $this->enabled = (bool) $enabled;
+        $this->enabled = (bool)$enabled;
 
         return $this;
     }
@@ -82,7 +82,7 @@ class IgnoreManager
      *
      * @return bool
      */
-    public function isEnabled()
+    public function isEnabled(): bool
     {
         return $this->enabled;
     }
@@ -92,7 +92,7 @@ class IgnoreManager
      *
      * @return bool
      */
-    public function hasPattern()
+    public function hasPattern(): bool
     {
         return $this->hasPattern;
     }
@@ -101,8 +101,10 @@ class IgnoreManager
      * Adds an ignore pattern.
      *
      * @param string $pattern The pattern
+     *
+     * @return void
      */
-    public function addPattern($pattern)
+    public function addPattern(string $pattern): void
     {
         $this->doAddPattern($this->convertPattern($pattern));
         $this->hasPattern = true;
@@ -110,8 +112,10 @@ class IgnoreManager
 
     /**
      * Deletes all files and directories that matches patterns.
+     *
+     * @return void
      */
-    public function cleanup()
+    public function cleanup(): void
     {
         if ($this->isEnabled() && $this->hasPattern() && realpath($this->installDir)) {
             $paths = iterator_to_array($this->finder->in($this->installDir));
@@ -127,12 +131,14 @@ class IgnoreManager
      * Action for Add an ignore pattern.
      *
      * @param string $pattern The pattern
+     *
+     * @return void
      */
-    public function doAddPattern($pattern)
+    public function doAddPattern(string $pattern): void
     {
-        if (0 === strpos($pattern, '!')) {
+        if (str_starts_with($pattern, '!')) {
             $searchPattern = substr($pattern, 1);
-            $this->finder->notPath(Glob::toRegex($searchPattern, true, true));
+            $this->finder->notPath(Glob::toRegex($searchPattern));
 
             $pathComponents = explode('/', $searchPattern);
 
@@ -141,12 +147,12 @@ class IgnoreManager
                 $basePath = '';
 
                 foreach ($parentDirectories as $dir) {
-                    $this->finder->notPath('/\b('.preg_quote($basePath.$dir, '/').')(?!\/)\b/');
-                    $basePath .= $dir.'/';
+                    $this->finder->notPath('/\b(' . preg_quote($basePath . $dir, '/') . ')(?!\/)\b/');
+                    $basePath .= $dir . '/';
                 }
             }
         } else {
-            $this->finder->path(Glob::toRegex($pattern, true, true));
+            $this->finder->path(Glob::toRegex($pattern));
         }
     }
 
@@ -157,17 +163,17 @@ class IgnoreManager
      *
      * @return string The pattern converted
      */
-    protected function convertPattern($pattern)
+    protected function convertPattern(string $pattern): string
     {
-        $prefix = 0 === strpos($pattern, '!') ? '!' : '';
+        $prefix = str_starts_with($pattern, '!') ? '!' : '';
         $searchPattern = trim(ltrim($pattern, '!'), '/');
-        $pattern = $prefix.$searchPattern;
+        $pattern = $prefix . $searchPattern;
 
-        if (\in_array($searchPattern, array('*', '*.*'), true)) {
-            $this->doAddPattern($prefix.'.*');
-        } elseif (0 === strpos($searchPattern, '**/')) {
-            $this->doAddPattern($prefix.'**/'.$searchPattern);
-            $this->doAddPattern($prefix.substr($searchPattern, 3));
+        if (\in_array($searchPattern, ['*', '*.*'], true)) {
+            $this->doAddPattern($prefix . '.*');
+        } elseif (str_starts_with($searchPattern, '**/')) {
+            $this->doAddPattern($prefix . '**/' . $searchPattern);
+            $this->doAddPattern($prefix . substr($searchPattern, 3));
         } else {
             $this->convertPatternStep2($prefix, $searchPattern, $pattern);
         }
@@ -178,14 +184,16 @@ class IgnoreManager
     /**
      * Step2: Converter pattern to glob.
      *
-     * @param string $prefix        The prefix
+     * @param string $prefix The prefix
      * @param string $searchPattern The search pattern
-     * @param string $pattern       The pattern
+     * @param string $pattern The pattern
+     *
+     * @return void
      */
-    protected function convertPatternStep2($prefix, $searchPattern, $pattern)
+    protected function convertPatternStep2(string $prefix, string $searchPattern, string $pattern): void
     {
         if ('.*' === $searchPattern) {
-            $this->doAddPattern($prefix.'**/.*');
+            $this->doAddPattern($prefix . '**/.*');
         } elseif ('**' === $searchPattern) {
             $this->finder->path('/.*/');
             $this->finder->notPath('/^\..*(?!\/)/');

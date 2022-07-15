@@ -15,6 +15,7 @@ use Composer\DependencyResolver\Pool;
 use Composer\IO\IOInterface;
 use Composer\Repository\RepositoryInterface;
 use Composer\Repository\RepositoryManager;
+use Composer\Util\HttpDownloader;
 use Fxp\Composer\AssetPlugin\Config\Config;
 
 /**
@@ -27,56 +28,57 @@ class AssetRepositoryManager
     /**
      * @var IOInterface
      */
-    protected $io;
+    protected IOInterface $io;
 
     /**
      * @var RepositoryManager
      */
-    protected $rm;
+    protected RepositoryManager $rm;
+
+    /**
+     * @var HttpDownloader
+     */
+    protected HttpDownloader $httpDownloader;
 
     /**
      * @var Config
      */
-    protected $config;
+    protected Config $config;
 
     /**
      * @var VcsPackageFilter
      */
-    protected $packageFilter;
+    protected VcsPackageFilter $packageFilter;
 
     /**
      * @var null|Pool
      */
-    protected $pool;
+    protected ?Pool $pool;
 
     /**
      * @var ResolutionManager
      */
-    protected $resolutionManager;
+    protected ResolutionManager $resolutionManager;
 
     /**
      * @var RepositoryInterface[]
      */
-    protected $repositories = array();
-
-    /**
-     * @var array
-     */
-    protected $poolRepositories = array();
+    protected array $repositories = [];
 
     /**
      * Constructor.
      *
-     * @param IOInterface       $io            The IO
-     * @param RepositoryManager $rm            The repository manager
-     * @param Config            $config        The asset config
-     * @param VcsPackageFilter  $packageFilter The package filter
+     * @param IOInterface $io The IO
+     * @param RepositoryManager $rm The repository manager
+     * @param Config $config The asset config
+     * @param VcsPackageFilter $packageFilter The package filter
      */
-    public function __construct(IOInterface $io, RepositoryManager $rm, Config $config, VcsPackageFilter $packageFilter)
+    public function __construct(IOInterface $io, RepositoryManager $rm, Config $config, HttpDownloader $httpDownloader, VcsPackageFilter $packageFilter)
     {
         $this->io = $io;
         $this->rm = $rm;
         $this->config = $config;
+        $this->httpDownloader = $httpDownloader;
         $this->packageFilter = $packageFilter;
     }
 
@@ -85,7 +87,7 @@ class AssetRepositoryManager
      *
      * @return RepositoryManager
      */
-    public function getRepositoryManager()
+    public function getRepositoryManager(): RepositoryManager
     {
         return $this->rm;
     }
@@ -95,7 +97,7 @@ class AssetRepositoryManager
      *
      * @return Config
      */
-    public function getConfig()
+    public function getConfig(): Config
     {
         return $this->config;
     }
@@ -105,17 +107,11 @@ class AssetRepositoryManager
      *
      * @param Pool $pool The pool
      *
-     * @return self
+     * @return static
      */
-    public function setPool(Pool $pool)
+    public function setPool(Pool $pool): static
     {
         $this->pool = $pool;
-
-        foreach ($this->poolRepositories as $repo) {
-            $pool->addRepository($repo);
-        }
-
-        $this->poolRepositories = array();
 
         return $this;
     }
@@ -124,22 +120,26 @@ class AssetRepositoryManager
      * Set the dependency resolution manager.
      *
      * @param ResolutionManager $resolutionManager The dependency resolution manager
+     *
+     * @return static
      */
-    public function setResolutionManager(ResolutionManager $resolutionManager)
+    public function setResolutionManager(ResolutionManager $resolutionManager): static
     {
         $this->resolutionManager = $resolutionManager;
+
+        return $this;
     }
 
     /**
      * Solve the dependency resolutions.
      *
+     * @param array $data
+     *
      * @return array
      */
-    public function solveResolutions(array $data)
+    public function solveResolutions(array $data): array
     {
-        return null !== $this->resolutionManager
-            ? $this->resolutionManager->solveResolutions($data)
-            : $data;
+        return $this->resolutionManager?->solveResolutions($data) ?? $data;
     }
 
     /**
@@ -151,7 +151,7 @@ class AssetRepositoryManager
      * @throws \UnexpectedValueException When the config of repository has not a type defined
      * @throws \UnexpectedValueException When the config of repository has an invalid type
      */
-    public function addRepositories(array $repositories)
+    public function addRepositories(array $repositories): void
     {
         foreach ($repositories as $index => $repo) {
             $this->validateRepositories($index, $repo);
@@ -160,34 +160,36 @@ class AssetRepositoryManager
                 $name = $repo['package']['name'];
             } else {
                 $name = \is_int($index) ? preg_replace('{^https?://}i', '', $repo['url']) : $index;
-                $name = isset($repo['name']) ? $repo['name'] : $name;
+                $name = $repo['name'] ?? $name;
                 $repo['asset-repository-manager'] = $this;
                 $repo['vcs-package-filter'] = $this->packageFilter;
             }
 
-            $repoInstance = Util::addRepository($this->io, $this->rm, $this->repositories, $name, $repo, $this->pool);
+//            $repoInstance =
+            Util::addRepository($this->io, $this->rm, $this->repositories, $name, $repo);
 
-            if (null === $this->pool && $repoInstance instanceof RepositoryInterface) {
-                $this->poolRepositories[] = $repoInstance;
-            }
+//            if (null === $this->pool && $repoInstance instanceof RepositoryInterface) {
+//                $this->poolRepositories[] = $repoInstance;
+//            }
         }
     }
 
     /**
      * Validates the config of repositories.
      *
-     * @param int|string  $index The index
-     * @param array|mixed $repo  The config repo
+     * @param int|string $index The index
+     * @param array|mixed $repo The config repo
      *
+     * @return void
      * @throws \UnexpectedValueException
      */
-    protected function validateRepositories($index, $repo)
+    protected function validateRepositories(int|string $index, mixed $repo): void
     {
         if (!\is_array($repo)) {
-            throw new \UnexpectedValueException('Repository '.$index.' ('.json_encode($repo).') should be an array, '.\gettype($repo).' given');
+            throw new \UnexpectedValueException('Repository ' . $index . ' (' . json_encode($repo) . ') should be an array, ' . \gettype($repo) . ' given');
         }
         if (!isset($repo['type'])) {
-            throw new \UnexpectedValueException('Repository '.$index.' ('.json_encode($repo).') must have a type defined');
+            throw new \UnexpectedValueException('Repository ' . $index . ' (' . json_encode($repo) . ') must have a type defined');
         }
 
         $this->validatePackageRepositories($index, $repo);
@@ -197,24 +199,25 @@ class AssetRepositoryManager
     /**
      * Validates the config of package repositories.
      *
-     * @param int|string  $index The index
-     * @param array|mixed $repo  The config repo
+     * @param int|string $index The index
+     * @param array|mixed $repo The config repo
      *
+     * @return void
      * @throws \UnexpectedValueException
      */
-    protected function validatePackageRepositories($index, $repo)
+    protected function validatePackageRepositories(int|string $index, mixed $repo): void
     {
         if ('package' !== $repo['type']) {
             return;
         }
 
         if (!isset($repo['package'])) {
-            throw new \UnexpectedValueException('Repository '.$index.' ('.json_encode($repo).') must have a package definition"');
+            throw new \UnexpectedValueException('Repository ' . $index . ' (' . json_encode($repo) . ') must have a package definition"');
         }
 
-        foreach (array('name', 'type', 'version', 'dist') as $key) {
+        foreach (['name', 'type', 'version', 'dist'] as $key) {
             if (!isset($repo['package'][$key])) {
-                throw new \UnexpectedValueException('Repository '.$index.' ('.json_encode($repo).') must have the "'.$key.'" key  in the package definition"');
+                throw new \UnexpectedValueException('Repository ' . $index . ' (' . json_encode($repo) . ') must have the "' . $key . '" key  in the package definition"');
             }
         }
     }
@@ -222,22 +225,23 @@ class AssetRepositoryManager
     /**
      * Validates the config of vcs repositories.
      *
-     * @param int|string  $index The index
-     * @param array|mixed $repo  The config repo
+     * @param int|string $index The index
+     * @param array|mixed $repo The config repo
      *
+     * @return void
      * @throws \UnexpectedValueException
      */
-    protected function validateVcsRepositories($index, $repo)
+    protected function validateVcsRepositories(int|string $index, mixed $repo): void
     {
         if ('package' === $repo['type']) {
             return;
         }
 
-        if (false === strpos($repo['type'], '-')) {
-            throw new \UnexpectedValueException('Repository '.$index.' ('.json_encode($repo).') must have a type defined in this way: "%asset-type%-%type%"');
+        if (!str_contains($repo['type'], '-')) {
+            throw new \UnexpectedValueException('Repository ' . $index . ' (' . json_encode($repo) . ') must have a type defined in this way: "%asset-type%-%type%"');
         }
         if (!isset($repo['url'])) {
-            throw new \UnexpectedValueException('Repository '.$index.' ('.json_encode($repo).') must have a url defined');
+            throw new \UnexpectedValueException('Repository ' . $index . ' (' . json_encode($repo) . ') must have a url defined');
         }
     }
 }

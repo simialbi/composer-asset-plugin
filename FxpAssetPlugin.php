@@ -26,6 +26,7 @@ use Fxp\Composer\AssetPlugin\Repository\AssetRepositoryManager;
 use Fxp\Composer\AssetPlugin\Repository\ResolutionManager;
 use Fxp\Composer\AssetPlugin\Repository\VcsPackageFilter;
 use Fxp\Composer\AssetPlugin\Util\AssetPlugin;
+use JetBrains\PhpStorm\ArrayShape;
 
 /**
  * Composer plugin.
@@ -37,41 +38,48 @@ class FxpAssetPlugin implements PluginInterface, EventSubscriberInterface
     /**
      * @var Config
      */
-    protected $config;
+    protected Config $config;
 
     /**
      * @var Composer
      */
-    protected $composer;
+    protected Composer $composer;
 
     /**
      * @var IOInterface
      */
-    protected $io;
+    protected IOInterface $io;
 
     /**
      * @var VcsPackageFilter
      */
-    protected $packageFilter;
+    protected VcsPackageFilter $packageFilter;
 
     /**
      * @var AssetRepositoryManager
      */
-    protected $assetRepositoryManager;
+    protected AssetRepositoryManager $assetRepositoryManager;
 
-    public static function getSubscribedEvents()
+    /**
+     * {@inheritDoc}
+     */
+    #[ArrayShape([PluginEvents::COMMAND => 'array[]', InstallerEvents::PRE_OPERATIONS_EXEC => 'array[]'])]
+    public static function getSubscribedEvents(): array
     {
-        return array(
-            PluginEvents::COMMAND => array(
-                array('onPluginCommand', 0),
-            ),
-            InstallerEvents::PRE_DEPENDENCIES_SOLVING => array(
-                array('onPreDependenciesSolving', 0),
-            ),
-        );
+        return [
+            PluginEvents::COMMAND => [
+                ['onPluginCommand', 0]
+            ],
+            InstallerEvents::PRE_OPERATIONS_EXEC => [
+                ['onPreDependenciesSolving', 0]
+            ]
+        ];
     }
 
-    public function activate(Composer $composer, IOInterface $io)
+    /**
+     * {@inheritDoc}
+     */
+    public function activate(Composer $composer, IOInterface $io): void
     {
         $this->config = ConfigBuilder::build($composer, $io);
 
@@ -81,7 +89,13 @@ class FxpAssetPlugin implements PluginInterface, EventSubscriberInterface
             $this->composer = $composer;
             $this->io = $io;
             $this->packageFilter = new VcsPackageFilter($this->config, $composer->getPackage(), $composer->getInstallationManager(), $installedRepository);
-            $this->assetRepositoryManager = new AssetRepositoryManager($io, $composer->getRepositoryManager(), $this->config, $this->packageFilter);
+            $this->assetRepositoryManager = new AssetRepositoryManager(
+                $io,
+                $composer->getRepositoryManager(),
+                $this->config,
+                $composer->getLoop()->getHttpDownloader(),
+                $this->packageFilter
+            );
             $this->assetRepositoryManager->setResolutionManager(new ResolutionManager($this->config->getArray('resolutions')));
 
             AssetPlugin::addRegistryRepositories($this->assetRepositoryManager, $this->packageFilter, $this->config);
@@ -94,14 +108,33 @@ class FxpAssetPlugin implements PluginInterface, EventSubscriberInterface
     }
 
     /**
-     * Disable the package filter for all command, but for install and update command.
+     * {@inheritDoc}
      */
-    public function onPluginCommand(CommandEvent $event)
+    public function deactivate(Composer $composer, IOInterface $io): void
+    {
+        AssetPlugin::removeInstallers($composer);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function uninstall(Composer $composer, IOInterface $io): void
+    {
+    }
+
+    /**
+     * Disable the package filter for all command, but for install and update command.
+     *
+     * @param CommandEvent $event
+     *
+     * @return void
+     */
+    public function onPluginCommand(CommandEvent $event): void
     {
         if ($this->config->get('enabled', true)) {
             ConfigBuilder::validate($this->io, $this->composer->getPackage(), $event->getCommandName());
 
-            if (!\in_array($event->getCommandName(), array('install', 'update'), true)) {
+            if (!\in_array($event->getCommandName(), ['install', 'update'], true)) {
                 $this->packageFilter->setEnabled(false);
             }
         }
@@ -109,11 +142,17 @@ class FxpAssetPlugin implements PluginInterface, EventSubscriberInterface
 
     /**
      * Add pool in asset repository manager.
+     * TODO
+     *
+     * @param InstallerEvent $event
+     *
+     * @return void
      */
-    public function onPreDependenciesSolving(InstallerEvent $event)
+    public function onPreDependenciesSolving(InstallerEvent $event): void
     {
         if ($this->config->get('enabled', true)) {
-            $this->assetRepositoryManager->setPool($event->getPool());
+//            $event->getTransaction()
+//            $this->assetRepositoryManager->setPool($event->getPool());
         }
     }
 
@@ -122,7 +161,7 @@ class FxpAssetPlugin implements PluginInterface, EventSubscriberInterface
      *
      * @return Config
      */
-    public function getConfig()
+    public function getConfig(): Config
     {
         return $this->config;
     }

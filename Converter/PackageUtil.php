@@ -29,7 +29,7 @@ abstract class PackageUtil
     /**
      * @var string[]
      */
-    private static $extensions = array(
+    private static array $extensions = [
         '.zip',
         '.tar',
         '.tar.gz',
@@ -38,48 +38,48 @@ abstract class PackageUtil
         '.tar.xz',
         '.bz2',
         '.gz',
-    );
+    ];
 
     /**
      * Checks if the version is a URL version.
      *
-     * @param AssetTypeInterface $assetType  The asset type
-     * @param string             $dependency The dependency
-     * @param string             $version    The version
-     * @param array              $vcsRepos   The list of new vcs configs
-     * @param array              $composer   The partial composer data
+     * @param AssetTypeInterface $assetType The asset type
+     * @param string $dependency The dependency
+     * @param string $version The version
+     * @param array $vcsRepos The list of new vcs configs
+     * @param array $composer The partial composer data
      *
      * @return string[] The new dependency and the new version
      */
-    public static function checkUrlVersion(AssetTypeInterface $assetType, $dependency, $version, array &$vcsRepos, array $composer)
+    public static function checkUrlVersion(AssetTypeInterface $assetType, string $dependency, string $version, array &$vcsRepos, array $composer): array
     {
         if (preg_match('/(:\/\/)|@/', $version)) {
-            list($url, $version) = static::splitUrlVersion($version);
+            [$url, $version] = static::splitUrlVersion($version);
 
             if (!static::isUrlArchive($url) && static::hasUrlDependencySupported($url)) {
-                $vcsRepos[] = array(
+                $vcsRepos[] = [
                     'type' => sprintf('%s-vcs', $assetType->getName()),
                     'url' => $url,
-                    'name' => $assetType->formatComposerName($dependency),
-                );
+                    'name' => $assetType->formatComposerName($dependency)
+                ];
             } else {
                 $dependency = static::getUrlFileDependencyName($assetType, $composer, $dependency);
-                $vcsRepos[] = array(
+                $vcsRepos[] = [
                     'type' => 'package',
-                    'package' => array(
+                    'package' => [
                         'name' => $assetType->formatComposerName($dependency),
                         'type' => $assetType->getComposerType(),
                         'version' => static::getUrlFileDependencyVersion($assetType, $url, $version),
-                        'dist' => array(
+                        'dist' => [
                             'url' => $url,
                             'type' => 'file',
-                        ),
-                    ),
-                );
+                        ]
+                    ]
+                ];
             }
         }
 
-        return array($dependency, $version);
+        return [$dependency, $version];
     }
 
     /**
@@ -89,11 +89,11 @@ abstract class PackageUtil
      *
      * @return bool
      */
-    public static function isUrlArchive($url)
+    public static function isUrlArchive(string $url): bool
     {
-        if (0 === strpos($url, 'http')) {
+        if (str_starts_with($url, 'http')) {
             foreach (self::$extensions as $extension) {
-                if (substr($url, -\strlen($extension)) === $extension) {
+                if (str_ends_with($url, $extension)) {
                     return true;
                 }
             }
@@ -105,65 +105,65 @@ abstract class PackageUtil
     /**
      * Checks if the version is a alias version.
      *
-     * @param AssetTypeInterface $assetType  The asset type
-     * @param string             $dependency The dependency
-     * @param string             $version    The version
+     * @param AssetTypeInterface $assetType The asset type
+     * @param string $dependency The dependency
+     * @param string $version The version
      *
      * @return string[] The new dependency and the new version
      */
-    public static function checkAliasVersion(AssetTypeInterface $assetType, $dependency, $version)
+    public static function checkAliasVersion(AssetTypeInterface $assetType, string $dependency, string $version): array
     {
         $pos = strpos($version, '#');
 
         if ($pos > 0 && !preg_match('{[0-9a-f]{40}$}', $version)) {
             $dependency = substr($version, 0, $pos);
             $version = substr($version, $pos);
-            $searchVerion = substr($version, 1);
+            $searchVersion = substr($version, 1);
 
-            if (false === strpos($version, '*') && Validator::validateTag($searchVerion, $assetType)) {
-                $dependency .= '-'.str_replace('#', '', $version);
+            if (!str_contains($version, '*') && Validator::validateTag($searchVersion, $assetType)) {
+                $dependency .= '-' . str_replace('#', '', $version);
             }
         }
 
-        return array($dependency, $version);
+        return [$dependency, $version];
     }
 
     /**
      * Convert the dependency version.
      *
-     * @param AssetTypeInterface $assetType  The asset type
-     * @param string             $dependency The dependency
-     * @param string             $version    The version
+     * @param AssetTypeInterface $assetType The asset type
+     * @param string $dependency The dependency
+     * @param string $version The version
      *
      * @return string[] The new dependency and the new version
      */
-    public static function convertDependencyVersion(AssetTypeInterface $assetType, $dependency, $version)
+    public static function convertDependencyVersion(AssetTypeInterface $assetType, string $dependency, string $version): array
     {
         $containsHash = false !== strpos($version, '#');
         $version = str_replace('#', '', $version);
         $version = empty($version) ? '*' : trim($version);
-        $searchVersion = str_replace(array(' ', '<', '>', '=', '^', '~'), '', $version);
+        $searchVersion = str_replace([' ', '<', '>', '=', '^', '~'], '', $version);
 
         // sha version or branch version
         // sha size: 4-40. See https://git-scm.com/book/tr/v2/Git-Tools-Revision-Selection#_short_sha_1
         if ($containsHash && preg_match('{^[0-9a-f]{4,40}$}', $version)) {
-            $version = 'dev-default#'.$version;
+            $version = 'dev-default#' . $version;
         } elseif ('*' !== $version && !Validator::validateTag($searchVersion, $assetType) && !static::depIsRange($version)) {
             $version = static::convertBrachVersion($assetType, $version);
         }
 
-        return array($dependency, $version);
+        return [$dependency, $version];
     }
 
     /**
      * Converts the simple key of package.
      *
-     * @param array  $asset       The asset data
-     * @param string $assetKey    The asset key
-     * @param array  $composer    The composer data
+     * @param array $asset The asset data
+     * @param string $assetKey The asset key
+     * @param array $composer The composer data
      * @param string $composerKey The composer key
      */
-    public static function convertStringKey(array $asset, $assetKey, array &$composer, $composerKey)
+    public static function convertStringKey(array $asset, string $assetKey, array &$composer, string $composerKey): void
     {
         if (isset($asset[$assetKey])) {
             $composer[$composerKey] = $asset[$assetKey];
@@ -173,14 +173,14 @@ abstract class PackageUtil
     /**
      * Converts the simple key of package.
      *
-     * @param array  $asset       The asset data
-     * @param string $assetKey    The asset key
-     * @param array  $composer    The composer data
-     * @param array  $composerKey The array with composer key name and closure
+     * @param array $asset The asset data
+     * @param string $assetKey The asset key
+     * @param array $composer The composer data
+     * @param array $composerKey The array with composer key name and closure
      *
      * @throws InvalidArgumentException When the 'composerKey' argument of asset packager converter is not an string or an array with the composer key and closure
      */
-    public static function convertArrayKey(array $asset, $assetKey, array &$composer, $composerKey)
+    public static function convertArrayKey(array $asset, string $assetKey, array &$composer, array $composerKey): void
     {
         if (2 !== \count($composerKey)
             || !\is_string($composerKey[0]) || !$composerKey[1] instanceof \Closure) {
@@ -189,8 +189,8 @@ abstract class PackageUtil
 
         $closure = $composerKey[1];
         $composerKey = $composerKey[0];
-        $data = isset($asset[$assetKey]) ? $asset[$assetKey] : null;
-        $previousData = isset($composer[$composerKey]) ? $composer[$composerKey] : null;
+        $data = $asset[$assetKey] ?? null;
+        $previousData = $composer[$composerKey] ?? null;
         $data = $closure($data, $previousData);
 
         if (null !== $data) {
@@ -205,7 +205,7 @@ abstract class PackageUtil
      *
      * @return string[] The url and version
      */
-    protected static function splitUrlVersion($version)
+    protected static function splitUrlVersion(string $version): array
     {
         $pos = strpos($version, '#');
 
@@ -218,37 +218,37 @@ abstract class PackageUtil
             $version = '#';
         }
 
-        return array($url, $version);
+        return [$url, $version];
     }
 
     /**
      * Get the name of url file dependency.
      *
-     * @param AssetTypeInterface $assetType  The asset type
-     * @param array              $composer   The partial composer
-     * @param string             $dependency The dependency name
+     * @param AssetTypeInterface $assetType The asset type
+     * @param array $composer The partial composer
+     * @param string $dependency The dependency name
      *
      * @return string The dependency name
      */
-    protected static function getUrlFileDependencyName(AssetTypeInterface $assetType, array $composer, $dependency)
+    protected static function getUrlFileDependencyName(AssetTypeInterface $assetType, array $composer, string $dependency): string
     {
         $prefix = isset($composer['name'])
-            ? substr($composer['name'], \strlen($assetType->getComposerVendorName()) + 1).'-'
+            ? substr($composer['name'], \strlen($assetType->getComposerVendorName()) + 1) . '-'
             : '';
 
-        return $prefix.$dependency.'-file';
+        return $prefix . $dependency . '-file';
     }
 
     /**
      * Get the version of url file dependency.
      *
      * @param AssetTypeInterface $assetType The asset type
-     * @param string             $url       The url
-     * @param string             $version   The version
+     * @param string $url The url
+     * @param string $version The version
      *
      * @return string The version
      */
-    protected static function getUrlFileDependencyVersion(AssetTypeInterface $assetType, $url, $version)
+    protected static function getUrlFileDependencyVersion(AssetTypeInterface $assetType, string $url, string $version): string
     {
         if ('#' !== $version) {
             return substr($version, 1);
@@ -268,7 +268,7 @@ abstract class PackageUtil
      *
      * @return bool
      */
-    protected static function hasUrlDependencySupported($url)
+    protected static function hasUrlDependencySupported(string $url): bool
     {
         $io = new NullIO();
         $config = new Config();
@@ -292,28 +292,28 @@ abstract class PackageUtil
      *
      * @return bool
      */
-    protected static function depIsRange($version)
+    protected static function depIsRange(string $version): bool
     {
         $version = trim($version);
 
-        return (bool) preg_match('/[<>=^~ ]/', $version);
+        return (bool)preg_match('/[<>=^~ ]/', $version);
     }
 
     /**
      * Convert the dependency branch version.
      *
      * @param AssetTypeInterface $assetType The asset type
-     * @param string             $version   The version
+     * @param string $version The version
      *
      * @return string
      */
-    protected static function convertBrachVersion(AssetTypeInterface $assetType, $version)
+    protected static function convertBrachVersion(AssetTypeInterface $assetType, string $version): string
     {
         $oldVersion = $version;
-        $version = 'dev-'.$assetType->getVersionConverter()->convertVersion($version);
+        $version = 'dev-' . $assetType->getVersionConverter()->convertVersion($version);
 
         if (!Validator::validateBranch($oldVersion)) {
-            $version .= ' || '.$oldVersion;
+            $version .= ' || ' . $oldVersion;
         }
 
         return $version;

@@ -25,9 +25,9 @@ abstract class NpmPackageUtil
      *
      * @return string
      */
-    public static function convertName($name)
+    public static function convertName(string $name): string
     {
-        if (0 === strpos($name, '@') && false !== strpos($name, '/')) {
+        if (str_starts_with($name, '@') && str_contains($name, '/')) {
             $name = ltrim(str_replace('/', '--', $name), '@');
         }
 
@@ -41,10 +41,10 @@ abstract class NpmPackageUtil
      *
      * @return string
      */
-    public static function revertName($name)
+    public static function revertName(string $name): string
     {
-        if (false !== strpos($name, '--')) {
-            $name = '@'.str_replace('--', '/', $name);
+        if (str_contains($name, '--')) {
+            $name = '@' . str_replace('--', '/', $name);
         }
 
         return $name;
@@ -57,13 +57,13 @@ abstract class NpmPackageUtil
      *
      * @return array|string
      */
-    public static function convertLicenses($licenses)
+    public static function convertLicenses(array|string $licenses): array|string
     {
         if (!\is_array($licenses)) {
             return $licenses;
         }
 
-        $result = array();
+        $result = [];
         foreach ($licenses as $license) {
             if (\is_array($license)) {
                 if (!empty($license['type'])) {
@@ -82,14 +82,14 @@ abstract class NpmPackageUtil
     /**
      * Convert the author section.
      *
-     * @param null|string $value The current value
+     * @param string|null $value The current value
      *
-     * @return array
+     * @return array|null
      */
-    public static function convertAuthor($value)
+    public static function convertAuthor(?string $value): array|null
     {
         if (null !== $value) {
-            $value = array($value);
+            $value = [$value];
         }
 
         return $value;
@@ -98,15 +98,15 @@ abstract class NpmPackageUtil
     /**
      * Convert the contributors section.
      *
-     * @param null|string $value     The current value
-     * @param null|string $prevValue The previous value
+     * @param array|string|null $value The current value
+     * @param array|string|null $prevValue The previous value
      *
      * @return array
      */
-    public static function convertContributors($value, $prevValue)
+    public static function convertContributors(array|string|null $value, array|string|null $prevValue): array|string|null
     {
-        $mergeValue = \is_array($prevValue) ? $prevValue : array();
-        $mergeValue = array_merge($mergeValue, \is_array($value) ? $value : array());
+        $mergeValue = \is_array($prevValue) ? $prevValue : [];
+        $mergeValue = array_merge($mergeValue, \is_array($value) ? $value : []);
 
         if (\count($mergeValue) > 0) {
             $value = $mergeValue;
@@ -118,15 +118,15 @@ abstract class NpmPackageUtil
     /**
      * Convert the dist section.
      *
-     * @param null|string $value The current value
+     * @param array|string|null $value The current value
      *
-     * @return array
+     * @return array|string|null
      */
-    public static function convertDist($value)
+    public static function convertDist(array|string|null $value): array|string|null
     {
         if (\is_array($value)) {
-            $data = (array) $value;
-            $value = array();
+            $data = $value;
+            $value = [];
 
             foreach ($data as $type => $url) {
                 if (\is_string($url)) {
@@ -141,16 +141,16 @@ abstract class NpmPackageUtil
     /**
      * Convert the each entry of dist section.
      *
-     * @param array  $value The result
-     * @param string $type  The dist type
-     * @param string $url   The dist url
+     * @param array $value The result
+     * @param string $type The dist type
+     * @param string $url The dist url
      */
-    private static function convertDistEntry(array &$value, $type, $url)
+    private static function convertDistEntry(array &$value, string $type, string $url): void
     {
         $httpPrefix = 'http://';
 
-        if (0 === strpos($url, $httpPrefix)) {
-            $url = 'https://'.substr($url, \strlen($httpPrefix));
+        if (str_starts_with($url, $httpPrefix)) {
+            $url = 'https://' . substr($url, \strlen($httpPrefix));
         }
 
         if ('shasum' === $type) {
@@ -167,10 +167,10 @@ abstract class NpmPackageUtil
     /**
      * Get downloader types in Composer.
      *
-     * @return array
+     * @return string[]
      */
-    private static function getDownloaderTypes()
+    private static function getDownloaderTypes(): array
     {
-        return array('git', 'svn', 'fossil', 'hg', 'perforce', 'zip', 'rar', 'tar', 'gzip', 'xz', 'phar', 'file', 'path');
+        return ['git', 'svn', 'fossil', 'hg', 'perforce', 'zip', 'rar', 'tar', 'gzip', 'xz', 'phar', 'file', 'path'];
     }
 }

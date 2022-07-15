@@ -31,8 +31,12 @@ class ScriptHandler
     /**
      * Remove ignored files of the installed package defined in the root
      * package config section.
+     *
+     * @param PackageEvent $event
+     *
+     * @return void
      */
-    public static function deleteIgnoredFiles(PackageEvent $event)
+    public static function deleteIgnoredFiles(PackageEvent $event): void
     {
         if (null === $package = static::getLibraryPackage($event->getOperation())) {
             return;
@@ -46,9 +50,11 @@ class ScriptHandler
     /**
      * Get the plugin config.
      *
+     * @param PackageEvent $event
+     *
      * @return Config
      */
-    public static function getConfig(PackageEvent $event)
+    public static function getConfig(PackageEvent $event): Config
     {
         foreach ($event->getComposer()->getPluginManager()->getPlugins() as $plugin) {
             if ($plugin instanceof FxpAssetPlugin) {
@@ -60,11 +66,11 @@ class ScriptHandler
     }
 
     /**
-     * Get the root config section of igore file patterns for each package.
+     * Get the root config section of ignore file patterns for each package.
      *
      * @return string The config section name
      */
-    protected static function getIgnoreConfigSection()
+    protected static function getIgnoreConfigSection(): string
     {
         return 'ignore-files';
     }
@@ -76,7 +82,7 @@ class ScriptHandler
      *
      * @return null|PackageInterface Return NULL if the package is an asset
      */
-    protected static function getLibraryPackage(OperationInterface $operation)
+    protected static function getLibraryPackage(OperationInterface $operation): ?PackageInterface
     {
         $package = static::getOperationPackage($operation);
         $data = null;
@@ -95,7 +101,7 @@ class ScriptHandler
      *
      * @return null|PackageInterface Return NULL if the operation is not INSTALL or UPDATE
      */
-    protected static function getOperationPackage(OperationInterface $operation)
+    protected static function getOperationPackage(OperationInterface $operation): ?PackageInterface
     {
         $data = null;
         if ($operation instanceof UpdateOperation) {
@@ -114,7 +120,7 @@ class ScriptHandler
      *
      * @return bool
      */
-    protected static function isAsset(PackageInterface $package)
+    protected static function isAsset(PackageInterface $package): bool
     {
         foreach (Assets::getTypes() as $type) {
             $type = Assets::createType($type);

@@ -27,10 +27,10 @@ class VersionParser extends BaseVersionParser
      *
      * @return string
      */
-    public static function parseStability($version)
+    public static function parseStability($version): string
     {
         $stability = parent::parseStability($version);
 
-        return false !== strpos($version, '-patch') ? 'dev' : $stability;
+        return str_contains($version, '-patch') ? 'dev' : $stability;
     }
 }

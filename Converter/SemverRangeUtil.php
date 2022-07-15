@@ -22,15 +22,15 @@ abstract class SemverRangeUtil
      * Replaces the special range "^".
      *
      * @param SemverConverter $converter The semver converter
-     * @param string          $match     The match version
+     * @param string $match The match version
      *
      * @return string the new match version
      */
-    public static function replaceSpecialRange(SemverConverter $converter, $match)
+    public static function replaceSpecialRange(SemverConverter $converter, string $match): string
     {
         $newMatch = $converter->convertVersion($match);
-        $newMatch = '>='.static::standardizeVersion(SemverUtil::replaceAlias($newMatch, '>')).',<';
-        $exp = static::getSplittedVersion($match);
+        $newMatch = '>=' . static::standardizeVersion(SemverUtil::replaceAlias($newMatch, '>')) . ',<';
+        $exp = static::getSplitVersion($match);
         $increase = false;
 
         foreach ($exp as $i => $sub) {
@@ -47,15 +47,15 @@ abstract class SemverRangeUtil
     }
 
     /**
-     * Analyze the sub version of splitted version.
+     * Analyze the sub version of split version.
      *
-     * @param int   $i        The position in splitted version
-     * @param array $exp      The splitted version
-     * @param bool  $increase Check if the next sub version must be increased
+     * @param int $i The position in split version
+     * @param array $exp The split version
+     * @param bool $increase Check if the next sub version must be increased
      *
      * @return bool
      */
-    protected static function analyzeSubVersion($i, array &$exp, &$increase)
+    protected static function analyzeSubVersion(int $i, array &$exp, bool &$increase): bool
     {
         $analyzed = false;
 
@@ -64,9 +64,9 @@ abstract class SemverRangeUtil
             $analyzed = true;
         }
 
-        if (0 === $i && (int) $exp[$i] > 0) {
+        if (0 === $i && (int)$exp[$i] > 0) {
             $increase = true;
-            $exp[$i] = (int) $exp[$i] + 1;
+            $exp[$i] = (int)$exp[$i] + 1;
             $analyzed = true;
         }
 
@@ -74,18 +74,18 @@ abstract class SemverRangeUtil
     }
 
     /**
-     * Increase the sub version of splitted version.
+     * Increase the sub version of split version.
      *
-     * @param int   $i        The position in splitted version
-     * @param array $exp      The splitted version
-     * @param bool  $increase Check if the next sub version must be increased
+     * @param int $i The position in split version
+     * @param array $exp The split version
+     * @param bool $increase Check if the next sub version must be increased
      */
-    protected static function increaseSubVersion($i, array &$exp, &$increase)
+    protected static function increaseSubVersion($i, array &$exp, bool &$increase): void
     {
-        $iNext = min(min($i + 1, 3), \count($exp) - 1);
+        $iNext = min($i + 1, 3, \count($exp) - 1);
 
-        if (($iNext !== $i && ($exp[$i] > 0 || (int) $exp[$iNext] > 9999998)) || $iNext === $i) {
-            $exp[$i] = (int) $exp[$i] + 1;
+        if (($iNext !== $i && ($exp[$i] > 0 || (int)$exp[$iNext] > 9999998)) || $iNext === $i) {
+            $exp[$i] = (int)$exp[$i] + 1;
             $increase = true;
         }
     }
@@ -93,11 +93,11 @@ abstract class SemverRangeUtil
     /**
      * Standardize the version.
      *
-     * @param array|string $version The version or the splitted version
+     * @param array|string $version The version or the split version
      *
      * @return string
      */
-    protected static function standardizeVersion($version)
+    protected static function standardizeVersion(array|string $version): string
     {
         if (\is_string($version)) {
             $version = explode('.', $version);
@@ -117,22 +117,22 @@ abstract class SemverRangeUtil
      *
      * @return array
      */
-    protected static function getSplittedVersion($version)
+    protected static function getSplitVersion(string $version): array
     {
         $version = static::cleanExtraVersion($version);
-        $version = str_replace(array('*', 'x', 'X'), '9999999', $version);
+        $version = str_replace(['*', 'x', 'X'], '9999999', $version);
 
         return explode('.', $version);
     }
 
     /**
-     * Remove the extra informations of the version (info after "-").
+     * Remove the extra information of the version (info after "-").
      *
      * @param string $version
      *
      * @return string
      */
-    protected static function cleanExtraVersion($version)
+    protected static function cleanExtraVersion(string $version): string
     {
         $pos = strpos($version, '-');
 

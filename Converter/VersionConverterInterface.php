@@ -25,7 +25,7 @@ interface VersionConverterInterface
      *
      * @return string The composer version
      */
-    public function convertVersion($version);
+    public function convertVersion(string $version): string;
 
     /**
      * Converts the range asset version to range composer version.
@@ -34,5 +34,5 @@ interface VersionConverterInterface
      *
      * @return string The range composer version
      */
-    public function convertRange($range);
+    public function convertRange(string $range): string;
 }

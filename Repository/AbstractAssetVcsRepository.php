@@ -21,12 +21,16 @@ use Composer\Package\Package;
 use Composer\Package\PackageInterface;
 use Composer\Repository\Vcs\VcsDriverInterface;
 use Composer\Repository\VcsRepository;
+use Composer\Repository\VersionCacheInterface;
+use Composer\Util\HttpDownloader;
+use Composer\Util\ProcessExecutor;
 use Fxp\Composer\AssetPlugin\Assets;
 use Fxp\Composer\AssetPlugin\Converter\SemverConverter;
 use Fxp\Composer\AssetPlugin\Exception\InvalidArgumentException;
 use Fxp\Composer\AssetPlugin\Package\Loader\LazyAssetPackageLoader;
 use Fxp\Composer\AssetPlugin\Package\Version\VersionParser;
 use Fxp\Composer\AssetPlugin\Type\AssetTypeInterface;
+use JetBrains\PhpStorm\ArrayShape;
 
 /**
  * Abstract class for Asset VCS repository.
@@ -38,7 +42,7 @@ abstract class AbstractAssetVcsRepository extends VcsRepository
     /**
      * @var AssetTypeInterface
      */
-    protected $assetType;
+    protected AssetTypeInterface $assetType;
 
     /**
      * @var VersionParser
@@ -46,9 +50,9 @@ abstract class AbstractAssetVcsRepository extends VcsRepository
     protected $versionParser;
 
     /**
-     * @var AssetRepositoryManager
+     * @var AssetRepositoryManager|null
      */
-    protected $assetRepositoryManager;
+    protected ?AssetRepositoryManager $assetRepositoryManager;
 
     /**
      * @var LoaderInterface
@@ -56,27 +60,42 @@ abstract class AbstractAssetVcsRepository extends VcsRepository
     protected $loader;
 
     /**
-     * @var string
+     * @var string|null
      */
-    protected $rootPackageVersion;
+    protected ?string $rootPackageVersion;
 
     /**
      * @var null|array
      */
-    protected $rootData;
+    protected ?array $rootData;
 
     /**
      * @var null|VcsPackageFilter
      */
-    protected $filter;
+    protected ?VcsPackageFilter $filter;
 
     /**
      * Constructor.
      *
-     * @param EventDispatcher $dispatcher
-     * @param array           $drivers
+     * @param array $repoConfig
+     * @param IOInterface $io
+     * @param Config $config
+     * @param HttpDownloader $httpDownloader
+     * @param EventDispatcher|null $dispatcher
+     * @param ProcessExecutor|null $process
+     * @param array|null $drivers
+     * @param VersionCacheInterface|null $versionCache
      */
-    public function __construct(array $repoConfig, IOInterface $io, Config $config, EventDispatcher $dispatcher = null, array $drivers = null)
+    public function __construct(
+        array                 $repoConfig,
+        IOInterface           $io,
+        Config                $config,
+        HttpDownloader        $httpDownloader,
+        EventDispatcher       $dispatcher = null,
+        ProcessExecutor       $process = null,
+        array                 $drivers = null,
+        VersionCacheInterface $versionCache = null
+    )
     {
         $drivers = $drivers ?: Assets::getVcsDrivers();
         $assetType = substr($repoConfig['type'], 0, strpos($repoConfig['type'], '-'));
@@ -86,18 +105,21 @@ abstract class AbstractAssetVcsRepository extends VcsRepository
         $repoConfig['filename'] = $assetType->getFilename();
         $this->assetType = $assetType;
         $this->assetRepositoryManager = isset($repoConfig['asset-repository-manager'])
-                && $repoConfig['asset-repository-manager'] instanceof AssetRepositoryManager
+        && $repoConfig['asset-repository-manager'] instanceof AssetRepositoryManager
             ? $repoConfig['asset-repository-manager']
             : null;
         $this->filter = isset($repoConfig['vcs-package-filter'])
-                && $repoConfig['vcs-package-filter'] instanceof VcsPackageFilter
+        && $repoConfig['vcs-package-filter'] instanceof VcsPackageFilter
             ? $repoConfig['vcs-package-filter']
             : null;
 
-        parent::__construct($repoConfig, $io, $config, $dispatcher, $drivers);
+        parent::__construct($repoConfig, $io, $config, $httpDownloader, $dispatcher, $process, $drivers, $versionCache);
     }
 
-    public function count()
+    /**
+     * {@inheritDoc}
+     */
+    public function count(): int
     {
         return null !== $this->packages ? \count($this->packages) : 0;
     }
@@ -106,8 +128,9 @@ abstract class AbstractAssetVcsRepository extends VcsRepository
      * Gets the package name of this repository.
      *
      * @return string
+     * @throws \Composer\Repository\InvalidRepositoryException
      */
-    public function getComposerPackageName()
+    public function getComposerPackageName(): string
     {
         if (null === $this->packages) {
             $this->initialize();
@@ -119,15 +142,15 @@ abstract class AbstractAssetVcsRepository extends VcsRepository
     /**
      * Initializes the driver.
      *
+     * @return VcsDriverInterface
      * @throws InvalidArgumentException When not driver found
      *
-     * @return VcsDriverInterface
      */
-    protected function initDriver()
+    protected function initDriver(): VcsDriverInterface
     {
         $driver = $this->getDriver();
         if (!$driver) {
-            throw new InvalidArgumentException('No driver found to handle Asset VCS repository '.$this->url);
+            throw new InvalidArgumentException('No driver found to handle Asset VCS repository ' . $this->url);
         }
 
         return $driver;
@@ -135,8 +158,10 @@ abstract class AbstractAssetVcsRepository extends VcsRepository
 
     /**
      * Initializes the version parser and loader.
+     *
+     * @return void
      */
-    protected function initLoader()
+    protected function initLoader(): void
     {
         $this->versionParser = new VersionParser();
 
@@ -147,15 +172,18 @@ abstract class AbstractAssetVcsRepository extends VcsRepository
 
     /**
      * Initializes the root identifier.
+     *
+     * @return void
      */
-    protected function initRootIdentifier(VcsDriverInterface $driver)
+    protected function initRootIdentifier(VcsDriverInterface $driver): void
     {
         try {
             if ($driver->hasComposerFile($driver->getRootIdentifier())) {
                 $data = $driver->getComposerInformation($driver->getRootIdentifier());
                 $sc = new SemverConverter();
                 $this->rootPackageVersion = !empty($data['version'])
-                    ? $sc->convertVersion(ltrim($data['version'], '^~')) : null;
+                    ? $sc->convertVersion(ltrim($data['version'], '^~'))
+                    : null;
                 $this->rootData = $data;
 
                 if (null === $this->packageName) {
@@ -164,7 +192,7 @@ abstract class AbstractAssetVcsRepository extends VcsRepository
             }
         } catch (\Exception $e) {
             if ($this->io->isVerbose()) {
-                $this->io->write('<error>Skipped parsing '.$driver->getRootIdentifier().', '.$e->getMessage().'</error>');
+                $this->io->write('<error>Skipped parsing ' . $driver->getRootIdentifier() . ', ' . $e->getMessage() . '</error>');
             }
         }
     }
@@ -175,7 +203,7 @@ abstract class AbstractAssetVcsRepository extends VcsRepository
      *
      * @return string The package name
      */
-    protected function createPackageName()
+    protected function createPackageName(): string
     {
         if (null === $this->packageName) {
             return $this->url;
@@ -187,18 +215,19 @@ abstract class AbstractAssetVcsRepository extends VcsRepository
     /**
      * Creates the mock of package config.
      *
-     * @param string $name    The package name
+     * @param string $name The package name
      * @param string $version The version
      *
      * @return array The package config
      */
-    protected function createMockOfPackageConfig($name, $version)
+    #[ArrayShape(['name' => 'string', 'version' => 'string', 'type' => 'string'])]
+    protected function createMockOfPackageConfig(string $name, string $version)
     {
-        return array(
+        return [
             'name' => $name,
             'version' => $version,
             'type' => $this->assetType->getComposerType(),
-        );
+        ];
     }
 
     /**
@@ -206,10 +235,12 @@ abstract class AbstractAssetVcsRepository extends VcsRepository
      *
      * @param string $type
      * @param string $identifier
+     * @param array $packageData
+     * @param VcsDriverInterface $driver
      *
      * @return LazyAssetPackageLoader
      */
-    protected function createLazyLoader($type, $identifier, array $packageData, VcsDriverInterface $driver)
+    protected function createLazyLoader(string $type, string $identifier, array $packageData, VcsDriverInterface $driver): LazyAssetPackageLoader
     {
         $lazyLoader = new LazyAssetPackageLoader($type, $identifier, $packageData);
         $lazyLoader->setAssetType($this->assetType);
@@ -224,15 +255,17 @@ abstract class AbstractAssetVcsRepository extends VcsRepository
     /**
      * Pre process the data of package before the conversion to Package instance.
      *
+     * @param array $data
+     *
      * @return array
      */
-    protected function preProcessAsset(array $data)
+    protected function preProcessAsset(array $data): array
     {
-        $vcsRepos = array();
+        $vcsRepos = [];
 
         // keep the name of the main identifier for all packages
         $data['name'] = $this->packageName ?: $data['name'];
-        $data = (array) $this->assetType->getPackageConverter()->convert($data, $vcsRepos);
+        $data = (array)$this->assetType->getPackageConverter()->convert($data, $vcsRepos);
         $this->assetRepositoryManager->addRepositories($vcsRepos);
 
         return $this->assetRepositoryManager->solveResolutions($data);
@@ -241,19 +274,19 @@ abstract class AbstractAssetVcsRepository extends VcsRepository
     /**
      * Override the branch alias extra config of the current package.
      *
-     * @param PackageInterface $package         The current package
-     * @param string           $aliasNormalized The alias version normalizes
-     * @param string           $branch          The branch name
+     * @param PackageInterface $package The current package
+     * @param string $aliasNormalized The alias version normalizes
+     * @param string $branch The branch name
      *
      * @return PackageInterface
      */
-    protected function overrideBranchAliasConfig(PackageInterface $package, $aliasNormalized, $branch)
+    protected function overrideBranchAliasConfig(PackageInterface $package, string $aliasNormalized, string $branch): PackageInterface
     {
-        if ($package instanceof Package && false === strpos('dev-', $aliasNormalized)) {
+        if ($package instanceof Package && !str_contains('dev-', $aliasNormalized)) {
             $extra = $package->getExtra();
-            $extra['branch-alias'] = array(
-                'dev-'.$branch => $this->rootPackageVersion.'-dev',
-            );
+            $extra['branch-alias'] = [
+                'dev-' . $branch => $this->rootPackageVersion . '-dev',
+            ];
             $this->injectExtraConfig($package, $extra);
         }
 
@@ -263,18 +296,18 @@ abstract class AbstractAssetVcsRepository extends VcsRepository
     /**
      * Add the alias packages.
      *
-     * @param PackageInterface $package         The current package
-     * @param string           $aliasNormalized The alias version normalizes
+     * @param PackageInterface $package The current package
+     * @param string $aliasNormalized The alias version normalizes
      *
      * @return PackageInterface
      */
-    protected function addPackageAliases(PackageInterface $package, $aliasNormalized)
+    protected function addPackageAliases(PackageInterface $package, string $aliasNormalized): PackageInterface
     {
         $alias = new AliasPackage($package, $aliasNormalized, $this->rootPackageVersion);
         $this->addPackage($alias);
 
-        if (false === strpos('dev-', $aliasNormalized)) {
-            $alias = new AliasPackage($package, $aliasNormalized.'-dev', $this->rootPackageVersion);
+        if (!str_contains('dev-', $aliasNormalized)) {
+            $alias = new AliasPackage($package, $aliasNormalized . '-dev', $this->rootPackageVersion);
             $this->addPackage($alias);
         }
 
@@ -285,7 +318,9 @@ abstract class AbstractAssetVcsRepository extends VcsRepository
      * Inject the overriding extra config in the current package.
      *
      * @param PackageInterface $package The package
-     * @param array            $extra   The new extra config
+     * @param array $extra The new extra config
+     *
+     * @throws \ReflectionException
      */
     private function injectExtraConfig(PackageInterface $package, array $extra)
     {

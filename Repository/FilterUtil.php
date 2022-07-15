@@ -28,12 +28,12 @@ class FilterUtil
     /**
      * Get the link constraint of normalized version.
      *
-     * @param string        $normalizedVersion The normalized version
-     * @param VersionParser $versionParser     The version parser
+     * @param string $normalizedVersion The normalized version
+     * @param VersionParser $versionParser The version parser
      *
      * @return ConstraintInterface The constraint
      */
-    public static function getVersionConstraint($normalizedVersion, VersionParser $versionParser)
+    public static function getVersionConstraint(string $normalizedVersion, VersionParser $versionParser): ConstraintInterface
     {
         if (preg_match('/^\d+(\.\d+)(\.\d+)(\.\d+)-[A-Za-z0-9]+$/', $normalizedVersion)) {
             $normalizedVersion = substr($normalizedVersion, 0, strpos($normalizedVersion, '-'));
@@ -49,7 +49,7 @@ class FilterUtil
      *
      * @return string The stability name
      */
-    public static function findFlagStabilityName($level)
+    public static function findFlagStabilityName(int $level): string
     {
         $stability = 'dev';
 
@@ -68,21 +68,21 @@ class FilterUtil
     /**
      * Find the lowest stability.
      *
-     * @param string[]      $stabilities   The list of stability
+     * @param string[] $stability The list of stability
      * @param VersionParser $versionParser The version parser
      *
      * @return string The lowest stability
      */
-    public static function findInlineStabilities(array $stabilities, VersionParser $versionParser)
+    public static function findInlineStability(array $stability, VersionParser $versionParser): string
     {
         $lowestStability = 'stable';
 
-        foreach ($stabilities as $stability) {
-            $stability = $versionParser->normalizeStability($stability);
-            $stability = $versionParser->parseStability($stability);
+        foreach ($stability as $s) {
+            $s = $versionParser->normalizeStability($s);
+            $s = $versionParser->parseStability($s);
 
-            if (Package::$stabilities[$stability] > Package::$stabilities[$lowestStability]) {
-                $lowestStability = $stability;
+            if (Package::$stabilities[$s] > Package::$stabilities[$lowestStability]) {
+                $lowestStability = $s;
             }
         }
 
@@ -93,11 +93,11 @@ class FilterUtil
      * Get the minimum stability for the require dependency defined in root package.
      *
      * @param RootPackageInterface $package The root package
-     * @param Link                 $require The require link defined in root package
+     * @param Link $require The require link defined in root package
      *
      * @return string The minimum stability defined in root package (in links or global project)
      */
-    public static function getMinimumStabilityFlag(RootPackageInterface $package, Link $require)
+    public static function getMinimumStabilityFlag(RootPackageInterface $package, Link $require): string
     {
         $flags = $package->getStabilityFlags();
 
@@ -112,11 +112,11 @@ class FilterUtil
      * Check the config option.
      *
      * @param Config $config The plugin config
-     * @param string $name   The extra option name
+     * @param string $name The extra option name
      *
      * @return bool
      */
-    public static function checkConfigOption(Config $config, $name)
+    public static function checkConfigOption(Config $config, string $name): bool
     {
         return true === $config->get($name, true);
     }

@@ -26,14 +26,21 @@ class GitBitbucketDriver extends BaseGitBitbucketDriver
      */
     protected $cache;
 
-    public function initialize()
+    /**
+     * {@inheritDoc}
+     */
+    public function initialize(): void
     {
         parent::initialize();
 
         $this->cache = new Cache($this->io, $this->config->get('cache-repo-dir').'/'.$this->originUrl.'/'.$this->owner.'/'.$this->repository);
     }
 
-    public function getComposerInformation($identifier)
+    /**
+     * {@inheritDoc}
+     * @throws \Seld\JsonLint\ParsingException
+     */
+    public function getComposerInformation($identifier): ?array
     {
         $method = method_exists($this, 'getContentsWithOAuthCredentials') ? 'getContentsWithOAuthCredentials' : 'getContents';
 

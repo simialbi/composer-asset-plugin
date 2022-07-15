@@ -25,15 +25,15 @@ class IgnoreFactory
     /**
      * Create a ignore manager.
      *
-     * @param Config           $config     The plugin config
-     * @param Composer         $composer   The composer instance
-     * @param PackageInterface $package    The package instance
-     * @param null|string      $installDir The custom installation directory
-     * @param null|string      $section    The config section of ignore patterns
+     * @param Config $config The plugin config
+     * @param Composer $composer The composer instance
+     * @param PackageInterface $package The package instance
+     * @param string|null $installDir The custom installation directory
+     * @param string|null $section The config section of ignore patterns
      *
      * @return IgnoreManager
      */
-    public static function create(Config $config, Composer $composer, PackageInterface $package, $installDir = null, $section = 'ignore-files')
+    public static function create(Config $config, Composer $composer, PackageInterface $package, string $installDir = null, ?string $section = 'ignore-files'): IgnoreManager
     {
         $installDir = static::getInstallDir($composer, $package, $installDir);
         $manager = new IgnoreManager($installDir);
@@ -53,16 +53,16 @@ class IgnoreFactory
     /**
      * Get the installation directory of the package.
      *
-     * @param Composer         $composer   The composer instance
-     * @param PackageInterface $package    The package instance
-     * @param null|string      $installDir The custom installation directory
+     * @param Composer $composer The composer instance
+     * @param PackageInterface $package The package instance
+     * @param string|null $installDir The custom installation directory
      *
      * @return string The installation directory
      */
-    protected static function getInstallDir(Composer $composer, PackageInterface $package, $installDir = null)
+    protected static function getInstallDir(Composer $composer, PackageInterface $package, string $installDir = null): string
     {
         if (null === $installDir) {
-            $installDir = rtrim($composer->getConfig()->get('vendor-dir'), '/').'/'.$package->getName();
+            $installDir = rtrim($composer->getConfig()->get('vendor-dir'), '/') . '/' . $package->getName();
         }
 
         return rtrim($installDir, '/');
@@ -71,12 +71,12 @@ class IgnoreFactory
     /**
      * Add ignore file patterns in the ignore manager.
      *
-     * @param IgnoreManager $manager  The ignore files manager
-     * @param array|bool    $patterns The patterns for ignore files
+     * @param IgnoreManager $manager The ignore files manager
+     * @param bool|array $patterns The patterns for ignore files
      */
-    protected static function addPatterns(IgnoreManager $manager, $patterns)
+    protected static function addPatterns(IgnoreManager $manager, bool|array $patterns): void
     {
-        $enabled = false === $patterns ? false : true;
+        $enabled = !(false === $patterns);
         $manager->setEnabled($enabled);
 
         if (\is_array($patterns)) {

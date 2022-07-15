@@ -21,14 +21,14 @@ class ResolutionManager
     /**
      * @var array
      */
-    protected $resolutions;
+    protected array $resolutions;
 
     /**
      * Constructor.
      *
      * @param array $resolutions The dependency resolutions
      */
-    public function __construct(array $resolutions = array())
+    public function __construct(array $resolutions = [])
     {
         $this->resolutions = $resolutions;
     }
@@ -40,7 +40,7 @@ class ResolutionManager
      *
      * @return array
      */
-    public function solveResolutions(array $data)
+    public function solveResolutions(array $data): array
     {
         $data = $this->doSolveResolutions($data, 'require');
 
@@ -50,12 +50,12 @@ class ResolutionManager
     /**
      * Solve the dependency resolutions.
      *
-     * @param array  $data    The data of asset composer package
+     * @param array $data The data of asset composer package
      * @param string $section The dependency section in package
      *
      * @return array
      */
-    protected function doSolveResolutions(array $data, $section)
+    protected function doSolveResolutions(array $data, string $section): array
     {
         if (\array_key_exists($section, $data) && \is_array($data[$section])) {
             foreach ($data[$section] as $dependency => &$range) {

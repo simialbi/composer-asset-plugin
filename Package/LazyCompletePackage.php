@@ -18,147 +18,210 @@ namespace Fxp\Composer\AssetPlugin\Package;
  */
 class LazyCompletePackage extends AbstractLazyCompletePackage implements LazyPackageInterface
 {
-    public function getTransportOptions()
+    /**
+     * {@inheritDoc}
+     */
+    public function getTransportOptions(): array
     {
         $this->initialize();
 
         return parent::getTransportOptions();
     }
 
-    public function getTargetDir()
+    /**
+     * {@inheritDoc}
+     */
+    public function getTargetDir(): string
     {
         $this->initialize();
 
         return parent::getTargetDir();
     }
 
-    public function getExtra()
+    /**
+     * {@inheritDoc}
+     */
+    public function getExtra(): array
     {
         $this->initialize();
 
         return parent::getExtra();
     }
 
-    public function getBinaries()
+    /**
+     * {@inheritDoc}
+     */
+    public function getBinaries(): array
     {
         $this->initialize();
 
         return parent::getBinaries();
     }
 
-    public function getInstallationSource()
+    /**
+     * {@inheritDoc}
+     */
+    public function getInstallationSource(): string
     {
         $this->initialize();
 
         return parent::getInstallationSource();
     }
 
-    public function getSourceType()
+    /**
+     * {@inheritDoc}
+     */
+    public function getSourceType(): string
     {
         $this->initialize();
 
         return parent::getSourceType();
     }
 
-    public function getSourceUrl()
+    /**
+     * {@inheritDoc}
+     */
+    public function getSourceUrl(): string
     {
         $this->initialize();
 
         return parent::getSourceUrl();
     }
 
-    public function getSourceReference()
+    /**
+     * {@inheritDoc}
+     */
+    public function getSourceReference(): string
     {
         $this->initialize();
 
         return parent::getSourceReference();
     }
 
-    public function getSourceMirrors()
+    /**
+     * {@inheritDoc}
+     */
+    public function getSourceMirrors(): array
     {
         $this->initialize();
 
         return parent::getSourceMirrors();
     }
 
-    public function getSourceUrls()
+    /**
+     * {@inheritDoc}
+     */
+    public function getSourceUrls(): array
     {
         $this->initialize();
 
         return parent::getSourceUrls();
     }
 
-    public function getDistType()
+    /**
+     * {@inheritDoc}
+     */
+    public function getDistType(): string
     {
         $this->initialize();
 
         return parent::getDistType();
     }
 
-    public function getDistUrl()
+    /**
+     * {@inheritDoc}
+     */
+    public function getDistUrl(): string
     {
         $this->initialize();
 
         return parent::getDistUrl();
     }
 
-    public function getDistReference()
+    /**
+     * {@inheritDoc}
+     */
+    public function getDistReference(): string
     {
         $this->initialize();
 
         return parent::getDistReference();
     }
 
-    public function getDistSha1Checksum()
+    /**
+     * {@inheritDoc}
+     */
+    public function getDistSha1Checksum(): string
     {
         $this->initialize();
 
         return parent::getDistSha1Checksum();
     }
 
-    public function getDistMirrors()
+    /**
+     * {@inheritDoc}
+     */
+    public function getDistMirrors(): array
     {
         $this->initialize();
 
         return parent::getDistMirrors();
     }
 
-    public function getDistUrls()
+    /**
+     * {@inheritDoc}
+     */
+    public function getDistUrls(): array
     {
         $this->initialize();
 
         return parent::getDistUrls();
     }
 
-    public function getReleaseDate()
+    /**
+     * {@inheritDoc}
+     */
+    public function getReleaseDate(): \DateTimeInterface
     {
         $this->initialize();
 
         return parent::getReleaseDate();
     }
 
-    public function getRequires()
+    /**
+     * {@inheritDoc}
+     */
+    public function getRequires(): array
     {
         $this->initialize();
 
         return parent::getRequires();
     }
 
-    public function getConflicts()
+    /**
+     * {@inheritDoc}
+     */
+    public function getConflicts(): array
     {
         $this->initialize();
 
         return parent::getConflicts();
     }
 
-    public function getDevRequires()
+    /**
+     * {@inheritDoc}
+     */
+    public function getDevRequires(): array
     {
         $this->initialize();
 
         return parent::getDevRequires();
     }
 
-    public function getSuggests()
+    /**
+     * {@inheritDoc}
+     */
+    public function getSuggests(): array
     {
         $this->initialize();
 

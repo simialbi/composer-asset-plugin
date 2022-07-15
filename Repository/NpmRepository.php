@@ -19,6 +19,7 @@ use Composer\Repository\ArrayRepository;
 use Fxp\Composer\AssetPlugin\Converter\NpmPackageUtil;
 use Fxp\Composer\AssetPlugin\Converter\PackageUtil;
 use Fxp\Composer\AssetPlugin\Exception\InvalidCreateRepositoryException;
+use JetBrains\PhpStorm\ArrayShape;
 
 /**
  * NPM repository.
@@ -27,32 +28,49 @@ use Fxp\Composer\AssetPlugin\Exception\InvalidCreateRepositoryException;
  */
 class NpmRepository extends AbstractAssetsRepository
 {
-    public function search($query, $mode = 0, $type = null)
+    /**
+     * {@inheritDoc}
+     */
+    public function search(string $query, int $mode = 0, ?string $type = null): array
     {
-        return array();
+        return [];
     }
 
-    protected function getType()
+    /**
+     * {@inheritDoc}
+     */
+    protected function getType(): string
     {
         return 'npm';
     }
 
-    protected function getUrl()
+    /**
+     * {@inheritDoc}
+     */
+    protected function getUrl(): string
     {
         return 'https://registry.npmjs.org';
     }
 
-    protected function getPackageUrl()
+    /**
+     * {@inheritDoc}
+     */
+    protected function getPackageUrl(): string
     {
-        return $this->canonicalizeUrl($this->baseUrl.'/%package%');
+        return $this->canonicalizeUrl($this->baseUrl . '/%package%');
+    }
+    /**
+     * {@inheritDoc}
+     */
+    protected function getSearchUrl(): string
+    {
+        return $this->canonicalizeUrl($this->baseUrl . '/-/all');
     }
 
-    protected function getSearchUrl()
-    {
-        return $this->canonicalizeUrl($this->baseUrl.'/-/all');
-    }
-
-    protected function buildPackageUrl($packageName)
+    /**
+     * {@inheritDoc}
+     */
+    protected function buildPackageUrl(string $packageName): string
     {
         $packageName = urlencode(NpmPackageUtil::revertName($packageName));
         $packageName = str_replace('%40', '@', $packageName);
@@ -60,9 +78,18 @@ class NpmRepository extends AbstractAssetsRepository
         return parent::buildPackageUrl($packageName);
     }
 
-    protected function createVcsRepositoryConfig(array $data, $registryName = null)
+    /**
+     * {@inheritDoc}
+     */
+    #[ArrayShape([
+        'type' => 'string',
+        'url' => 'string',
+        'name' => 'string',
+        'registry-versions' => 'array'
+    ])]
+    protected function createVcsRepositoryConfig(array $data, string $registryName = null): array
     {
-        $type = isset($data['repository']['type']) ? $data['repository']['type'] : 'vcs';
+        $type = $data['repository']['type'] ?? 'vcs';
 
         // Add release date in $packageConfigs
         if (isset($data['versions'], $data['time'])) {
@@ -72,43 +99,48 @@ class NpmRepository extends AbstractAssetsRepository
             });
         }
 
-        return array(
-            'type' => $this->assetType->getName().'-'.$type,
+        return [
+            'type' => $this->assetType->getName() . '-' . $type,
             'url' => $this->getVcsRepositoryUrl($data, $registryName),
             'name' => $registryName,
-            'registry-versions' => isset($data['versions']) ? $this->createArrayRepositoryConfig($data['versions']) : array(),
-        );
+            'registry-versions' => isset($data['versions']) ? $this->createArrayRepositoryConfig($data['versions']) : [],
+        ];
     }
 
-    protected function whatProvidesManageException(Pool $pool, $name, \Exception $exception)
+    /**
+     * {@inheritDoc}
+     */
+    protected function whatProvidesManageException(string $name, \Exception $exception): void
     {
         if ($exception instanceof InvalidCreateRepositoryException) {
             $data = $exception->getData();
 
             if (isset($data['versions']) && !empty($data['versions'])) {
-                $this->putArrayRepositoryConfig($data['versions'], $name, $pool);
+                $this->putArrayRepositoryConfig($data['versions'], $name);
 
                 return;
             }
         }
 
-        parent::whatProvidesManageException($pool, $name, $exception);
+        parent::whatProvidesManageException($name, $exception);
     }
 
     /**
      * Create and put the array repository with the asset configs.
      *
-     * @param array  $packageConfigs The configs of assets package versions
-     * @param string $name           The asset package name
-     * @param Pool   $pool           The pool
+     * @param array $packageConfigs The configs of assets package versions
+     * @param string $name The asset package name
+     * @param Pool $pool The pool
+     *
+     * @return void
      */
-    protected function putArrayRepositoryConfig(array $packageConfigs, $name, Pool $pool)
+    protected function putArrayRepositoryConfig(array $packageConfigs, string $name): void
     {
         $packages = $this->createArrayRepositoryConfig($packageConfigs);
         $repo = new ArrayRepository($packages);
-        Util::addRepositoryInstance($this->io, $this->repositoryManager, $this->repos, $name, $repo, $pool);
+        Util::addRepositoryInstance($this->io, $this->repositoryManager, $this->repos, $name, $repo);
 
-        $this->providers[$name] = array();
+        $this->providers[$name] = [];
     }
 
     /**
@@ -122,9 +154,9 @@ class NpmRepository extends AbstractAssetsRepository
      *
      * @return CompletePackageInterface[]
      */
-    protected function createArrayRepositoryConfig(array $packageConfigs)
+    protected function createArrayRepositoryConfig(array $packageConfigs): array
     {
-        $packages = array();
+        $packages = [];
         $loader = new ArrayLoader();
 
         foreach ($packageConfigs as $version => $config) {
@@ -144,25 +176,24 @@ class NpmRepository extends AbstractAssetsRepository
     /**
      * Get the URL of VCS repository.
      *
-     * @param array  $data         The repository config
-     * @param string $registryName The package name in asset registry
-     *
-     * @throws InvalidCreateRepositoryException When the repository.url parameter does not exist
+     * @param array $data The repository config
+     * @param string|null $registryName The package name in asset registry
      *
      * @return string
+     * @throws InvalidCreateRepositoryException When the repository.url parameter does not exist
      */
-    protected function getVcsRepositoryUrl(array $data, $registryName = null)
+    protected function getVcsRepositoryUrl(array $data, ?string $registryName = null): string
     {
         if (!isset($data['repository']['url'])) {
             $msg = sprintf('The "repository.url" parameter of "%s" %s asset package must be present for create a VCS Repository', $registryName, $this->assetType->getName());
-            $msg .= PHP_EOL.'If the config comes from the NPM Registry, override the config with a custom Asset VCS Repository';
+            $msg .= PHP_EOL . 'If the config comes from the NPM Registry, override the config with a custom Asset VCS Repository';
             $ex = new InvalidCreateRepositoryException($msg);
             $ex->setData($data);
 
             throw $ex;
         }
 
-        return $this->convertUrl((string) $data['repository']['url']);
+        return $this->convertUrl((string)$data['repository']['url']);
     }
 
     /**
@@ -172,9 +203,9 @@ class NpmRepository extends AbstractAssetsRepository
      *
      * @return string The url converted
      */
-    private function convertUrl($url)
+    private function convertUrl(string $url): string
     {
-        if (0 === strpos($url, 'git+http')) {
+        if (str_starts_with($url, 'git+http')) {
             return substr($url, 4);
         }
 

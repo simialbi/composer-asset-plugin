@@ -25,63 +25,83 @@ abstract class AbstractAssetType implements AssetTypeInterface
     /**
      * @var PackageConverterInterface
      */
-    protected $packageConverter;
+    protected PackageConverterInterface $packageConverter;
 
     /**
      * @var VersionConverterInterface
      */
-    protected $versionConverter;
+    protected VersionConverterInterface $versionConverter;
 
     /**
      * Constructor.
      *
-     * @param PackageConverterInterface $packageConverter
-     * @param VersionConverterInterface $versionConverter
+     * @param PackageConverterInterface|null $packageConverter
+     * @param VersionConverterInterface|null $versionConverter
      */
     public function __construct(PackageConverterInterface $packageConverter = null, VersionConverterInterface $versionConverter = null)
     {
-        $this->packageConverter = !$packageConverter ? $this->createPackageConverter() : $packageConverter;
-        $this->versionConverter = !$versionConverter ? new SemverConverter() : $versionConverter;
+        $this->packageConverter = $packageConverter ?? $this->createPackageConverter();
+        $this->versionConverter = $versionConverter ?? new SemverConverter();
     }
 
-    public function getComposerVendorName()
+    /**
+     * {@inheritDoc}
+     */
+    public function getComposerVendorName(): string
     {
-        return $this->getName().'-asset';
+        return $this->getName() . '-asset';
     }
 
-    public function getComposerType()
+    /**
+     * {@inheritDoc}
+     */
+    public function getComposerType(): string
     {
-        return $this->getName().'-asset-library';
+        return $this->getName() . '-asset-library';
     }
 
-    public function getFilename()
+    /**
+     * {@inheritDoc}
+     */
+    public function getFilename(): string
     {
-        return $this->getName().'.json';
+        return $this->getName() . '.json';
     }
 
-    public function getPackageConverter()
+    /**
+     * {@inheritDoc}
+     */
+    public function getPackageConverter(): PackageConverterInterface
     {
         return $this->packageConverter;
     }
 
-    public function getVersionConverter()
+    /**
+     * {@inheritDoc}
+     */
+    public function getVersionConverter(): VersionConverterInterface
     {
         return $this->versionConverter;
     }
 
-    public function formatComposerName($name)
+    /**
+     * {@inheritDoc}
+     */
+    public function formatComposerName(string $name): string
     {
-        $prefix = $this->getComposerVendorName().'/';
+        $prefix = $this->getComposerVendorName() . '/';
 
-        if (preg_match('/(:\/\/)|@/', $name) || 0 === strpos($name, $prefix)) {
+        if (preg_match('/(:\/\/)|@/', $name) || str_starts_with($name, $prefix)) {
             return $name;
         }
 
-        return $prefix.$name;
+        return $prefix . $name;
     }
 
     /**
+     * Create package converter.
+     *
      * @return PackageConverterInterface
      */
-    abstract protected function createPackageConverter();
+    abstract protected function createPackageConverter(): PackageConverterInterface;
 }

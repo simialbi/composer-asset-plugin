@@ -29,21 +29,24 @@ class Util
      *
      * @return bool
      */
-    public static function isSha($identifier)
+    public static function isSha(string $identifier): bool
     {
-        return (bool) preg_match('{[a-f0-9]{40}}i', $identifier);
+        return (bool)preg_match('{[a-f0-9]{40}}i', $identifier);
     }
 
     /**
-     * @param array  $cacheCode  The cache code
-     * @param Cache  $cache      The cache filesystem
-     * @param string $type       The asset type
+     * Read from cache.
+     *
+     * @param array $cacheCode The cache code
+     * @param Cache $cache The cache filesystem
+     * @param string $type The asset type
      * @param string $identifier The identifier
-     * @param bool   $force      Force the read
+     * @param bool $force Force the read
      *
      * @return null|array
+     * @throws \Seld\JsonLint\ParsingException
      */
-    public static function readCache(array $cacheCode, Cache $cache, $type, $identifier, $force = false)
+    public static function readCache(array $cacheCode, Cache $cache, string $type, string $identifier, bool $force = false): ?array
     {
         if (\array_key_exists($identifier, $cacheCode)) {
             return $cacheCode[$identifier];
@@ -51,7 +54,7 @@ class Util
 
         $data = null;
         if (self::isSha($identifier) || $force) {
-            $res = $cache->read($type.'-'.$identifier);
+            $res = $cache->read($type . '-' . $identifier);
 
             if ($res) {
                 $data = JsonFile::parseJson($res);
@@ -62,35 +65,44 @@ class Util
     }
 
     /**
-     * @param Cache  $cache      The cache
-     * @param string $type       The asset type
-     * @param string $identifier The identifier
-     * @param array  $composer   The data composer
-     * @param bool   $force      Force the write
+     * Write to cache
      *
+     * @param Cache $cache The cache
+     * @param string $type The asset type
+     * @param string $identifier The identifier
+     * @param array $composer The data composer
+     * @param bool $force Force the write
+     *
+     * @return void
      * @throws
      */
-    public static function writeCache(Cache $cache, $type, $identifier, array $composer, $force = false)
+    public static function writeCache(Cache $cache, string $type, string $identifier, array $composer, bool $force = false): void
     {
         if (self::isSha($identifier) || $force) {
-            $cache->write($type.'-'.$identifier, json_encode($composer));
+            $cache->write($type . '-' . $identifier, json_encode($composer));
         }
     }
 
     /**
      * Add time in composer.
      *
-     * @param array              $composer    The composer
-     * @param string             $resourceKey The composer key
-     * @param string             $resource    The resource url
-     * @param VcsDriverInterface $driver      The vcs driver
-     * @param string             $method      The method for get content
+     * @param array $composer The composer
+     * @param string $resourceKey The composer key
+     * @param string $resource The resource url
+     * @param VcsDriverInterface $driver The vcs driver
+     * @param string $method The method for get content
      *
-     * @throws
-     *
-     * @return array The composer
+     * @return array|null The composer
+     * @throws \ReflectionException
+     * @throws \Seld\JsonLint\ParsingException
      */
-    public static function addComposerTime(array $composer, $resourceKey, $resource, VcsDriverInterface $driver, $method = 'getContents')
+    public static function addComposerTime(
+        array $composer,
+        string $resourceKey,
+        string $resource,
+        VcsDriverInterface $driver,
+        string $method = 'getContents'
+    ): ?array
     {
         if (!isset($composer['time'])) {
             $ref = new \ReflectionClass($driver);

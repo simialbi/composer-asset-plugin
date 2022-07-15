@@ -26,42 +26,42 @@ interface AssetTypeInterface
      *
      * @return string
      */
-    public function getName();
+    public function getName(): string;
 
     /**
      * Gets the composer vendor name.
      *
      * @return string
      */
-    public function getComposerVendorName();
+    public function getComposerVendorName(): string;
 
     /**
      * Gets the type of the composer package.
      *
      * @return string
      */
-    public function getComposerType();
+    public function getComposerType(): string;
 
     /**
      * Gets the filename of asset package.
      *
      * @return string
      */
-    public function getFilename();
+    public function getFilename(): string;
 
     /**
      * Gets the version converter.
      *
      * @return VersionConverterInterface
      */
-    public function getVersionConverter();
+    public function getVersionConverter(): VersionConverterInterface;
 
     /**
      * Gets the package converter.
      *
      * @return PackageConverterInterface
      */
-    public function getPackageConverter();
+    public function getPackageConverter(): PackageConverterInterface;
 
     /**
      * Formats the package name with composer vendor if the name is not an URL.
@@ -70,5 +70,5 @@ interface AssetTypeInterface
      *
      * @return string
      */
-    public function formatComposerName($name);
+    public function formatComposerName(string $name): string;
 }

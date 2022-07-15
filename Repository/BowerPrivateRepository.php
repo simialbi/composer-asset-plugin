@@ -14,10 +14,12 @@ namespace Fxp\Composer\AssetPlugin\Repository;
 use Composer\Config;
 use Composer\EventDispatcher\EventDispatcher;
 use Composer\IO\IOInterface;
+use Composer\Util\HttpDownloader;
 use Fxp\Composer\AssetPlugin\Exception\InvalidCreateRepositoryException;
+use JetBrains\PhpStorm\ArrayShape;
 
 /**
- * Bower repository for Private Instaltions.
+ * Bower repository for Private Installations.
  *
  * @author Marcus Stueben <marcus@it-stueben.de>
  */
@@ -26,70 +28,92 @@ class BowerPrivateRepository extends AbstractAssetsRepository
     /**
      * Constructor.
      *
-     * @param EventDispatcher $eventDispatcher
+     * @param array $repoConfig
+     * @param IOInterface $io
+     * @param Config $config
+     * @param HttpDownloader $httpDownloader
+     * @param EventDispatcher|null $eventDispatcher
      */
-    public function __construct(array $repoConfig, IOInterface $io, Config $config, EventDispatcher $eventDispatcher = null)
+    public function __construct(array $repoConfig, IOInterface $io, Config $config, HttpDownloader $httpDownloader, EventDispatcher $eventDispatcher = null)
     {
-        $this->url = isset($repoConfig['private-registry-url'])
-            ? $repoConfig['private-registry-url']
-            : null;
+        $this->url = $repoConfig['private-registry-url'] ?? null;
 
-        parent::__construct($repoConfig, $io, $config, $eventDispatcher);
+        parent::__construct($repoConfig, $io, $config, $httpDownloader, $eventDispatcher);
     }
 
-    protected function getType()
+    /**
+     * {@inheritDoc}
+     */
+    protected function getType(): string
     {
         return 'bower';
     }
 
-    protected function getUrl()
+    /**
+     * {@inheritDoc}
+     */
+    protected function getUrl(): string
     {
         return $this->url;
     }
 
-    protected function getPackageUrl()
+    /**
+     * {@inheritDoc}
+     */
+    protected function getPackageUrl(): string
     {
-        return $this->canonicalizeUrl($this->baseUrl.'/%package%');
+        return $this->canonicalizeUrl($this->baseUrl . '/%package%');
     }
 
-    protected function getSearchUrl()
+    /**
+     * {@inheritDoc}
+     */
+    protected function getSearchUrl(): string
     {
-        return $this->canonicalizeUrl($this->baseUrl.'/search/%query%');
+        return $this->canonicalizeUrl($this->baseUrl . '/search/%query%');
     }
 
-    protected function createVcsRepositoryConfig(array $data, $registryName = null)
+    /**
+     * {@inheritDoc}
+     * @throws InvalidCreateRepositoryException
+     */
+    #[ArrayShape([
+        'type' => 'string',
+        'url' => 'string',
+        'name' => 'string'
+    ])]
+    protected function createVcsRepositoryConfig(array $data, string $registryName = null): array
     {
-        $myArray = array();
+        $myArray = [];
         $myArray['repository'] = $data;
 
-        return array(
-            'type' => $this->assetType->getName().'-vcs',
+        return [
+            'type' => $this->assetType->getName() . '-vcs',
             'url' => $this->getVcsRepositoryUrl($myArray, $registryName),
-            'name' => $registryName,
-        );
+            'name' => $registryName
+        ];
     }
 
     /**
      * Get the URL of VCS repository.
      *
-     * @param array  $data         The repository config
-     * @param string $registryName The package name in asset registry
-     *
-     * @throws InvalidCreateRepositoryException When the repository.url parameter does not exist
+     * @param array $data The repository config
+     * @param string|null $registryName The package name in asset registry
      *
      * @return string
+     * @throws InvalidCreateRepositoryException When the repository.url parameter does not exist
      */
-    protected function getVcsRepositoryUrl(array $data, $registryName = null)
+    protected function getVcsRepositoryUrl(array $data, ?string $registryName = null): string
     {
         if (!isset($data['repository']['url'])) {
             $msg = sprintf('The "repository.url" parameter of "%s" %s asset package must be present for create a VCS Repository', $registryName, $this->assetType->getName());
-            $msg .= PHP_EOL.'If the config comes from the Bower Private Registry, override the config with a custom Asset VCS Repository';
+            $msg .= PHP_EOL . 'If the config comes from the Bower Private Registry, override the config with a custom Asset VCS Repository';
             $ex = new InvalidCreateRepositoryException($msg);
             $ex->setData($data);
 
             throw $ex;
         }
 
-        return (string) $data['repository']['url'];
+        return (string)$data['repository']['url'];
     }
 }

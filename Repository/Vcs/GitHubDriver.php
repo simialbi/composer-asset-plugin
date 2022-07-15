@@ -26,7 +26,7 @@ class GitHubDriver extends AbstractGitHubDriver
      *
      * @throws
      */
-    public function getComposerInformation($identifier)
+    public function getComposerInformation($identifier): ?array
     {
         if ($this->gitDriver) {
             return $this->gitDriver->getComposerInformation($identifier);
@@ -35,13 +35,13 @@ class GitHubDriver extends AbstractGitHubDriver
         $this->infoCache[$identifier] = Util::readCache($this->infoCache, $this->cache, $this->repoConfig['asset-type'], $identifier);
 
         if (!isset($this->infoCache[$identifier])) {
-            $resource = $this->getApiUrl().'/repos/'.$this->owner.'/'.$this->repository.'/contents/'.$this->repoConfig['filename'].'?ref='.urlencode($identifier);
+            $resource = $this->getApiUrl() . '/repos/' . $this->owner . '/' . $this->repository . '/contents/' . $this->repoConfig['filename'] . '?ref=' . urlencode($identifier);
             $composer = $this->getComposerContent($resource);
 
             if ($composer) {
                 $composer = $this->convertComposerContent($composer, $resource, $identifier);
             } else {
-                $composer = array('_nonexistent_package' => true);
+                $composer = ['_nonexistent_package' => true];
             }
 
             Util::writeCache($this->cache, $this->repoConfig['asset-type'], $identifier, $composer);
@@ -56,13 +56,13 @@ class GitHubDriver extends AbstractGitHubDriver
      *
      * @param string $resource
      *
-     * @throws \RuntimeException
+     * @return string|false|null
+     *
      * @throws TransportException
      * @throws \Exception
-     *
-     * @return null|array|false
+     * @throws \RuntimeException
      */
-    protected function getComposerContent($resource)
+    protected function getComposerContent(string $resource): string|false|null
     {
         $notFoundRetries = 2;
         $composer = null;
@@ -91,16 +91,15 @@ class GitHubDriver extends AbstractGitHubDriver
      *
      * @param string $resource
      *
+     * @return string
      * @throws \RuntimeException When the resource could not be retrieved
-     *
-     * @return array
      */
-    protected function parseComposerContent($resource)
+    protected function parseComposerContent(string $resource): string
     {
-        $composer = (array) JsonFile::parseJson($this->getContents($resource));
+        $composer = (array)$this->getContents($resource)->decodeJson();
 
-        if (empty($composer['content']) || 'base64' !== $composer['encoding'] || !($composer = base64_decode($composer['content'], true))) {
-            throw new \RuntimeException('Could not retrieve '.$this->repoConfig['filename'].' from '.$resource);
+        if (empty($composer['content']) || 'base64' !== $composer['encoding'] || !($composer = base64_decode($composer['content'], true))) { // todo
+            throw new \RuntimeException('Could not retrieve ' . $this->repoConfig['filename'] . ' from ' . $resource);
         }
 
         return $composer;
@@ -114,11 +113,13 @@ class GitHubDriver extends AbstractGitHubDriver
      * @param string $identifier
      *
      * @return array
+     * @throws \ReflectionException
+     * @throws \Seld\JsonLint\ParsingException
      */
-    protected function convertComposerContent($composer, $resource, $identifier)
+    protected function convertComposerContent(string $composer, string $resource, string $identifier): array
     {
         $composer = JsonFile::parseJson($composer, $resource);
-        $resource = $this->getApiUrl().'/repos/'.$this->owner.'/'.$this->repository.'/commits/'.urlencode($identifier);
+        $resource = "{$this->getApiUrl()}/repos/$this->owner/$this->repository/commits/" . urlencode($identifier);
         $composer = Util::addComposerTime($composer, 'commit.committer.date', $resource, $this);
 
         if (!isset($composer['support']['source'])) {
@@ -136,20 +137,22 @@ class GitHubDriver extends AbstractGitHubDriver
      * Setup git driver.
      *
      * @param string $url
+     *
+     * @return void
      */
-    protected function setupGitDriver($url)
+    protected function setupGitDriver(string $url): void
     {
         $this->gitDriver = new GitDriver(
-            array(
+            [
                 'url' => $url,
                 'asset-type' => $this->repoConfig['asset-type'],
                 'filename' => $this->repoConfig['filename'],
-                'asset-repository-manager' => $this->repoConfig['asset-repository-manager'],
-            ),
+                'asset-repository-manager' => $this->repoConfig['asset-repository-manager']
+            ],
             $this->io,
             $this->config,
-            $this->process,
-            $this->remoteFilesystem
+            $this->httpDownloader,
+            $this->process
         );
         $this->gitDriver->initialize();
     }

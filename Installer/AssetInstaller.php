@@ -31,12 +31,16 @@ class AssetInstaller extends LibraryInstaller
     /**
      * @var Config
      */
-    private $config;
+    private Config $config;
 
     /**
      * Constructor.
      *
-     * @param Filesystem $filesystem
+     * @param Config $config
+     * @param IOInterface $io
+     * @param Composer $composer
+     * @param AssetTypeInterface $assetType
+     * @param Filesystem|null $filesystem
      */
     public function __construct(Config $config, IOInterface $io, Composer $composer, AssetTypeInterface $assetType, Filesystem $filesystem = null)
     {
@@ -48,32 +52,44 @@ class AssetInstaller extends LibraryInstaller
         if (!empty($paths[$this->type])) {
             $this->vendorDir = rtrim($paths[$this->type], '/');
         } else {
-            $this->vendorDir = rtrim($this->vendorDir.'/'.$assetType->getComposerVendorName(), '/');
+            $this->vendorDir = rtrim($this->vendorDir . '/' . $assetType->getComposerVendorName(), '/');
         }
     }
 
-    public function supports($packageType)
+    /**
+     * {@inheritDoc}
+     */
+    public function supports(string $packageType): bool
     {
         return $packageType === $this->type;
     }
 
-    public function getInstallPath(PackageInterface $package)
+    /**
+     * {@inheritDoc}
+     */
+    public function getInstallPath(PackageInterface $package): string
     {
         $this->initializeVendorDir();
 
         $targetDir = $package->getTargetDir();
 
-        list(, $name) = explode('/', $package->getPrettyName(), 2);
+        [, $name] = explode('/', $package->getPrettyName(), 2);
 
-        return ($this->vendorDir ? $this->vendorDir.'/' : '').$name.($targetDir ? '/'.$targetDir : '');
+        return ($this->vendorDir ? $this->vendorDir . '/' : '') . $name . ($targetDir ? '/' . $targetDir : '');
     }
 
-    protected function getPackageBasePath(PackageInterface $package)
+    /**
+     * {@inheritDoc}
+     */
+    protected function getPackageBasePath(PackageInterface $package): string
     {
         return $this->getInstallPath($package);
     }
 
-    protected function installCode(PackageInterface $package)
+    /**
+     * {@inheritDoc}
+     */
+    protected function installCode(PackageInterface $package): void
     {
         $package = AssetPlugin::addMainFiles($this->config, $package);
 
@@ -82,7 +98,10 @@ class AssetInstaller extends LibraryInstaller
         $this->deleteIgnoredFiles($package);
     }
 
-    protected function updateCode(PackageInterface $initial, PackageInterface $target)
+    /**
+     * {@inheritDoc}
+     */
+    protected function updateCode(PackageInterface $initial, PackageInterface $target): void
     {
         $target = AssetPlugin::addMainFiles($this->config, $target);
 
@@ -93,8 +112,12 @@ class AssetInstaller extends LibraryInstaller
 
     /**
      * Deletes files defined in bower.json in section "ignore".
+     *
+     * @param PackageInterface $package
+     *
+     * @return void
      */
-    protected function deleteIgnoredFiles(PackageInterface $package)
+    protected function deleteIgnoredFiles(PackageInterface $package): void
     {
         $manager = IgnoreFactory::create($this->config, $this->composer, $package, $this->getInstallPath($package));
 
@@ -108,10 +131,12 @@ class AssetInstaller extends LibraryInstaller
     /**
      * Add ignore patterns in the manager.
      *
-     * @param IgnoreManager    $manager The ignore manager instance
+     * @param IgnoreManager $manager The ignore manager instance
      * @param PackageInterface $package The package instance
+     *
+     * @return void
      */
-    protected function addIgnorePatterns(IgnoreManager $manager, PackageInterface $package)
+    protected function addIgnorePatterns(IgnoreManager $manager, PackageInterface $package): void
     {
         // override this method
     }

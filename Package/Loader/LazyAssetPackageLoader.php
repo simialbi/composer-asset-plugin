@@ -31,96 +31,113 @@ class LazyAssetPackageLoader implements LazyLoaderInterface
     /**
      * @var string
      */
-    protected $type;
+    protected string $type;
 
     /**
      * @var string
      */
-    protected $identifier;
+    protected string $identifier;
 
     /**
      * @var array
      */
-    protected $packageData;
+    protected array $packageData;
 
     /**
      * @var AssetTypeInterface
      */
-    protected $assetType;
+    protected AssetTypeInterface $assetType;
 
     /**
      * @var LoaderInterface
      */
-    protected $loader;
+    protected LoaderInterface $loader;
 
     /**
      * @var VcsDriverInterface
      */
-    protected $driver;
+    protected VcsDriverInterface $driver;
 
     /**
      * @var IOInterface
      */
-    protected $io;
+    protected IOInterface $io;
 
     /**
      * @var AssetRepositoryManager
      */
-    protected $assetRepositoryManager;
+    protected AssetRepositoryManager $assetRepositoryManager;
 
     /**
      * @var bool
      */
-    protected $verbose;
+    protected bool $verbose;
 
     /**
      * @var array
      */
-    protected $cache;
+    protected array $cache;
 
     /**
      * Constructor.
      *
-     * @param string $identifier
      * @param string $type
+     * @param string $identifier
+     * @param array $packageData
      */
-    public function __construct($type, $identifier, array $packageData)
+    public function __construct(string $type, string $identifier, array $packageData)
     {
         $this->identifier = $identifier;
         $this->type = $type;
         $this->packageData = $packageData;
         $this->verbose = false;
-        $this->cache = array();
+        $this->cache = [];
     }
 
     /**
      * Sets the asset type.
+     *
+     * @param AssetTypeInterface $assetType
+     *
+     * @return void
      */
-    public function setAssetType(AssetTypeInterface $assetType)
+    public function setAssetType(AssetTypeInterface $assetType): void
     {
         $this->assetType = $assetType;
     }
 
     /**
-     * Sets the laoder.
+     * Sets the loader.
+     *
+     * @param LoaderInterface $loader
+     *
+     * @return void
      */
-    public function setLoader(LoaderInterface $loader)
+    public function setLoader(LoaderInterface $loader): void
     {
         $this->loader = $loader;
     }
 
     /**
      * Sets the driver.
+     *
+     * @param VcsDriverInterface $driver
+     *
+     * @return void
      */
-    public function setDriver(VcsDriverInterface $driver)
+    public function setDriver(VcsDriverInterface $driver): void
     {
         $this->driver = $driver;
     }
 
     /**
      * Sets the IO.
+     *
+     * @param IOInterface $io
+     *
+     * @return void
      */
-    public function setIO(IOInterface $io)
+    public function setIO(IOInterface $io): void
     {
         $this->io = $io;
         $this->verbose = $io->isVerbose();
@@ -130,13 +147,18 @@ class LazyAssetPackageLoader implements LazyLoaderInterface
      * Sets the asset repository manager.
      *
      * @param AssetRepositoryManager $assetRepositoryManager The asset repository manager
+     *
+     * @return void
      */
-    public function setAssetRepositoryManager(AssetRepositoryManager $assetRepositoryManager)
+    public function setAssetRepositoryManager(AssetRepositoryManager $assetRepositoryManager): void
     {
         $this->assetRepositoryManager = $assetRepositoryManager;
     }
 
-    public function load(LazyPackageInterface $package)
+    /**
+     * {@inheritDoc}
+     */
+    public function load(LazyPackageInterface $package): LazyPackageInterface|false
     {
         if (isset($this->cache[$package->getUniqueName()])) {
             return $this->cache[$package->getUniqueName()];
@@ -144,7 +166,7 @@ class LazyAssetPackageLoader implements LazyLoaderInterface
         $this->validateConfig();
 
         $filename = $this->assetType->getFilename();
-        $msg = 'Reading '.$filename.' of <info>'.$package->getName().'</info> (<comment>'.$package->getPrettyVersion().'</comment>)';
+        $msg = 'Reading ' . $filename . ' of <info>' . $package->getName() . '</info> (<comment>' . $package->getPrettyVersion() . '</comment>)';
         if ($this->verbose) {
             $this->io->write($msg);
         } else {
@@ -164,11 +186,12 @@ class LazyAssetPackageLoader implements LazyLoaderInterface
     /**
      * Validates the class config.
      *
+     * @return void
      * @throws InvalidArgumentException When the property of this class is not defined
      */
-    protected function validateConfig()
+    protected function validateConfig(): void
     {
-        foreach (array('assetType', 'loader', 'driver', 'io') as $property) {
+        foreach (['assetType', 'loader', 'driver', 'io'] as $property) {
             if (null === $this->{$property}) {
                 throw new InvalidArgumentException(sprintf('The "%s" property must be defined', $property));
             }
@@ -178,9 +201,11 @@ class LazyAssetPackageLoader implements LazyLoaderInterface
     /**
      * Loads the real package.
      *
+     * @param LazyPackageInterface $package
+     *
      * @return CompletePackageInterface|false
      */
-    protected function loadRealPackage(LazyPackageInterface $package)
+    protected function loadRealPackage(LazyPackageInterface $package): CompletePackageInterface|false
     {
         $realPackage = false;
 
@@ -190,7 +215,7 @@ class LazyAssetPackageLoader implements LazyLoaderInterface
             $data = $this->preProcess($this->driver, $this->validateData($data), $this->identifier);
 
             if ($this->verbose) {
-                $this->io->write('Importing '.($valid ? '' : 'empty ').$this->type.' '.$data['version'].' ('.$data['version_normalized'].')');
+                $this->io->write('Importing ' . ($valid ? '' : 'empty ') . $this->type . ' ' . $data['version'] . ' (' . $data['version_normalized'] . ')');
             }
 
             /** @var CompletePackageInterface $realPackage */
@@ -198,7 +223,7 @@ class LazyAssetPackageLoader implements LazyLoaderInterface
         } catch (\Exception $e) {
             if ($this->verbose) {
                 $filename = $this->assetType->getFilename();
-                $this->io->write('<'.$this->getIoTag().'>Skipped '.$this->type.' '.$package->getPrettyVersion().', '.($e instanceof TransportException ? 'no '.$filename.' file was found' : $e->getMessage()).'</'.$this->getIoTag().'>');
+                $this->io->write('<' . $this->getIoTag() . '>Skipped ' . $this->type . ' ' . $package->getPrettyVersion() . ', ' . ($e instanceof TransportException ? 'no ' . $filename . ' file was found' : $e->getMessage()) . '</' . $this->getIoTag() . '>');
             }
         }
         $this->driver->cleanup();
@@ -207,13 +232,13 @@ class LazyAssetPackageLoader implements LazyLoaderInterface
     }
 
     /**
-     * @param array|bool $data
+     * @param bool|array $data
      *
      * @return array
      */
-    protected function validateData($data)
+    protected function validateData(bool|array $data): array
     {
-        return \is_array($data) ? $data : array();
+        return \is_array($data) ? $data : [];
     }
 
     /**
@@ -221,7 +246,7 @@ class LazyAssetPackageLoader implements LazyLoaderInterface
      *
      * @return string
      */
-    protected function getIoTag()
+    protected function getIoTag(): string
     {
         return 'branch' === $this->type ? 'error' : 'warning';
     }
@@ -229,13 +254,15 @@ class LazyAssetPackageLoader implements LazyLoaderInterface
     /**
      * Pre process the data of package before the conversion to Package instance.
      *
+     * @param VcsDriverInterface $driver
+     * @param array $data
      * @param string $identifier
      *
      * @return array
      */
-    protected function preProcess(VcsDriverInterface $driver, array $data, $identifier)
+    protected function preProcess(VcsDriverInterface $driver, array $data, string $identifier): array
     {
-        $vcsRepos = array();
+        $vcsRepos = [];
         $data = array_merge($data, $this->packageData);
         $data = $this->assetType->getPackageConverter()->convert($data, $vcsRepos);
 
@@ -248,16 +275,18 @@ class LazyAssetPackageLoader implements LazyLoaderInterface
             $data['source'] = $driver->getSource($identifier);
         }
 
-        return $this->assetRepositoryManager->solveResolutions((array) $data);
+        return $this->assetRepositoryManager->solveResolutions($data);
     }
 
     /**
      * Dispatches the vcs repositories event.
+     *
+     * @param array $vcsRepositories
+     *
+     * @return void
      */
-    protected function addRepositories(array $vcsRepositories)
+    protected function addRepositories(array $vcsRepositories): void
     {
-        if (null !== $this->assetRepositoryManager) {
-            $this->assetRepositoryManager->addRepositories($vcsRepositories);
-        }
+        $this->assetRepositoryManager->addRepositories($vcsRepositories);
     }
 }

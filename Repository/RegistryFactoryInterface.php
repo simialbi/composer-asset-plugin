@@ -11,6 +11,7 @@
 
 namespace Fxp\Composer\AssetPlugin\Repository;
 
+use Composer\Util\HttpDownloader;
 use Fxp\Composer\AssetPlugin\Config\Config;
 
 /**
@@ -23,9 +24,11 @@ interface RegistryFactoryInterface
     /**
      * Create the repository registries.
      *
-     * @param AssetRepositoryManager $arm    The asset repository manager
-     * @param VcsPackageFilter       $filter The vcs package filter
-     * @param Config                 $config The plugin config
+     * @param AssetRepositoryManager $arm The asset repository manager
+     * @param VcsPackageFilter $filter The vcs package filter
+     * @param Config $config The plugin config
+     *
+     * @return void
      */
-    public static function create(AssetRepositoryManager $arm, VcsPackageFilter $filter, Config $config);
+    public static function create(AssetRepositoryManager $arm, VcsPackageFilter $filter, Config $config): void;
 }

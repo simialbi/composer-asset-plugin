@@ -22,110 +22,154 @@ use Fxp\Composer\AssetPlugin\Package\Loader\LazyLoaderInterface;
 abstract class AbstractLazyCompletePackage extends CompletePackage implements LazyPackageInterface
 {
     /**
-     * @var LazyLoaderInterface
+     * @var LazyLoaderInterface|null
      */
-    protected $lazyLoader;
+    protected ?LazyLoaderInterface $lazyLoader;
 
-    public function getAutoload()
+    /**
+     * {@inheritDoc}
+     */
+    public function getAutoload(): array
     {
         $this->initialize();
 
         return parent::getAutoload();
     }
 
-    public function getDevAutoload()
+    /**
+     * {@inheritDoc}
+     */
+    public function getDevAutoload(): array
     {
         $this->initialize();
 
         return parent::getDevAutoload();
     }
 
-    public function getIncludePaths()
+    /**
+     * {@inheritDoc}
+     */
+    public function getIncludePaths(): array
     {
         $this->initialize();
 
         return parent::getIncludePaths();
     }
 
-    public function getNotificationUrl()
+    /**
+     * {@inheritDoc}
+     */
+    public function getNotificationUrl(): string
     {
         $this->initialize();
 
         return parent::getNotificationUrl();
     }
 
-    public function getArchiveExcludes()
+    /**
+     * {@inheritDoc}
+     */
+    public function getArchiveExcludes(): array
     {
         $this->initialize();
 
         return parent::getArchiveExcludes();
     }
 
-    public function getScripts()
+    /**
+     * {@inheritDoc}
+     */
+    public function getScripts(): array
     {
         $this->initialize();
 
         return parent::getScripts();
     }
 
-    public function getRepositories()
+    /**
+     * {@inheritDoc}
+     */
+    public function getRepositories(): array
     {
         $this->initialize();
 
         return parent::getRepositories();
     }
 
-    public function getLicense()
+    /**
+     * {@inheritDoc}
+     */
+    public function getLicense(): array
     {
         $this->initialize();
 
         return parent::getLicense();
     }
 
-    public function getKeywords()
+    /**
+     * {@inheritDoc}
+     */
+    public function getKeywords(): array
     {
         $this->initialize();
 
         return parent::getKeywords();
     }
 
-    public function getAuthors()
+    /**
+     * {@inheritDoc}
+     */
+    public function getAuthors(): array
     {
         $this->initialize();
 
         return parent::getAuthors();
     }
 
-    public function getDescription()
+    /**
+     * {@inheritDoc}
+     */
+    public function getDescription(): string
     {
         $this->initialize();
 
         return parent::getDescription();
     }
 
-    public function getHomepage()
+    /**
+     * {@inheritDoc}
+     */
+    public function getHomepage(): string
     {
         $this->initialize();
 
         return parent::getHomepage();
     }
 
-    public function getSupport()
+    /**
+     * {@inheritDoc}
+     */
+    public function getSupport(): array
     {
         $this->initialize();
 
         return parent::getSupport();
     }
 
-    public function setLoader(LazyLoaderInterface $lazyLoader)
+    /**
+     * {@inheritDoc}
+     */
+    public function setLoader(LazyLoaderInterface $lazyLoader): void
     {
         $this->lazyLoader = $lazyLoader;
     }
 
     /**
      * Initialize the package.
+     *
+     * @return void
      */
-    protected function initialize()
+    protected function initialize(): void
     {
         if (!$this->lazyLoader) {
             return;

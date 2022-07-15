@@ -13,6 +13,7 @@ namespace Fxp\Composer\AssetPlugin\Converter;
 
 use Fxp\Composer\AssetPlugin\Exception\InvalidArgumentException;
 use Fxp\Composer\AssetPlugin\Type\AssetTypeInterface;
+use JetBrains\PhpStorm\ArrayShape;
 
 /**
  * Abstract class for converter for asset package to composer package.
@@ -24,7 +25,7 @@ abstract class AbstractPackageConverter implements PackageConverterInterface
     /**
      * @var AssetTypeInterface
      */
-    protected $assetType;
+    protected AssetTypeInterface $assetType;
 
     /**
      * Constructor.
@@ -34,7 +35,7 @@ abstract class AbstractPackageConverter implements PackageConverterInterface
         $this->assetType = $assetType;
     }
 
-    public function convert(array $data, array &$vcsRepos = array())
+    public function convert(array $data, array &$vcsRepos = []): array
     {
         $keys = $this->getMapKeys();
         $dependencies = $this->getMapDependencies();
@@ -46,17 +47,17 @@ abstract class AbstractPackageConverter implements PackageConverterInterface
     /**
      * Converts the all keys (keys, dependencies and extra keys).
      *
-     * @param array $asset        The asset data
-     * @param array $keys         The map of asset key and composer key
+     * @param array $asset The asset data
+     * @param array $keys The map of asset key and composer key
      * @param array $dependencies The map of asset dependency key and composer dependency key
-     * @param array $extras       The map of asset key and composer extra key
-     * @param array $vcsRepos     The list of new vcs configs
+     * @param array $extras The map of asset key and composer extra key
+     * @param array $vcsRepos The list of new vcs configs
      *
      * @return array The composer package converted
      */
-    protected function convertData(array $asset, array $keys, array $dependencies, array $extras, array &$vcsRepos = array())
+    protected function convertData(array $asset, array $keys, array $dependencies, array $extras, array &$vcsRepos = []): array
     {
-        $composer = array();
+        $composer = [];
 
         foreach ($keys as $assetKey => $composerKey) {
             $this->convertKey($asset, $assetKey, $composer, $composerKey);
@@ -76,14 +77,15 @@ abstract class AbstractPackageConverter implements PackageConverterInterface
     /**
      * Converts the simple key of package.
      *
-     * @param array        $asset       The asset data
-     * @param string       $assetKey    The asset key
-     * @param array        $composer    The composer data
+     * @param array $asset The asset data
+     * @param string $assetKey The asset key
+     * @param array $composer The composer data
      * @param array|string $composerKey The composer key or array with composer key name and closure
      *
+     * @return void
      * @throws InvalidArgumentException When the 'composerKey' argument of asset packager converter is not an string or an array with the composer key and closure
      */
-    protected function convertKey(array $asset, $assetKey, array &$composer, $composerKey)
+    protected function convertKey(array $asset, string $assetKey, array &$composer, array|string $composerKey): void
     {
         if (\is_array($composerKey)) {
             PackageUtil::convertArrayKey($asset, $assetKey, $composer, $composerKey);
@@ -95,15 +97,17 @@ abstract class AbstractPackageConverter implements PackageConverterInterface
     /**
      * Converts the extra key of package.
      *
-     * @param array        $asset       The asset data
-     * @param string       $assetKey    The asset extra key
-     * @param array        $composer    The composer data
+     * @param array $asset The asset data
+     * @param string $assetKey The asset extra key
+     * @param array $composer The composer data
      * @param array|string $composerKey The composer extra key or array with composer extra key name and closure
-     * @param string       $extraKey    The extra key name
+     * @param string $extraKey The extra key name
+     *
+     * @return void
      */
-    protected function convertExtraKey(array $asset, $assetKey, array &$composer, $composerKey, $extraKey = 'extra')
+    protected function convertExtraKey(array $asset, string $assetKey, array &$composer, array|string $composerKey, string $extraKey = 'extra'): void
     {
-        $extra = isset($composer[$extraKey]) ? $composer[$extraKey] : array();
+        $extra = $composer[$extraKey] ?? [];
 
         $this->convertKey($asset, $assetKey, $extra, $composerKey);
 
@@ -115,22 +119,24 @@ abstract class AbstractPackageConverter implements PackageConverterInterface
     /**
      * Converts simple key of package.
      *
-     * @param array  $asset       The asset data
-     * @param string $assetKey    The asset key of dependencies
-     * @param array  $composer    The composer data
+     * @param array $asset The asset data
+     * @param string $assetKey The asset key of dependencies
+     * @param array $composer The composer data
      * @param string $composerKey The composer key of dependencies
-     * @param array  $vcsRepos    The list of new vcs configs
+     * @param array $vcsRepos The list of new vcs configs
+     *
+     * @return void
      */
-    protected function convertDependencies(array $asset, $assetKey, array &$composer, $composerKey, array &$vcsRepos = array())
+    protected function convertDependencies(array $asset, string $assetKey, array &$composer, string $composerKey, array &$vcsRepos = []): void
     {
         if (isset($asset[$assetKey]) && \is_array($asset[$assetKey])) {
-            $newDependencies = array();
+            $newDependencies = [];
 
             foreach ($asset[$assetKey] as $dependency => $version) {
-                list($dependency, $version) = $this->convertDependency($dependency, $version, $vcsRepos, $composer);
+                [$dependency, $version] = $this->convertDependency($dependency, $version, $vcsRepos, $composer);
                 $version = $this->assetType->getVersionConverter()->convertRange($version);
-                if (0 !== strpos($version, $dependency)) {
-                    $newDependencies[$this->assetType->getComposerVendorName().'/'.$dependency] = $version;
+                if (!str_starts_with($version, $dependency)) {
+                    $newDependencies[$this->assetType->getComposerVendorName() . '/' . $dependency] = $version;
                 }
             }
 
@@ -142,24 +148,29 @@ abstract class AbstractPackageConverter implements PackageConverterInterface
      * Convert the .
      *
      * @param string $dependency The dependency
-     * @param string $version    The version
-     * @param array  $vcsRepos   The list of new vcs configs
-     * @param array  $composer   The partial composer data
+     * @param string $version The version
+     * @param array $vcsRepos The list of new vcs configs
+     * @param array $composer The partial composer data
      *
      * @return string[] The new dependency and the new version
      */
-    protected function convertDependency($dependency, $version, array &$vcsRepos, array $composer)
+    protected function convertDependency(string $dependency, string $version, array &$vcsRepos, array $composer): array
     {
-        list($dependency, $version) = PackageUtil::checkUrlVersion($this->assetType, $dependency, $version, $vcsRepos, $composer);
-        list($dependency, $version) = PackageUtil::checkAliasVersion($this->assetType, $dependency, $version);
-        list($dependency, $version) = PackageUtil::convertDependencyVersion($this->assetType, $dependency, $version);
+        [$dependency, $version] = PackageUtil::checkUrlVersion($this->assetType, $dependency, $version, $vcsRepos, $composer);
+        [$dependency, $version] = PackageUtil::checkAliasVersion($this->assetType, $dependency, $version);
+        [$dependency, $version] = PackageUtil::convertDependencyVersion($this->assetType, $dependency, $version);
 
-        return array($dependency, $version);
+        return [$dependency, $version];
     }
 
-    protected function getMapKeys()
+    /**
+     * Get map keys.
+     *
+     * @return array
+     */
+    protected function getMapKeys(): array
     {
-        return array();
+        return [];
     }
 
     /**
@@ -167,15 +178,21 @@ abstract class AbstractPackageConverter implements PackageConverterInterface
      *
      * @return array
      */
-    protected function getMapDependencies()
+    #[ArrayShape(['dependencies' => "string"])]
+    protected function getMapDependencies(): array
     {
-        return array(
-            'dependencies' => 'require',
-        );
+        return [
+            'dependencies' => 'require'
+        ];
     }
 
-    protected function getMapExtras()
+    /**
+     * Get map extras.
+     *
+     * @return array
+     */
+    protected function getMapExtras(): array
     {
-        return array();
+        return [];
     }
 }

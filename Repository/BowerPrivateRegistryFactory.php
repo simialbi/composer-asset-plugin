@@ -11,6 +11,7 @@
 
 namespace Fxp\Composer\AssetPlugin\Repository;
 
+use Composer\Util\HttpDownloader;
 use Fxp\Composer\AssetPlugin\Config\Config;
 use Fxp\Composer\AssetPlugin\Util\AssetPlugin;
 
@@ -21,7 +22,10 @@ use Fxp\Composer\AssetPlugin\Util\AssetPlugin;
  */
 class BowerPrivateRegistryFactory implements RegistryFactoryInterface
 {
-    public static function create(AssetRepositoryManager $arm, VcsPackageFilter $filter, Config $config)
+    /**
+     * {@inheritDoc}
+     */
+    public static function create(AssetRepositoryManager $arm, VcsPackageFilter $filter, Config $config): void
     {
         $rm = $arm->getRepositoryManager();
         $registries = $config->getArray('private-bower-registries');

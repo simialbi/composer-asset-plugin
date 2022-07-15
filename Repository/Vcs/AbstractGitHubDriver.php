@@ -15,6 +15,7 @@ use Composer\Cache;
 use Composer\Downloader\TransportException;
 use Composer\Json\JsonFile;
 use Composer\Repository\Vcs\GitHubDriver as BaseGitHubDriver;
+use Composer\Util\Http\Response;
 use Fxp\Composer\AssetPlugin\Repository\Util as RepoUtil;
 
 /**
@@ -32,9 +33,12 @@ abstract class AbstractGitHubDriver extends BaseGitHubDriver
     /**
      * @var null|false|string
      */
-    protected $redirectApi;
+    protected string|null|false $redirectApi;
 
-    public function initialize()
+    /**
+     * {@inheritDoc}
+     */
+    public function initialize(): void
     {
         if (!isset($this->repoConfig['no-api'])) {
             $this->repoConfig['no-api'] = $this->getNoApiOption();
@@ -43,16 +47,19 @@ abstract class AbstractGitHubDriver extends BaseGitHubDriver
         parent::initialize();
     }
 
-    public function getBranches()
+    /**
+     * {@inheritDoc}
+     */
+    public function getBranches(): array
     {
         if ($this->gitDriver) {
             return $this->gitDriver->getBranches();
         }
 
         if (null === $this->branches) {
-            $this->branches = array();
-            $resource = $this->getApiUrl().'/repos/'.$this->owner.'/'.$this->repository.'/git/refs/heads?per_page=100';
-            $branchBlacklist = 'gh-pages' === $this->getRootIdentifier() ? array() : array('gh-pages');
+            $this->branches = [];
+            $resource = $this->getApiUrl() . '/repos/' . $this->owner . '/' . $this->repository . '/git/refs/heads?per_page=100';
+            $branchBlacklist = 'gh-pages' === $this->getRootIdentifier() ? [] : ['gh-pages'];
 
             $this->doAddBranches($resource, $branchBlacklist);
         }
@@ -65,33 +72,33 @@ abstract class AbstractGitHubDriver extends BaseGitHubDriver
      *
      * @return bool
      */
-    protected function getNoApiOption()
+    protected function getNoApiOption(): bool
     {
         $packageName = $this->repoConfig['package-name'];
-        $opts = RepoUtil::getArrayValue($this->repoConfig, 'vcs-driver-options', array());
-        $noApiOpt = RepoUtil::getArrayValue($opts, 'github-no-api', array());
+        $opts = RepoUtil::getArrayValue($this->repoConfig, 'vcs-driver-options', []);
+        $noApiOpt = RepoUtil::getArrayValue($opts, 'github-no-api', []);
         $defaultValue = false;
 
         if (\is_bool($noApiOpt)) {
             $defaultValue = $noApiOpt;
-            $noApiOpt = array();
+            $noApiOpt = [];
         }
 
-        $noApiOpt['default'] = (bool) RepoUtil::getArrayValue($noApiOpt, 'default', $defaultValue);
-        $noApiOpt['packages'] = (array) RepoUtil::getArrayValue($noApiOpt, 'packages', array());
+        $noApiOpt['default'] = (bool)RepoUtil::getArrayValue($noApiOpt, 'default', $defaultValue);
+        $noApiOpt['packages'] = (array)RepoUtil::getArrayValue($noApiOpt, 'packages', []);
 
-        return (bool) RepoUtil::getArrayValue($noApiOpt['packages'], $packageName, $defaultValue);
+        return (bool)RepoUtil::getArrayValue($noApiOpt['packages'], $packageName, $defaultValue);
     }
 
     /**
      * Get the remote content.
      *
-     * @param string $url              The URL of content
-     * @param bool   $fetchingRepoData Fetching the repo data or not
+     * @param string $url The URL of content
+     * @param bool $fetchingRepoData Fetching the repo data or not
      *
-     * @return mixed The result
+     * @return Response The result
      */
-    protected function getContents($url, $fetchingRepoData = false)
+    protected function getContents(string $url, bool $fetchingRepoData = false): Response
     {
         $url = $this->getValidContentUrl($url);
 
@@ -114,18 +121,20 @@ abstract class AbstractGitHubDriver extends BaseGitHubDriver
     }
 
     /**
+     * Get the valid content url.
+     *
      * @param string $url The url
      *
      * @return string The url redirected
      */
-    protected function getValidContentUrl($url)
+    protected function getValidContentUrl(string $url): string
     {
         if (null === $this->redirectApi && false !== $redirectApi = $this->cache->read('redirect-api')) {
             $this->redirectApi = $redirectApi;
         }
 
-        if (\is_string($this->redirectApi) && 0 === strpos($url, $this->getRepositoryApiUrl())) {
-            $url = $this->redirectApi.substr($url, \strlen($this->getRepositoryApiUrl()));
+        if (\is_string($this->redirectApi) && str_starts_with($url, $this->getRepositoryApiUrl())) {
+            $url = $this->redirectApi . substr($url, \strlen($this->getRepositoryApiUrl()));
         }
 
         return $url;
@@ -136,13 +145,13 @@ abstract class AbstractGitHubDriver extends BaseGitHubDriver
      *
      * @param string $url The url
      *
+     * @return bool
      * @throws
      *
-     * @return bool
      */
-    protected function hasRedirectUrl($url)
+    protected function hasRedirectUrl(string $url): bool
     {
-        if (null === $this->redirectApi && 0 === strpos($url, $this->getRepositoryApiUrl())) {
+        if (null === $this->redirectApi && str_starts_with($url, $this->getRepositoryApiUrl())) {
             $this->redirectApi = $this->getNewRepositoryUrl();
 
             if (\is_string($this->redirectApi)) {
@@ -158,20 +167,20 @@ abstract class AbstractGitHubDriver extends BaseGitHubDriver
      *
      * @return false|string The new url or false if there is not a new url
      */
-    protected function getNewRepositoryUrl()
+    protected function getNewRepositoryUrl(): string|false
     {
         try {
-            $this->getRemoteContents($this->getRepositoryUrl());
-            $headers = $this->remoteFilesystem->getLastHeaders();
+            $response = $this->getRemoteContents($this->getRepositoryUrl());
+            $headers = $response->getHeaders();
 
-            if (!empty($headers[0]) && preg_match('{^HTTP/\S+ (30[1278])}i', $headers[0], $match)) {
+            if (preg_match('{^(30[1278])}i', $response->getStatusCode())) {
                 array_shift($headers);
 
                 return $this->findNewLocationInHeader($headers);
             }
 
             return false;
-        } catch (\Exception $ex) {
+        } catch (\Exception) {
             return false;
         }
     }
@@ -183,12 +192,12 @@ abstract class AbstractGitHubDriver extends BaseGitHubDriver
      *
      * @return false|string
      */
-    protected function findNewLocationInHeader(array $headers)
+    protected function findNewLocationInHeader(array $headers): string|false
     {
         $url = false;
 
         foreach ($headers as $header) {
-            if (0 === strpos($header, 'Location:')) {
+            if (str_starts_with($header, 'Location:')) {
                 $newUrl = trim(substr($header, 9));
                 preg_match('#^(?:(?:https?|git)://([^/]+)/|git@([^:]+):)([^/]+)/(.+?)(?:\.git|/)?$#', $newUrl, $match);
                 $owner = $match[3];
@@ -207,17 +216,17 @@ abstract class AbstractGitHubDriver extends BaseGitHubDriver
     /**
      * Get the url API of the repository.
      *
-     * @param string $owner
-     * @param string $repository
+     * @param string|null $owner
+     * @param string|null $repository
      *
      * @return string
      */
-    protected function getRepositoryApiUrl($owner = null, $repository = null)
+    protected function getRepositoryApiUrl(?string $owner = null, ?string $repository = null): string
     {
         $owner = null !== $owner ? $owner : $this->owner;
         $repository = null !== $repository ? $repository : $this->repository;
 
-        return $this->getApiUrl().'/repos/'.$owner.'/'.$repository;
+        return $this->getApiUrl() . '/repos/' . $owner . '/' . $repository;
     }
 
     /**
@@ -225,22 +234,26 @@ abstract class AbstractGitHubDriver extends BaseGitHubDriver
      *
      * @param string $url
      *
-     * @return bool|string
+     * @return Response
      */
-    protected function getRemoteContents($url)
+    protected function getRemoteContents(string $url): Response
     {
-        return $this->remoteFilesystem->getContents($this->originUrl, $url, false);
+        return $this->httpDownloader->get($url, []);
     }
 
     /**
      * Push the list of all branch.
      *
      * @param string $resource
+     * @param array $branchBlacklist
+     *
+     * @return void
      */
-    protected function doAddBranches($resource, array $branchBlacklist)
+    protected function doAddBranches(string $resource, array $branchBlacklist): void
     {
         do {
-            $branchData = JsonFile::parseJson((string) $this->getContents($resource), $resource);
+            $response = $this->getContents($resource);
+            $branchData = $response->decodeJson();
 
             foreach ($branchData as $branch) {
                 $name = substr($branch['ref'], 11);
@@ -250,7 +263,7 @@ abstract class AbstractGitHubDriver extends BaseGitHubDriver
                 }
             }
 
-            $resource = $this->getNextPage();
+            $resource = $this->getNextPage($response);
         } while ($resource);
     }
 }

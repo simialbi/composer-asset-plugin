@@ -34,52 +34,57 @@ class VcsPackageFilter
     /**
      * @var Config
      */
-    protected $config;
+    protected Config $config;
 
     /**
      * @var RootPackageInterface
      */
-    protected $package;
+    protected RootPackageInterface $package;
 
     /**
      * @var InstallationManager
      */
-    protected $installationManager;
+    protected InstallationManager $installationManager;
 
     /**
-     * @var InstalledFilesystemRepository
+     * @var InstalledFilesystemRepository|null
      */
-    protected $installedRepository;
+    protected ?InstalledFilesystemRepository $installedRepository;
 
     /**
      * @var VersionParser
      */
-    protected $versionParser;
+    protected VersionParser $versionParser;
 
     /**
      * @var ArrayLoader
      */
-    protected $arrayLoader;
+    protected ArrayLoader $arrayLoader;
 
     /**
      * @var bool
      */
-    protected $enabled;
+    protected bool $enabled;
 
     /**
      * @var array
      */
-    protected $requires;
+    protected array $requires;
 
     /**
      * Constructor.
      *
-     * @param Config                             $config              The plugin config
-     * @param RootPackageInterface               $package             The root package
-     * @param InstallationManager                $installationManager The installation manager
+     * @param Config $config The plugin config
+     * @param RootPackageInterface $package The root package
+     * @param InstallationManager $installationManager The installation manager
      * @param null|InstalledFilesystemRepository $installedRepository The installed repository
      */
-    public function __construct(Config $config, RootPackageInterface $package, InstallationManager $installationManager, InstalledFilesystemRepository $installedRepository = null)
+    public function __construct(
+        Config                        $config,
+        RootPackageInterface          $package,
+        InstallationManager           $installationManager,
+        InstalledFilesystemRepository $installedRepository = null
+    )
     {
         $this->config = $config;
         $this->package = $package;
@@ -97,9 +102,9 @@ class VcsPackageFilter
      *
      * @return self
      */
-    public function setEnabled($enabled)
+    public function setEnabled(bool $enabled): static
     {
-        $this->enabled = (bool) $enabled;
+        $this->enabled = $enabled;
 
         return $this;
     }
@@ -109,7 +114,7 @@ class VcsPackageFilter
      *
      * @return bool
      */
-    public function isEnabled()
+    public function isEnabled(): bool
     {
         return $this->enabled;
     }
@@ -118,12 +123,12 @@ class VcsPackageFilter
      * Check if the version must be skipped.
      *
      * @param AssetTypeInterface $assetType The asset type
-     * @param string             $name      The composer package name
-     * @param string             $version   The version
+     * @param string $name The composer package name
+     * @param string $version The version
      *
      * @return bool
      */
-    public function skip(AssetTypeInterface $assetType, $name, $version)
+    public function skip(AssetTypeInterface $assetType, string $name, string $version): bool
     {
         try {
             $cVersion = $assetType->getVersionConverter()->convertVersion($version);
@@ -142,14 +147,14 @@ class VcsPackageFilter
     /**
      * Do check if the version must be skipped.
      *
-     * @param string $name              The composer package name
+     * @param string $name The composer package name
      * @param string $normalizedVersion The normalized version
      *
      * @return bool
      */
-    protected function doSkip($name, $normalizedVersion)
+    protected function doSkip(string $name, string $normalizedVersion): bool
     {
-        if (!isset($this->requires[$name]) || false !== strpos($normalizedVersion, '-p')) {
+        if (!isset($this->requires[$name]) || str_contains($normalizedVersion, '-p')) {
             return false;
         }
 
@@ -162,12 +167,12 @@ class VcsPackageFilter
     /**
      * Check if the require dependency has a satisfactory version and stability.
      *
-     * @param Link   $require           The require link defined in root package
+     * @param Link $require The require link defined in root package
      * @param string $normalizedVersion The normalized version
      *
      * @return bool
      */
-    protected function satisfy(Link $require, $normalizedVersion)
+    protected function satisfy(Link $require, string $normalizedVersion): bool
     {
         return $this->satisfyVersion($require, $normalizedVersion)
             && $this->satisfyStability($require, $normalizedVersion);
@@ -178,7 +183,7 @@ class VcsPackageFilter
      *
      * @return false|string Return the pattern or FALSE for disable the feature
      */
-    protected function skipByPattern()
+    protected function skipByPattern(): string|false
     {
         $skip = $this->config->get('pattern-skip-version', false);
 
@@ -194,39 +199,39 @@ class VcsPackageFilter
      *
      * @return bool
      */
-    protected function forceSkipVersion($normalizedVersion)
+    protected function forceSkipVersion(string $normalizedVersion): bool
     {
-        return (bool) preg_match('/'.$this->skipByPattern().'/', $normalizedVersion);
+        return (bool)preg_match('/' . $this->skipByPattern() . '/', $normalizedVersion);
     }
 
     /**
      * Check if the require dependency has a satisfactory version.
      *
-     * @param Link   $require           The require link defined in root package
+     * @param Link $require The require link defined in root package
      * @param string $normalizedVersion The normalized version
      *
      * @return bool
      */
-    protected function satisfyVersion(Link $require, $normalizedVersion)
+    protected function satisfyVersion(Link $require, string $normalizedVersion): bool
     {
         $constraintSame = $this->versionParser->parseConstraints($normalizedVersion);
-        $sameVersion = (bool) $require->getConstraint()->matches($constraintSame);
+        $sameVersion = (bool)$require->getConstraint()->matches($constraintSame);
 
         $consNormalizedVersion = FilterUtil::getVersionConstraint($normalizedVersion, $this->versionParser);
         $constraint = FilterUtil::getVersionConstraint($consNormalizedVersion->getPrettyString(), $this->versionParser);
 
-        return (bool) $require->getConstraint()->matches($constraint) || $sameVersion;
+        return $require->getConstraint()->matches($constraint) || $sameVersion;
     }
 
     /**
      * Check if the require dependency has a satisfactory stability.
      *
-     * @param Link   $require           The require link defined in root package
+     * @param Link $require The require link defined in root package
      * @param string $normalizedVersion The normalized version
      *
      * @return bool
      */
-    protected function satisfyStability(Link $require, $normalizedVersion)
+    protected function satisfyStability(Link $require, string $normalizedVersion): bool
     {
         $requireStability = $this->getRequireStability($require);
         $stability = $this->versionParser->parseStability($normalizedVersion);
@@ -241,13 +246,13 @@ class VcsPackageFilter
      *
      * @return string The minimum stability
      */
-    protected function getRequireStability(Link $require)
+    protected function getRequireStability(Link $require): string
     {
         $prettyConstraint = $require->getPrettyConstraint();
-        $stabilities = Package::$stabilities;
+        $stability = Package::$stabilities;
 
-        if (preg_match_all('/@('.implode('|', array_keys($stabilities)).')/', $prettyConstraint, $matches)) {
-            return FilterUtil::findInlineStabilities($matches[1], $this->versionParser);
+        if (preg_match_all('/@(' . implode('|', array_keys($stability)) . ')/', $prettyConstraint, $matches)) {
+            return FilterUtil::findInlineStability($matches[1], $this->versionParser);
         }
 
         return FilterUtil::getMinimumStabilityFlag($this->package, $require);
@@ -256,7 +261,7 @@ class VcsPackageFilter
     /**
      * Initialize.
      */
-    protected function initialize()
+    protected function initialize(): void
     {
         $this->requires = array_merge(
             $this->package->getRequires(),
@@ -264,7 +269,7 @@ class VcsPackageFilter
         );
 
         if (null !== $this->installedRepository
-                && FilterUtil::checkConfigOption($this->config, 'optimize-with-installed-packages')) {
+            && FilterUtil::checkConfigOption($this->config, 'optimize-with-installed-packages')) {
             $this->initInstalledPackages();
         }
     }
@@ -272,11 +277,11 @@ class VcsPackageFilter
     /**
      * Initialize the installed package.
      */
-    private function initInstalledPackages()
+    private function initInstalledPackages(): void
     {
         foreach ($this->installedRepository->getPackages() as $package) {
             $operator = $this->getFilterOperator($package);
-            $link = current($this->arrayLoader->parseLinks($this->package->getName(), $this->package->getVersion(), 'installed', array($package->getName() => $operator.$package->getPrettyVersion())));
+            $link = current($this->arrayLoader->parseLinks($this->package->getName(), $this->package->getVersion(), 'installed', [$package->getName() => $operator . $package->getPrettyVersion()]));
             $link = $this->includeRootConstraint($package, $link);
 
             $this->requires[$package->getName()] = $link;
@@ -288,17 +293,17 @@ class VcsPackageFilter
      * of installed package.
      *
      * @param PackageInterface $package The installed package
-     * @param Link             $link    The link contained installed constraint
+     * @param Link $link The link contained installed constraint
      *
      * @return Link The link with root and installed version constraint
      */
-    private function includeRootConstraint(PackageInterface $package, Link $link)
+    private function includeRootConstraint(PackageInterface $package, Link $link): Link
     {
         if (isset($this->requires[$package->getName()])) {
             /** @var Link $rLink */
             $rLink = $this->requires[$package->getName()];
             $useConjunctive = FilterUtil::checkConfigOption($this->config, 'optimize-with-conjunctive');
-            $constraint = new MultiConstraint(array($rLink->getConstraint(), $link->getConstraint()), $useConjunctive);
+            $constraint = new MultiConstraint([$rLink->getConstraint(), $link->getConstraint()], $useConjunctive);
             $link = new Link($rLink->getSource(), $rLink->getTarget(), $constraint, 'installed', $constraint->getPrettyString());
         }
 
@@ -308,9 +313,11 @@ class VcsPackageFilter
     /**
      * Get the filter root constraint operator.
      *
+     * @param PackageInterface $package The installed package
+     *
      * @return string
      */
-    private function getFilterOperator(PackageInterface $package)
+    private function getFilterOperator(PackageInterface $package): string
     {
         return $this->installationManager->isPackageInstalled($this->installedRepository, $package)
             ? '>'

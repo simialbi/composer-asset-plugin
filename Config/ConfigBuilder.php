@@ -28,7 +28,7 @@ abstract class ConfigBuilder
      *
      * @var array
      */
-    private static $deprecatedOptions = array(
+    private static array $deprecatedOptions = [
         'installer-paths' => 'asset-installer-paths',
         'ignore-files' => 'asset-ignore-files',
         'private-bower-registries' => 'asset-private-bower-registries',
@@ -38,20 +38,20 @@ abstract class ConfigBuilder
         'repositories' => 'asset-repositories',
         'registry-options' => 'asset-registry-options',
         'vcs-driver-options' => 'asset-vcs-driver-options',
-        'main-files' => 'asset-main-files',
-    );
+        'main-files' => 'asset-main-files'
+    ];
 
     /**
      * Validate the config of root package.
      *
-     * @param IOInterface          $io          The composer input/output
-     * @param RootPackageInterface $package     The root package
-     * @param string               $commandName The command name
+     * @param IOInterface $io The composer input/output
+     * @param RootPackageInterface $package The root package
+     * @param string|null $commandName The command name
      */
-    public static function validate(IOInterface $io, RootPackageInterface $package, $commandName = null)
+    public static function validate(IOInterface $io, RootPackageInterface $package, string $commandName = null): void
     {
-        if (null === $commandName || \in_array($commandName, array('install', 'update', 'validate', 'require', 'remove'), true)) {
-            $extra = (array) $package->getExtra();
+        if (null === $commandName || \in_array($commandName, ['install', 'update', 'validate', 'require', 'remove'], true)) {
+            $extra = (array)$package->getExtra();
 
             foreach (self::$deprecatedOptions as $new => $old) {
                 if (\array_key_exists($old, $extra)) {
@@ -64,15 +64,15 @@ abstract class ConfigBuilder
     /**
      * Build the config of plugin.
      *
-     * @param Composer         $composer The composer
-     * @param null|IOInterface $io       The composer input/output
+     * @param Composer $composer The composer
+     * @param IOInterface|null $io The composer input/output
      *
      * @return Config
      */
-    public static function build(Composer $composer, $io = null)
+    public static function build(Composer $composer, ?IOInterface $io = null): Config
     {
         $config = self::getConfigBase($composer, $io);
-        $config = self::injectDeprecatedConfig($config, (array) $composer->getPackage()->getExtra());
+        $config = self::injectDeprecatedConfig($config, (array)$composer->getPackage()->getExtra());
 
         return new Config($config);
     }
@@ -81,11 +81,11 @@ abstract class ConfigBuilder
      * Inject the deprecated keys in config if the config keys are not present.
      *
      * @param array $config The config
-     * @param array $extra  The root package extra section
+     * @param array $extra The root package extra section
      *
      * @return array
      */
-    private static function injectDeprecatedConfig(array $config, array $extra)
+    private static function injectDeprecatedConfig(array $config, array $extra): array
     {
         foreach (self::$deprecatedOptions as $key => $deprecatedKey) {
             if (\array_key_exists($deprecatedKey, $extra) && !\array_key_exists($key, $config)) {
@@ -99,19 +99,19 @@ abstract class ConfigBuilder
     /**
      * Get the base of data.
      *
-     * @param Composer         $composer The composer
-     * @param null|IOInterface $io       The composer input/output
+     * @param Composer $composer The composer
+     * @param IOInterface|null $io The composer input/output
      *
      * @return array
      */
-    private static function getConfigBase(Composer $composer, $io = null)
+    private static function getConfigBase(Composer $composer, ?IOInterface $io = null): array
     {
         $globalPackageConfig = self::getGlobalConfig($composer, 'composer', $io);
         $globalConfig = self::getGlobalConfig($composer, 'config', $io);
         $packageConfig = $composer->getPackage()->getConfig();
         $packageConfig = isset($packageConfig['fxp-asset']) && \is_array($packageConfig['fxp-asset'])
             ? $packageConfig['fxp-asset']
-            : array();
+            : [];
 
         return array_merge($globalPackageConfig, $globalConfig, $packageConfig);
     }
@@ -119,17 +119,18 @@ abstract class ConfigBuilder
     /**
      * Get the data of the global config.
      *
-     * @param Composer         $composer The composer
-     * @param string           $filename The filename
-     * @param null|IOInterface $io       The composer input/output
+     * @param Composer $composer The composer
+     * @param string $filename The filename
+     * @param IOInterface|null $io The composer input/output
      *
      * @return array
+     * @throws \Seld\JsonLint\ParsingException
      */
-    private static function getGlobalConfig(Composer $composer, $filename, $io = null)
+    private static function getGlobalConfig(Composer $composer, string $filename, ?IOInterface $io = null): array
     {
         $home = self::getComposerHome($composer);
-        $file = new JsonFile($home.'/'.$filename.'.json');
-        $config = array();
+        $file = new JsonFile($home . '/' . $filename . '.json');
+        $config = [];
 
         if ($file->exists()) {
             $data = $file->read();
@@ -138,7 +139,7 @@ abstract class ConfigBuilder
                 $config = $data['config']['fxp-asset'];
 
                 if ($io instanceof IOInterface && $io->isDebug()) {
-                    $io->writeError('Loading fxp-asset config in file '.$file->getPath());
+                    $io->writeError('Loading fxp-asset config in file ' . $file->getPath());
                 }
             }
         }
@@ -153,7 +154,7 @@ abstract class ConfigBuilder
      *
      * @return string
      */
-    private static function getComposerHome(Composer $composer)
+    private static function getComposerHome(Composer $composer): string
     {
         return null !== $composer->getConfig() && $composer->getConfig()->has('home')
             ? $composer->getConfig()->get('home')

@@ -25,10 +25,11 @@ class Validator
      * Validates the branch.
      *
      * @param string $branch
+     * @param VersionParser|null $parser
      *
      * @return false|string
      */
-    public static function validateBranch($branch, VersionParser $parser = null)
+    public static function validateBranch(string $branch, VersionParser $parser = null): string|false
     {
         if (null === $parser) {
             $parser = new VersionParser();
@@ -36,7 +37,7 @@ class Validator
 
         $normalize = $parser->normalizeBranch($branch);
 
-        if (false !== strpos($normalize, '.9999999-dev')) {
+        if (str_contains($normalize, '.9999999-dev')) {
             return false;
         }
 
@@ -47,12 +48,14 @@ class Validator
      * Validates the tag.
      *
      * @param string $tag
+     * @param AssetTypeInterface $assetType
+     * @param VersionParser|null $parser
      *
      * @return false|string
      */
-    public static function validateTag($tag, AssetTypeInterface $assetType, VersionParser $parser = null)
+    public static function validateTag(string $tag, AssetTypeInterface $assetType, VersionParser $parser = null): string|false
     {
-        if (\in_array($tag, array('master', 'trunk', 'default'), true)) {
+        if (\in_array($tag, ['master', 'trunk', 'default'], true)) {
             return false;
         }
 
@@ -64,7 +67,7 @@ class Validator
             $tag = $assetType->getVersionConverter()->convertVersion($tag);
             $tag = $parser->normalize($tag);
         } catch (\Exception $e) {
-            $tag = false;
+            return false;
         }
 
         return $tag;

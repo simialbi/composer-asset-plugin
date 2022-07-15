@@ -23,12 +23,12 @@ final class Config
     /**
      * @var array
      */
-    private $config;
+    private array $config;
 
     /**
      * @var array
      */
-    private $cacheEnv = array();
+    private array $cacheEnv = [];
 
     /**
      * Constructor.
@@ -43,12 +43,12 @@ final class Config
     /**
      * Get the array config value.
      *
-     * @param string $key     The config key
-     * @param array  $default The default value
+     * @param string $key The config key
+     * @param array $default The default value
      *
      * @return array
      */
-    public function getArray($key, array $default = array())
+    public function getArray(string $key, array $default = []): array
     {
         return $this->get($key, $default);
     }
@@ -56,12 +56,12 @@ final class Config
     /**
      * Get the config value.
      *
-     * @param string     $key     The config key
-     * @param null|mixed $default The default value
+     * @param string $key The config key
+     * @param mixed|null $default The default value
      *
      * @return null|mixed
      */
-    public function get($key, $default = null)
+    public function get(string $key, mixed $default = null): mixed
     {
         if (\array_key_exists($key, $this->cacheEnv)) {
             return $this->cacheEnv[$key];
@@ -85,20 +85,20 @@ final class Config
      *
      * @return string
      */
-    private function convertEnvKey($key)
+    private function convertEnvKey(string $key): string
     {
-        return 'FXP_ASSET__'.strtoupper(str_replace('-', '_', $key));
+        return 'FXP_ASSET__' . strtoupper(str_replace('-', '_', $key));
     }
 
     /**
      * Convert the value of environment variable into php variable.
      *
-     * @param string $value               The value of environment variable
+     * @param string $value The value of environment variable
      * @param string $environmentVariable The environment variable name
      *
      * @return array|bool|int|string
      */
-    private function convertEnvValue($value, $environmentVariable)
+    private function convertEnvValue(string $value, string $environmentVariable): array|bool|int|string
     {
         $value = trim(trim(trim($value, '\''), '"'));
 
@@ -120,11 +120,11 @@ final class Config
      *
      * @return bool
      */
-    private function isBoolean($value)
+    private function isBoolean(string $value): bool
     {
         $value = strtolower($value);
 
-        return \in_array($value, array('true', 'false', '1', '0', 'yes', 'no', 'y', 'n'), true);
+        return \in_array($value, ['true', 'false', '1', '0', 'yes', 'no', 'y', 'n'], true);
     }
 
     /**
@@ -134,9 +134,9 @@ final class Config
      *
      * @return bool
      */
-    private function convertBoolean($value)
+    private function convertBoolean(string $value): bool
     {
-        return \in_array($value, array('true', '1', 'yes', 'y'), true);
+        return \in_array($value, ['true', '1', 'yes', 'y'], true);
     }
 
     /**
@@ -146,7 +146,7 @@ final class Config
      *
      * @return bool
      */
-    private function isInteger($value)
+    private function isInteger(string $value): bool
     {
         return ctype_digit(trim($value, '-'));
     }
@@ -154,13 +154,13 @@ final class Config
     /**
      * Convert the value of environment variable into a integer.
      *
-     * @param string $value The value of environment variable
+     * @param string|int|float $value The value of environment variable
      *
-     * @return bool
+     * @return integer
      */
-    private function convertInteger($value)
+    private function convertInteger(string|int|float $value): int
     {
-        return (int) $value;
+        return (int)$value;
     }
 
     /**
@@ -170,20 +170,20 @@ final class Config
      *
      * @return bool
      */
-    private function isJson($value)
+    private function isJson(string $value): bool
     {
-        return 0 === strpos($value, '{') || 0 === strpos($value, '[');
+        return str_starts_with($value, '{') || str_starts_with($value, '[');
     }
 
     /**
      * Convert the value of environment variable into a json array.
      *
-     * @param string $value               The value of environment variable
+     * @param string $value The value of environment variable
      * @param string $environmentVariable The environment variable name
      *
      * @return array
      */
-    private function convertJson($value, $environmentVariable)
+    private function convertJson(string $value, string $environmentVariable): array
     {
         $value = json_decode($value, true);
 

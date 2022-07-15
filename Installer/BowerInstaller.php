@@ -21,7 +21,10 @@ use Composer\Package\PackageInterface;
  */
 class BowerInstaller extends AssetInstaller
 {
-    protected function addIgnorePatterns(IgnoreManager $manager, PackageInterface $package)
+    /**
+     * {@inheritDoc}
+     */
+    protected function addIgnorePatterns(IgnoreManager $manager, PackageInterface $package): void
     {
         $extra = $package->getExtra();
 

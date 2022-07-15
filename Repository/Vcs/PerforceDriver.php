@@ -30,7 +30,7 @@ class PerforceDriver extends BasePerforceDriver
     /**
      * @var array
      */
-    protected $infoCache = array();
+    protected $infoCache = [];
 
     /**
      * @var Cache
@@ -38,9 +38,10 @@ class PerforceDriver extends BasePerforceDriver
     protected $cache;
 
     /**
-     * @throws
+     * {@inheritDoc}
+     * @throws \Exception
      */
-    public function initialize()
+    public function initialize(): void
     {
         $this->depot = $this->repoConfig['depot'];
         $this->branch = '';
@@ -55,12 +56,13 @@ class PerforceDriver extends BasePerforceDriver
         $this->perforce->writeP4ClientSpec();
         $this->perforce->connectClient();
 
-        $this->cache = new Cache($this->io, $this->config->get('cache-repo-dir').'/'.$this->originUrl.'/'.$this->depot);
-
-        return true;
+        $this->cache = new Cache($this->io, $this->config->get('cache-repo-dir') . '/' . $this->originUrl . '/' . $this->depot);
     }
 
-    public function getComposerInformation($identifier)
+    /**
+     * {@inheritDoc}
+     */
+    public function getComposerInformation($identifier): ?array
     {
         $this->infoCache[$identifier] = Util::readCache($this->infoCache, $this->cache, $this->repoConfig['asset-type'], $identifier, true);
 
@@ -81,27 +83,31 @@ class PerforceDriver extends BasePerforceDriver
      *
      * @return array
      */
-    protected function getComposerContent($identifier)
+    protected function getComposerContent(string $identifier): array
     {
         $composer = $this->perforce->getComposerInformation($identifier);
 
         if (empty($composer) || !\is_array($composer)) {
-            $composer = array('_nonexistent_package' => true);
+            $composer = ['_nonexistent_package' => true];
         }
 
         return $composer;
     }
 
     /**
+     * Initialize perforce asset
+     *
      * @param array $repoConfig
+     *
+     * @return void
      */
-    private function initAssetPerforce($repoConfig)
+    private function initAssetPerforce(array $repoConfig): void
     {
         if (!empty($this->perforce)) {
             return;
         }
 
-        $repoDir = $this->config->get('cache-vcs-dir').'/'.$this->depot;
+        $repoDir = $this->config->get('cache-vcs-dir') . '/' . $this->depot;
         $this->perforce = Perforce::create($repoConfig, $this->getUrl(), $repoDir, $this->process, $this->io);
     }
 }

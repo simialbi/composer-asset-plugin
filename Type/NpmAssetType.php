@@ -12,6 +12,7 @@
 namespace Fxp\Composer\AssetPlugin\Type;
 
 use Fxp\Composer\AssetPlugin\Converter\NpmPackageConverter;
+use Fxp\Composer\AssetPlugin\Converter\PackageConverterInterface;
 
 /**
  * NPM asset type.
@@ -20,17 +21,26 @@ use Fxp\Composer\AssetPlugin\Converter\NpmPackageConverter;
  */
 class NpmAssetType extends AbstractAssetType
 {
-    public function getName()
+    /**
+     * {@inheritDoc}
+     */
+    public function getName(): string
     {
         return 'npm';
     }
 
-    public function getFilename()
+    /**
+     * {@inheritDoc}
+     */
+    public function getFilename(): string
     {
         return 'package.json';
     }
 
-    protected function createPackageConverter()
+    /**
+     * {@inheritDoc}
+     */
+    protected function createPackageConverter(): PackageConverterInterface
     {
         return new NpmPackageConverter($this);
     }

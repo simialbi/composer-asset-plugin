@@ -11,6 +11,8 @@
 
 namespace Fxp\Composer\AssetPlugin\Repository;
 
+use JetBrains\PhpStorm\ArrayShape;
+
 /**
  * Bower repository.
  *
@@ -18,32 +20,52 @@ namespace Fxp\Composer\AssetPlugin\Repository;
  */
 class BowerRepository extends AbstractAssetsRepository
 {
-    protected function getType()
+    /**
+     * {@inheritDoc}
+     */
+    protected function getType(): string
     {
         return 'bower';
     }
 
-    protected function getUrl()
+    /**
+     * {@inheritDoc}
+     */
+    protected function getUrl(): string
     {
         return 'https://registry.bower.io/packages';
     }
 
-    protected function getPackageUrl()
+    /**
+     * {@inheritDoc}
+     */
+    protected function getPackageUrl(): string
     {
-        return $this->canonicalizeUrl($this->baseUrl.'/%package%');
+        return $this->canonicalizeUrl($this->baseUrl . '/%package%');
     }
 
-    protected function getSearchUrl()
+    /**
+     * {@inheritDoc}
+     */
+    protected function getSearchUrl(): string
     {
-        return $this->canonicalizeUrl($this->baseUrl.'/search/%query%');
+        return $this->canonicalizeUrl($this->baseUrl . '/search/%query%');
     }
 
-    protected function createVcsRepositoryConfig(array $data, $registryName = null)
+    /**
+     * {@inheritDoc}
+     */
+    #[ArrayShape([
+        'type' => 'string',
+        'url' => 'string',
+        'name' => 'string'
+    ])]
+    protected function createVcsRepositoryConfig(array $data, string $registryName = null): array
     {
-        return array(
-            'type' => $this->assetType->getName().'-vcs',
+        return [
+            'type' => $this->assetType->getName() . '-vcs',
             'url' => $data['url'],
-            'name' => $registryName,
-        );
+            'name' => $registryName
+        ];
     }
 }

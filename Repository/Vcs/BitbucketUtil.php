@@ -25,29 +25,31 @@ class BitbucketUtil
     /**
      * Get composer information.
      *
-     * @param Cache              $cache      The cache
-     * @param array              $infoCache  The code cache
-     * @param string             $scheme     The scheme
-     * @param array              $repoConfig The repository config
-     * @param string             $identifier The identifier
-     * @param string             $owner      The owner of repository
-     * @param string             $repository The repository name
-     * @param VcsDriverInterface $driver     The vcs driver
-     * @param string             $method     The method of vcs driver for get contents
+     * @param Cache $cache The cache
+     * @param array $infoCache The code cache
+     * @param string $scheme The scheme
+     * @param array $repoConfig The repository config
+     * @param string $identifier The identifier
+     * @param string $owner The owner of repository
+     * @param string $repository The repository name
+     * @param VcsDriverInterface $driver The vcs driver
+     * @param string $method The method of vcs driver for get contents
      *
-     * @return array The composer
+     * @return array|null The composer
+     * @throws \Seld\JsonLint\ParsingException
      */
     public static function getComposerInformation(
-        Cache $cache,
-        array &$infoCache,
-        $scheme,
-        array $repoConfig,
-        $identifier,
-        $owner,
-        $repository,
+        Cache              $cache,
+        array              &$infoCache,
+        string             $scheme,
+        array              $repoConfig,
+        string             $identifier,
+        string             $owner,
+        string             $repository,
         VcsDriverInterface $driver,
-        $method = 'getContents'
-    ) {
+        string             $method = 'getContents'
+    ): ?array
+    {
         $infoCache[$identifier] = Util::readCache($infoCache, $cache, $repoConfig['asset-type'], $identifier);
 
         if (!isset($infoCache[$identifier])) {
@@ -64,74 +66,77 @@ class BitbucketUtil
     /**
      * Get the url of resource.
      *
-     * @param string             $scheme     The scheme
-     * @param array              $repoConfig The repository config
-     * @param string             $identifier The identifier
-     * @param string             $owner      The owner of repository
-     * @param string             $repository The repository name
-     * @param VcsDriverInterface $driver     The vcs driver
+     * @param string $scheme The scheme
+     * @param array $repoConfig The repository config
+     * @param string $identifier The identifier
+     * @param string $owner The owner of repository
+     * @param string $repository The repository name
+     * @param VcsDriverInterface $driver The vcs driver
      *
      * @return string
      */
     protected static function getUrlResource(
-        $scheme,
-        array $repoConfig,
-        $identifier,
-        $owner,
-        $repository,
+        string             $scheme,
+        array              $repoConfig,
+        string             $identifier,
+        string             $owner,
+        string             $repository,
         VcsDriverInterface $driver
-    ) {
-        if (false === strpos(\get_class($driver), 'Git')) {
-            return $scheme.'://bitbucket.org/'.$owner.'/'.$repository.'/raw/'.$identifier.'/'.$repoConfig['filename'];
+    ): string
+    {
+        if (!str_contains(\get_class($driver), 'Git')) {
+            return "$scheme://bitbucket.org/$owner/$repository/raw/$identifier/{$repoConfig['filename']}";
         }
 
-        return $scheme.'://api.bitbucket.org/1.0/repositories/'.$owner.'/'.$repository.'/src/'.$identifier.'/'.$repoConfig['filename'];
+
+        return "$scheme://api.bitbucket.org/1.0/repositories/$owner/$repository/src/$identifier/{$repoConfig['filename']}";
     }
 
     /**
      * Gets content of composer information.
      *
-     * @param string             $resource   The resource
-     * @param string             $identifier The identifier
-     * @param string             $scheme     The scheme
-     * @param string             $owner      The owner
-     * @param string             $repository The repository
-     * @param VcsDriverInterface $driver     The vcs driver
-     * @param string             $method     The method for get content
+     * @param string $resource The resource
+     * @param string $identifier The identifier
+     * @param string $scheme The scheme
+     * @param string $owner The owner
+     * @param string $repository The repository
+     * @param VcsDriverInterface $driver The vcs driver
+     * @param string $method The method for get content
      *
      * @return array
+     * @throws \Seld\JsonLint\ParsingException
      */
     protected static function getComposerContent(
-        $resource,
-        $identifier,
-        $scheme,
-        $owner,
-        $repository,
+        string             $resource,
+        string             $identifier,
+        string             $scheme,
+        string             $owner,
+        string             $repository,
         VcsDriverInterface $driver,
-        $method
-    ) {
+        string             $method
+    ): array
+    {
         $composer = static::getComposerContentOfFile($resource, $driver, $method);
 
         if (false !== $composer) {
-            $composer = (array) JsonFile::parseJson((string) $composer, $resource);
-            $composer = static::formatComposerContent($composer, $identifier, $scheme, $owner, $repository, $driver, $method);
+            $composer = (array)JsonFile::parseJson((string)$composer, $resource);
 
-            return $composer;
+            return static::formatComposerContent($composer, $identifier, $scheme, $owner, $repository, $driver, $method);
         }
 
-        return array('_nonexistent_package' => true);
+        return ['_nonexistent_package' => true];
     }
 
     /**
      * Get the parsed content of composer.
      *
-     * @param string             $resource The resource
-     * @param VcsDriverInterface $driver   The vcs driver
-     * @param string             $method   The method for get content
+     * @param string $resource The resource
+     * @param VcsDriverInterface $driver The vcs driver
+     * @param string $method The method for get content
      *
      * @return false|string
      */
-    protected static function getComposerContentOfFile($resource, VcsDriverInterface $driver, $method)
+    protected static function getComposerContentOfFile(string $resource, VcsDriverInterface $driver, string $method): string|false
     {
         try {
             $ref = new \ReflectionClass($driver);
@@ -140,11 +145,11 @@ class BitbucketUtil
             $composer = $meth->invoke($driver, $resource);
 
             if ('getContents' !== $method) {
-                $file = (array) JsonFile::parseJson((string) $composer, $resource);
+                $file = (array)JsonFile::parseJson((string)$composer, $resource);
                 $composer = empty($file) || !\array_key_exists('data', $file)
                     ? false : $file['data'];
             }
-        } catch (\Exception $e) {
+        } catch (\Exception) {
             $composer = false;
         }
 
@@ -154,19 +159,27 @@ class BitbucketUtil
     /**
      * Format composer content.
      *
-     * @param array              $composer   The composer
-     * @param string             $identifier The identifier
-     * @param string             $scheme     The scheme
-     * @param string             $owner      The owner
-     * @param string             $repository The repository
-     * @param VcsDriverInterface $driver     The vcs driver
-     * @param string             $method     The method for get content
+     * @param array $composer The composer
+     * @param string $identifier The identifier
+     * @param string $scheme The scheme
+     * @param string $owner The owner
+     * @param string $repository The repository
+     * @param VcsDriverInterface $driver The vcs driver
+     * @param string $method The method for get content
      *
      * @return array
      */
-    protected static function formatComposerContent(array $composer, $identifier, $scheme, $owner, $repository, $driver, $method)
+    protected static function formatComposerContent(
+        array              $composer,
+        string             $identifier,
+        string             $scheme,
+        string             $owner,
+        string             $repository,
+        VcsDriverInterface $driver,
+        string             $method
+    ): array
     {
-        $resource = $scheme.'://api.bitbucket.org/1.0/repositories/'.$owner.'/'.$repository.'/changesets/'.$identifier;
+        $resource = "$scheme://api.bitbucket.org/1.0/repositories/$owner/$repository/changesets/$identifier";
 
         return Util::addComposerTime($composer, 'timestamp', $resource, $driver, $method);
     }

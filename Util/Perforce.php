@@ -28,21 +28,19 @@ class Perforce extends BasePerforce
     protected $filename;
 
     /**
-     * @param array $repoConfig
+     * {@inheritDoc}
      */
-    public function initialize($repoConfig)
+    public function initialize($repoConfig): void
     {
         parent::initialize($repoConfig);
 
-        $this->filename = (string) $repoConfig['filename'];
+        $this->filename = (string)$repoConfig['filename'];
     }
 
     /**
-     * @param string $identifier
-     *
-     * @return array|string
+     * {@inheritDoc}
      */
-    public function getComposerInformation($identifier)
+    public function getComposerInformation(string $identifier): ?array
     {
         $composerFileContent = $this->getFileContent($this->filename, $identifier);
 
@@ -52,15 +50,9 @@ class Perforce extends BasePerforce
     }
 
     /**
-     * Create perforce helper.
-     *
-     * @param array      $repoConfig
-     * @param int|string $port
-     * @param string     $path
-     *
-     * @return Perforce
+     * {@inheritDoc}
      */
-    public static function create($repoConfig, $port, $path, ProcessExecutor $process, IOInterface $io)
+    public static function create($repoConfig, string|int $port, string $path, ProcessExecutor $process, IOInterface $io): static
     {
         $isWindows = \defined('PHP_WINDOWS_VERSION_BUILD');
 

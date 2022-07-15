@@ -24,31 +24,31 @@ class Assets
     /**
      * @var array
      */
-    protected static $typeClasses = array(
+    protected static array $typeClasses = [
         'npm' => 'Fxp\Composer\AssetPlugin\Type\NpmAssetType',
         'bower' => 'Fxp\Composer\AssetPlugin\Type\BowerAssetType',
-    );
+    ];
 
     /**
      * @var array
      */
-    protected static $registryFactoryClasses = array(
+    protected static array $registryFactoryClasses = [
         'default' => 'Fxp\Composer\AssetPlugin\Repository\DefaultRegistryFactory',
         'bower-private' => 'Fxp\Composer\AssetPlugin\Repository\BowerPrivateRegistryFactory',
-    );
+    ];
 
     /**
      * @var array
      */
-    protected static $defaultRegistryClasses = array(
+    protected static array $defaultRegistryClasses = [
         'npm' => 'Fxp\Composer\AssetPlugin\Repository\NpmRepository',
         'bower' => 'Fxp\Composer\AssetPlugin\Repository\BowerRepository',
-    );
+    ];
 
     /**
      * @var array
      */
-    protected static $vcsRepositoryDrivers = array(
+    protected static array $vcsRepositoryDrivers = [
         'vcs' => 'Fxp\Composer\AssetPlugin\Repository\AssetVcsRepository',
         'github' => 'Fxp\Composer\AssetPlugin\Repository\AssetVcsRepository',
         'git-bitbucket' => 'Fxp\Composer\AssetPlugin\Repository\AssetVcsRepository',
@@ -58,12 +58,12 @@ class Assets
         'perforce' => 'Fxp\Composer\AssetPlugin\Repository\AssetVcsRepository',
         'svn' => 'Fxp\Composer\AssetPlugin\Repository\AssetVcsRepository',
         'url' => 'Fxp\Composer\AssetPlugin\Repository\AssetVcsRepository',
-    );
+    ];
 
     /**
      * @var array
      */
-    protected static $vcsDrivers = array(
+    protected static array $vcsDrivers = [
         'github' => 'Fxp\Composer\AssetPlugin\Repository\Vcs\GitHubDriver',
         'git-bitbucket' => 'Fxp\Composer\AssetPlugin\Repository\Vcs\GitBitbucketDriver',
         'git' => 'Fxp\Composer\AssetPlugin\Repository\Vcs\GitDriver',
@@ -73,21 +73,21 @@ class Assets
         'url' => 'Fxp\Composer\AssetPlugin\Repository\Vcs\GitDriver',
         // svn must be last because identifying a subversion server for sure is practically impossible
         'svn' => 'Fxp\Composer\AssetPlugin\Repository\Vcs\SvnDriver',
-    );
+    ];
 
     /**
      * Creates asset type.
      *
      * @param string $type
      *
+     * @return AssetTypeInterface
      * @throws InvalidArgumentException When the asset type does not exist
      *
-     * @return AssetTypeInterface
      */
-    public static function createType($type)
+    public static function createType(string $type): AssetTypeInterface
     {
         if (!isset(static::$typeClasses[$type])) {
-            throw new InvalidArgumentException('The asset type "'.$type.'" does not exist, only "'.implode('", "', static::getTypes()).'" are accepted');
+            throw new InvalidArgumentException('The asset type "' . $type . '" does not exist, only "' . implode('", "', static::getTypes()) . '" are accepted');
         }
 
         $class = static::$typeClasses[$type];
@@ -100,7 +100,7 @@ class Assets
      *
      * @return array
      */
-    public static function getTypes()
+    public static function getTypes(): array
     {
         return array_keys(static::$typeClasses);
     }
@@ -110,7 +110,7 @@ class Assets
      *
      * @return array
      */
-    public static function getRegistryFactories()
+    public static function getRegistryFactories(): array
     {
         return static::$registryFactoryClasses;
     }
@@ -120,7 +120,7 @@ class Assets
      *
      * @return array
      */
-    public static function getDefaultRegistries()
+    public static function getDefaultRegistries(): array
     {
         return static::$defaultRegistryClasses;
     }
@@ -130,7 +130,7 @@ class Assets
      *
      * @return array
      */
-    public static function getVcsRepositoryDrivers()
+    public static function getVcsRepositoryDrivers(): array
     {
         return static::$vcsRepositoryDrivers;
     }
@@ -140,7 +140,7 @@ class Assets
      *
      * @return array
      */
-    public static function getVcsDrivers()
+    public static function getVcsDrivers(): array
     {
         return static::$vcsDrivers;
     }

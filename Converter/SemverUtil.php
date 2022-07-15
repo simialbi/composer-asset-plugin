@@ -23,10 +23,10 @@ abstract class SemverUtil
     /**
      * @var string[]
      */
-    private static $cleanPatterns = array(
+    private static array $cleanPatterns = [
         '-npm-packages',
         '-bower-packages',
-    );
+    ];
 
     /**
      * Replace the alias version (x or *) by integer.
@@ -36,11 +36,11 @@ abstract class SemverUtil
      *
      * @return string
      */
-    public static function replaceAlias($version, $type)
+    public static function replaceAlias(string $version, string $type): string
     {
         $value = '>' === $type ? '0' : '9999999';
 
-        return str_replace(array('x', '*'), $value, $version);
+        return str_replace(['x', '*'], $value, $version);
     }
 
     /**
@@ -50,11 +50,11 @@ abstract class SemverUtil
      *
      * @return string
      */
-    public static function convertDateVersion($version)
+    public static function convertDateVersion(string $version): string
     {
         if (preg_match('/^\d{7,}\./', $version)) {
             $pos = strpos($version, '.');
-            $version = substr($version, 0, $pos).self::convertDateMinorVersion(substr($version, $pos + 1));
+            $version = substr($version, 0, $pos) . self::convertDateMinorVersion(substr($version, $pos + 1));
         }
 
         return $version;
@@ -67,7 +67,7 @@ abstract class SemverUtil
      *
      * @return string
      */
-    public static function convertVersionMetadata($version)
+    public static function convertVersionMetadata(string $version): string
     {
         $version = str_replace(self::$cleanPatterns, '', $version);
 
@@ -77,10 +77,10 @@ abstract class SemverUtil
             $matches,
             PREG_OFFSET_CAPTURE
         )) {
-            list($type, $version, $end) = self::cleanVersion(strtolower($version), $matches);
-            list($version, $patchVersion) = self::matchVersion($version, $type);
+            [$type, $version, $end] = self::cleanVersion(strtolower($version), $matches);
+            [$version, $patchVersion] = self::matchVersion($version, $type);
 
-            $matches = array();
+            $matches = [];
             $hasPatchNumber = preg_match('/[0-9]+\.[0-9]+|[0-9]+|\.[0-9]+$/', $end, $matches);
             $end = $hasPatchNumber ? $matches[0] : '1';
 
@@ -99,13 +99,13 @@ abstract class SemverUtil
      *
      * @return string The full pattern with '/'
      */
-    public static function createPattern($pattern)
+    public static function createPattern(string $pattern): string
     {
         $numVer = '([0-9]+|x|\*)';
-        $numVer2 = '('.$numVer.'\.'.$numVer.')';
-        $numVer3 = '('.$numVer.'\.'.$numVer.'\.'.$numVer.')';
+        $numVer2 = '(' . $numVer . '\.' . $numVer . ')';
+        $numVer3 = '(' . $numVer . '\.' . $numVer . '\.' . $numVer . ')';
 
-        return '/^'.'('.$numVer.'|'.$numVer2.'|'.$numVer3.')'.$pattern.'/';
+        return '/^' . '(' . $numVer . '|' . $numVer2 . '|' . $numVer3 . ')' . $pattern . '/';
     }
 
     /**
@@ -115,9 +115,9 @@ abstract class SemverUtil
      *
      * @return string The cleaned version
      */
-    protected static function cleanWildcard($version)
+    protected static function cleanWildcard(string $version): string
     {
-        while (false !== strpos($version, '.x.x')) {
+        while (str_contains($version, '.x.x')) {
             $version = str_replace('.x.x', '.x', $version);
         }
 
@@ -128,26 +128,26 @@ abstract class SemverUtil
      * Clean the raw version.
      *
      * @param string $version The version
-     * @param array  $matches The match of pattern asset version
+     * @param array $matches The match of pattern asset version
      *
      * @return array The list of $type, $version and $end
      */
-    protected static function cleanVersion($version, array $matches)
+    protected static function cleanVersion(string $version, array $matches): array
     {
         $end = substr($version, \strlen($matches[1][0][0]));
-        $version = $matches[1][0][0].'-';
+        $version = $matches[1][0][0] . '-';
 
-        $matches = array();
+        $matches = [];
         if (preg_match('/^([-+])/', $end, $matches)) {
             $end = substr($end, 1);
         }
 
-        $matches = array();
+        $matches = [];
         preg_match('/^[a-z]+/', $end, $matches);
         $type = isset($matches[0]) ? VersionParser::normalizeStability($matches[0]) : null;
         $end = substr($end, \strlen($type));
 
-        return array($type, $version, $end);
+        return [$type, $version, $end];
     }
 
     /**
@@ -158,24 +158,24 @@ abstract class SemverUtil
      *
      * @return array The list of $version and $patchVersion
      */
-    protected static function matchVersion($version, $type)
+    protected static function matchVersion(string $version, string $type): array
     {
         $patchVersion = true;
 
-        if (\in_array($type, array('dev', 'snapshot'), true)) {
+        if (\in_array($type, ['dev', 'snapshot'], true)) {
             $type = 'dev';
             $patchVersion = false;
         } elseif ('a' === $type) {
             $type = 'alpha';
-        } elseif (\in_array($type, array('b', 'pre'), true)) {
+        } elseif (\in_array($type, ['b', 'pre'], true)) {
             $type = 'beta';
-        } elseif (!\in_array($type, array('alpha', 'beta', 'RC'), true)) {
+        } elseif (!\in_array($type, ['alpha', 'beta', 'RC'], true)) {
             $type = 'patch';
         }
 
         $version .= $type;
 
-        return array($version, $patchVersion);
+        return [$version, $patchVersion];
     }
 
     /**
@@ -185,12 +185,12 @@ abstract class SemverUtil
      *
      * @return string
      */
-    protected static function convertDateMinorVersion($minor)
+    protected static function convertDateMinorVersion(string $minor): string
     {
         $split = explode('.', $minor);
-        $minor = (int) $split[0];
-        $revision = isset($split[1]) ? (int) $split[1] : 0;
+        $minor = (int)$split[0];
+        $revision = isset($split[1]) ? (int)$split[1] : 0;
 
-        return '.'.sprintf('%03d', $minor).sprintf('%03d', $revision);
+        return '.' . sprintf('%03d', $minor) . sprintf('%03d', $revision);
     }
 }

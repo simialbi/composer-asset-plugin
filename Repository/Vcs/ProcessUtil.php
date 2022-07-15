@@ -25,7 +25,10 @@ class ProcessUtil
     /**
      * Get composer information.
      *
+     * @param Cache $cache
+     * @param array $infoCache
      * @param string $assetType
+     * @param ProcessExecutor $process
      * @param string $identifier
      * @param string $resource
      * @param string $cmdGet
@@ -33,20 +36,21 @@ class ProcessUtil
      * @param string $repoDir
      * @param string $datetimePrefix
      *
-     * @return array The composer
+     * @return array|null The composer
      */
     public static function getComposerInformation(
-        Cache $cache,
-        array &$infoCache,
-        $assetType,
+        Cache           $cache,
+        array           &$infoCache,
+        string          $assetType,
         ProcessExecutor $process,
-        $identifier,
-        $resource,
-        $cmdGet,
-        $cmdLog,
-        $repoDir,
-        $datetimePrefix = ''
-    ) {
+        string          $identifier,
+        string          $resource,
+        string          $cmdGet,
+        string          $cmdLog,
+        string          $repoDir,
+        string          $datetimePrefix = ''
+    ): ?array
+    {
         $infoCache[$identifier] = Util::readCache($infoCache, $cache, $assetType, $identifier);
 
         if (!isset($infoCache[$identifier])) {
@@ -63,19 +67,28 @@ class ProcessUtil
      * Get composer information.
      *
      * @param string $resource
+     * @param ProcessExecutor $process
      * @param string $cmdGet
      * @param string $cmdLog
      * @param string $repoDir
      * @param string $datetimePrefix
      *
-     * @return array The composer
+     * @return array|null The composer
+     * @throws \Seld\JsonLint\ParsingException
      */
-    protected static function doGetComposerInformation($resource, ProcessExecutor $process, $cmdGet, $cmdLog, $repoDir, $datetimePrefix = '')
+    protected static function doGetComposerInformation(
+        string          $resource,
+        ProcessExecutor $process,
+        string          $cmdGet,
+        string          $cmdLog,
+        string          $repoDir,
+        string          $datetimePrefix = ''
+    ): ?array
     {
         $process->execute($cmdGet, $composer, $repoDir);
 
         if (!trim($composer)) {
-            return array('_nonexistent_package' => true);
+            return ['_nonexistent_package' => true];
         }
 
         $composer = JsonFile::parseJson($composer, $resource);
@@ -86,19 +99,26 @@ class ProcessUtil
     /**
      * Add time in composer.
      *
+     * @param array $composer
+     * @param ProcessExecutor $process
      * @param string $cmd
      * @param string $repoDir
      * @param string $datetimePrefix
      *
-     * @throws
-     *
-     * @return array The composer
+     * @return array|null The composer
+     * @throws \Exception
      */
-    protected static function addComposerTime(array $composer, ProcessExecutor $process, $cmd, $repoDir, $datetimePrefix = '')
+    protected static function addComposerTime(
+        array           $composer,
+        ProcessExecutor $process,
+        string          $cmd,
+        string          $repoDir,
+        string          $datetimePrefix = ''
+    ): ?array
     {
         if (!isset($composer['time'])) {
             $process->execute($cmd, $output, $repoDir);
-            $date = new \DateTime($datetimePrefix.trim($output), new \DateTimeZone('UTC'));
+            $date = new \DateTime($datetimePrefix . trim($output), new \DateTimeZone('UTC'));
             $composer['time'] = $date->format('Y-m-d H:i:s');
         }
 

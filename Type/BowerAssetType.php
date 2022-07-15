@@ -12,6 +12,7 @@
 namespace Fxp\Composer\AssetPlugin\Type;
 
 use Fxp\Composer\AssetPlugin\Converter\BowerPackageConverter;
+use Fxp\Composer\AssetPlugin\Converter\PackageConverterInterface;
 
 /**
  * Bower asset type.
@@ -20,12 +21,18 @@ use Fxp\Composer\AssetPlugin\Converter\BowerPackageConverter;
  */
 class BowerAssetType extends AbstractAssetType
 {
-    public function getName()
+    /**
+     * {@inheritDoc}
+     */
+    public function getName(): string
     {
         return 'bower';
     }
 
-    protected function createPackageConverter()
+    /**
+     * {@inheritDoc}
+     */
+    protected function createPackageConverter(): PackageConverterInterface
     {
         return new BowerPackageConverter($this);
     }

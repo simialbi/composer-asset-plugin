@@ -24,7 +24,10 @@ use Composer\Repository\Vcs\SvnDriver as BaseSvnDriver;
  */
 class SvnDriver extends BaseSvnDriver
 {
-    public function initialize()
+    /**
+     * {@inheritDoc}
+     */
+    public function initialize(): void
     {
         $this->url = 0 === strpos($this->url, 'svn+http')
             ? substr($this->url, 4)
@@ -33,14 +36,17 @@ class SvnDriver extends BaseSvnDriver
         parent::initialize();
     }
 
-    public function getComposerInformation($identifier)
+    /**
+     * {@inheritDoc}
+     */
+    public function getComposerInformation(string $identifier): ?array
     {
-        $identifier = '/'.trim($identifier, '/').'/';
+        $identifier = '/' . trim($identifier, '/') . '/';
         $this->infoCache[$identifier] = Util::readCache($this->infoCache, $this->cache, $this->repoConfig['asset-type'], trim($identifier, '/'), true);
 
         if (!isset($this->infoCache[$identifier])) {
-            list($path, $rev) = $this->getPathRev($identifier);
-            $resource = $path.$this->repoConfig['filename'];
+            [$path, $rev] = $this->getPathRev($identifier);
+            $resource = $path . $this->repoConfig['filename'];
             $output = $this->getComposerContent($resource, $rev);
             $composer = $this->parseComposerContent($output, $resource, $path, $rev);
 
@@ -51,10 +57,13 @@ class SvnDriver extends BaseSvnDriver
         return $this->infoCache[$identifier];
     }
 
-    public static function supports(IOInterface $io, Config $config, $url, $deep = false)
+    /**
+     * {@inheritDoc}
+     */
+    public static function supports(IOInterface $io, Config $config, string $url, bool $deep = false): bool
     {
-        if (0 === strpos($url, 'http') && preg_match('/\/svn|svn\//i', $url)) {
-            $url = 'svn'.substr($url, strpos($url, '://'));
+        if (str_starts_with($url, 'http') && preg_match('/\/svn|svn\//i', $url)) {
+            $url = 'svn' . substr($url, strpos($url, '://'));
         }
 
         return parent::supports($io, $config, $url, $deep);
@@ -67,7 +76,7 @@ class SvnDriver extends BaseSvnDriver
      *
      * @return string[]
      */
-    protected function getPathRev($identifier)
+    protected function getPathRev(string $identifier): array
     {
         $path = $identifier;
         $rev = '';
@@ -79,25 +88,25 @@ class SvnDriver extends BaseSvnDriver
             $rev = $match[2];
         }
 
-        return array($path, $rev);
+        return [$path, $rev];
     }
 
     /**
      * Get the composer content.
      *
      * @param string $resource The resource
-     * @param string $rev      The rev
-     *
-     * @throws TransportException
+     * @param string $rev The rev
      *
      * @return null|string The composer content
+     * @throws TransportException
+     *
      */
-    protected function getComposerContent($resource, $rev)
+    protected function getComposerContent(string $resource, string $rev): ?string
     {
         $output = null;
 
         try {
-            $output = $this->execute($this->getSvnCredetials('svn cat'), $this->baseUrl.$resource.$rev);
+            $output = $this->execute($this->getSvnCredetials('svn cat'), $this->baseUrl . $resource . $rev);
         } catch (\RuntimeException $e) {
             throw new TransportException($e->getMessage());
         }
@@ -108,20 +117,21 @@ class SvnDriver extends BaseSvnDriver
     /**
      * Parse the content of composer.
      *
-     * @param null|string $output   The output of process executor
-     * @param string      $resource The resouce
-     * @param string      $path     The path
-     * @param string      $rev      The rev
+     * @param string|null $output The output of process executor
+     * @param string $resource The resource
+     * @param string $path The path
+     * @param string $rev The rev
      *
      * @return array The composer
+     * @throws \Seld\JsonLint\ParsingException
      */
-    protected function parseComposerContent($output, $resource, $path, $rev)
+    protected function parseComposerContent(?string $output, string $resource, string $path, string $rev): array
     {
         if (!trim($output)) {
-            return array('_nonexistent_package' => true);
+            return ['_nonexistent_package' => true];
         }
 
-        $composer = (array) JsonFile::parseJson($output, $this->baseUrl.$resource.$rev);
+        $composer = (array)JsonFile::parseJson($output, $this->baseUrl . $resource . $rev);
 
         return $this->addComposerTime($composer, $path, $rev);
     }
@@ -129,18 +139,18 @@ class SvnDriver extends BaseSvnDriver
     /**
      * Add time in composer.
      *
-     * @param array  $composer The composer
-     * @param string $path     The path
-     * @param string $rev      The rev
-     *
-     * @throws
+     * @param array $composer The composer
+     * @param string $path The path
+     * @param string $rev The rev
      *
      * @return array The composer
+     * @throws
+     *
      */
-    protected function addComposerTime(array $composer, $path, $rev)
+    protected function addComposerTime(array $composer, string $path, string $rev)
     {
         if (!isset($composer['time'])) {
-            $output = $this->execute($this->getSvnCredetials('svn info'), $this->baseUrl.$path.$rev);
+            $output = $this->execute($this->getSvnCredetials('svn info'), $this->baseUrl . $path . $rev);
 
             foreach ($this->process->splitLines($output) as $line) {
                 if ($line && preg_match('{^Last Changed Date: ([^(]+)}', $line, $match)) {
@@ -162,7 +172,7 @@ class SvnDriver extends BaseSvnDriver
      *
      * @return string
      */
-    protected function getSvnCredetials($command)
+    protected function getSvnCredetials(string $command): string
     {
         $httpBasic = $this->config->get('http-basic');
         $parsedUrl = parse_url($this->baseUrl);
@@ -173,7 +183,7 @@ class SvnDriver extends BaseSvnDriver
                 $uname = $httpBasic[$parsedUrl['host']]['username'];
                 $pw = $httpBasic[$parsedUrl['host']]['password'];
 
-                $svnCommand = $command.sprintf(' --username %s --password %s --no-auth-cache', $uname, $pw);
+                $svnCommand = $command . sprintf(' --username %s --password %s --no-auth-cache', $uname, $pw);
             }
         }
 
