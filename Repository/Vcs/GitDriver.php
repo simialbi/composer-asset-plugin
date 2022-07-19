@@ -49,7 +49,8 @@ class GitDriver extends BaseGitDriver
         }
 
         $cacheUrl = Filesystem::isLocalPath($this->url)
-            ? $this->initializeLocalPath() : $this->initializeRemotePath($skipSync);
+            ? $this->initializeLocalPath()
+            : $this->initializeRemotePath($skipSync);
         $this->getTags();
         $this->getBranches();
         $this->cache = new Cache($this->io, $this->config->get('cache-repo-dir') . '/' . preg_replace('{[^a-z0-9.]}i', '-', $cacheUrl));

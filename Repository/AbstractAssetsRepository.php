@@ -12,15 +12,18 @@
 namespace Fxp\Composer\AssetPlugin\Repository;
 
 use Composer\Config;
-use Composer\DependencyResolver\Pool;
 use Composer\Downloader\TransportException;
 use Composer\EventDispatcher\EventDispatcher;
 use Composer\IO\IOInterface;
-use Composer\Json\JsonFile;
+use Composer\Package\AliasPackage;
+use Composer\Package\BasePackage;
 use Composer\Pcre\Preg;
 use Composer\Repository\ComposerRepository;
 use Composer\Repository\RepositoryManager;
+use Composer\Semver\Constraint\Constraint;
+use Composer\Semver\Constraint\ConstraintInterface;
 use Composer\Util\HttpDownloader;
+use Composer\Util\ProcessExecutor;
 use Fxp\Composer\AssetPlugin\Assets;
 use Fxp\Composer\AssetPlugin\Type\AssetTypeInterface;
 use JetBrains\PhpStorm\ArrayShape;
@@ -90,6 +93,16 @@ abstract class AbstractAssetsRepository extends ComposerRepository
     protected HttpDownloader $httpDownloader;
 
     /**
+     * @var Config
+     */
+    protected Config $config;
+
+    /**
+     * @var ProcessExecutor
+     */
+    protected ProcessExecutor $process;
+
+    /**
      * @var string
      */
     protected string $baseUrl;
@@ -107,8 +120,16 @@ abstract class AbstractAssetsRepository extends ComposerRepository
      * @param Config $config
      * @param HttpDownloader $httpDownloader
      * @param EventDispatcher|null $eventDispatcher
+     * @param ProcessExecutor|null $process
      */
-    public function __construct(array $repoConfig, IOInterface $io, Config $config, HttpDownloader $httpDownloader, EventDispatcher $eventDispatcher = null)
+    public function __construct(
+        array            $repoConfig,
+        IOInterface      $io,
+        Config           $config,
+        HttpDownloader   $httpDownloader,
+        ?EventDispatcher $eventDispatcher = null,
+        ?ProcessExecutor $process = null
+    )
     {
         $repoConfig = array_merge($repoConfig, [
             'url' => $this->getUrl(),
@@ -118,7 +139,11 @@ abstract class AbstractAssetsRepository extends ComposerRepository
 
         parent::__construct($repoConfig, $io, $config, $httpDownloader, $eventDispatcher);
 
+        $this->io = $io;
+        $this->repoConfig = $repoConfig;
         $this->httpDownloader = $httpDownloader;
+        $this->config = $config;
+        $this->process = $process;
         $this->url = $repoConfig['url'];
         $this->baseUrl = rtrim(Preg::replace('{(?:/[^/\\\\]+\.json)?(?:[?#].*)?$}', '', $this->url), '/');
         $this->assetType = Assets::createType($this->getType());
@@ -155,44 +180,119 @@ abstract class AbstractAssetsRepository extends ComposerRepository
     }
 
     /**
+     * {@inheritDoc}
+     * @throws \Exception
+     */
+    #[ArrayShape([
+        'namesFound' => 'array',
+        'packages' => 'array'
+    ])]
+    public function loadPackages(array $packageNameMap, array $acceptableStability, array $stabilityFlags, array $alreadyLoaded = []): array
+    {
+        $packages = [];
+        $namesFound = [];
+
+        if ($this->hasProviders) {
+            foreach ($packageNameMap as $name => $constraint) {
+                $matches = [];
+//                if (is_null($constraint) || $name === 'bower-asset/jquery') {
+//                    var_dump($name, $packageNameMap, $acceptableStability);
+//                    debug_print_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+//                    exit;
+//                }
+                $candidates = $this->whatProvides($name, $constraint, $acceptableStability, $stabilityFlags, $alreadyLoaded);
+                foreach ($candidates as $candidate) {
+                    if ($candidate->getName() !== $name) {
+                        var_dump($candidate->getName(), $name);
+                        exit();
+                    }
+
+                    $namesFound[$name] = true;
+
+                    if (!$constraint || $constraint->matches(new Constraint('==', $candidate->getVersion()))) {
+                        $matches[spl_object_hash($candidate)] = $candidate;
+                        if ($candidate instanceof AliasPackage && !isset($matches[spl_object_hash($candidate->getAliasOf())])) {
+                            $matches[spl_object_hash($candidate->getAliasOf())] = $candidate->getAliasOf();
+                        }
+                    }
+                }
+
+                // add aliases of matched packages even if they did not match the constraint
+                foreach ($candidates as $candidate) {
+                    if ($candidate instanceof AliasPackage) {
+                        if (isset($matches[spl_object_hash($candidate->getAliasOf())])) {
+                            $matches[spl_object_hash($candidate)] = $candidate;
+                        }
+                    }
+                }
+                $packages = array_merge($packages, $matches);
+            }
+        }
+
+        return [
+            'namesFound' => $namesFound,
+            'packages' => $packages
+        ];
+    }
+
+    /**
+     * Search package by name
      * @param string $name
+     * @param ConstraintInterface $constraint
      * @param array|null $acceptableStability
      * @param array|null $stabilityFlags
      * @param array $alreadyLoaded
      *
-     * @return array
-     * @throws \Exception
+     * @return BasePackage[]
+     * @throws \Composer\Repository\RepositorySecurityException
      */
     protected function whatProvides(
-        string $name,
-        array  $acceptableStability = null,
-        array  $stabilityFlags = null,
-        array  $alreadyLoaded = []
+        string              $name,
+        ConstraintInterface $constraint,
+        ?array              $acceptableStability = null,
+        ?array              $stabilityFlags = null,
+        array               $alreadyLoaded = []
     ): array
     {
-        if (null !== ($provides = $this->findWhatProvides($name))) {
-            return $provides;
+        if (!str_starts_with($name, "{$this->getType()}-asset/")) {
+            return [];
         }
 
+        $packages = null;
         try {
             $repoName = Util::convertAliasName($name);
             $packageName = Util::cleanPackageName($repoName);
             $packageUrl = $this->buildPackageUrl($packageName);
-            $cacheName = $packageName . '-' . sha1($packageName) . '-package.json';
-            $data = $this->fetchFile($packageUrl, $cacheName);
-            $repo = $this->createVcsRepositoryConfig($data, Util::cleanPackageName($name));
-            $repo['asset-repository-manager'] = $this->assetRepositoryManager;
-            $repo['vcs-package-filter'] = $this->packageFilter;
-            $repo['vcs-driver-options'] = Util::getArrayValue($this->repoConfig, 'vcs-driver-options', []);
+            $cacheKey = $packageName . '-' . strtr($name, '/', '$') . '-package.json';
 
-            Util::addRepository($this->io, $this->repositoryManager, $this->repos, $name, $repo);
+            if ($contents = $this->cache->read($cacheKey)) {
+                $contents = json_decode($contents, true);
 
-            $this->providers[$name] = [];
-        } catch (\Exception $ex) {
-            $this->whatProvidesManageException($name, $ex);
+                if (isset($alreadyLoaded[$name])) {
+                    $packages = $contents;
+                }
+            }
+
+            if (!$packages) {
+                $data = $this->fetchFile($packageUrl, $cacheKey);
+                $repo = $this->createVcsRepositoryConfig($data, Util::cleanPackageName($name));
+                $repo['asset-repository-manager'] = $this->assetRepositoryManager;
+                $repo['vcs-package-filter'] = $this->packageFilter;
+                $repo['vcs-driver-options'] = Util::getArrayValue($this->repoConfig, 'vcs-driver-options', []);
+                $repo = Util::addRepository($this->io, $this->repositoryManager, $this->repos, $name, $repo);
+                /** @var \Fxp\Composer\AssetPlugin\Repository\AssetVcsRepository $repo */
+
+                $packages = $repo->loadPackages([$repoName => $constraint], $acceptableStability, $stabilityFlags, $alreadyLoaded)['packages'];
+            }
+        } catch (TransportException $e) {
+            try {
+                $this->whatProvidesManageException($name, $e);
+            } catch (\Exception $e) {
+            }
         }
 
-        return $this->providers[$name];
+
+        return $packages;
     }
 
     /**
@@ -252,6 +352,7 @@ abstract class AbstractAssetsRepository extends ComposerRepository
      * @param string $name The package name of the vcs repository
      *
      * @return bool
+     * @throws \Composer\Repository\InvalidRepositoryException
      */
     protected function hasVcsRepository(string $name): bool
     {

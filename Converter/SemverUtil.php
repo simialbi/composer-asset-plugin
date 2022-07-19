@@ -144,7 +144,7 @@ abstract class SemverUtil
 
         $matches = [];
         preg_match('/^[a-z]+/', $end, $matches);
-        $type = isset($matches[0]) ? VersionParser::normalizeStability($matches[0]) : null;
+        $type = isset($matches[0]) ? VersionParser::normalizeStability($matches[0]) : '';
         $end = substr($end, \strlen($type));
 
         return [$type, $version, $end];

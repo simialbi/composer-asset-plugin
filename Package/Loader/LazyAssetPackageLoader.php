@@ -158,7 +158,7 @@ class LazyAssetPackageLoader implements LazyLoaderInterface
     /**
      * {@inheritDoc}
      */
-    public function load(LazyPackageInterface $package): LazyPackageInterface|false
+    public function load(LazyPackageInterface $package): CompletePackageInterface|false
     {
         if (isset($this->cache[$package->getUniqueName()])) {
             return $this->cache[$package->getUniqueName()];

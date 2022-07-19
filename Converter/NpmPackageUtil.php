@@ -53,11 +53,11 @@ abstract class NpmPackageUtil
     /**
      * Convert the npm licenses list.
      *
-     * @param array|string $licenses The npm package licenses list
+     * @param array|string|null $licenses The npm package licenses list
      *
-     * @return array|string
+     * @return array|string|null
      */
-    public static function convertLicenses(array|string $licenses): array|string
+    public static function convertLicenses(array|string|null $licenses): array|string|null
     {
         if (!\is_array($licenses)) {
             return $licenses;
@@ -82,11 +82,11 @@ abstract class NpmPackageUtil
     /**
      * Convert the author section.
      *
-     * @param string|null $value The current value
+     * @param string|array|null $value The current value
      *
      * @return array|null
      */
-    public static function convertAuthor(?string $value): array|null
+    public static function convertAuthor(string|array|null $value): array|null
     {
         if (null !== $value) {
             $value = [$value];

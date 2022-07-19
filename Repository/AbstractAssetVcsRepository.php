@@ -173,6 +173,7 @@ abstract class AbstractAssetVcsRepository extends VcsRepository
     /**
      * Initializes the root identifier.
      *
+     * @param VcsDriverInterface $driver
      * @return void
      */
     protected function initRootIdentifier(VcsDriverInterface $driver): void
@@ -221,12 +222,12 @@ abstract class AbstractAssetVcsRepository extends VcsRepository
      * @return array The package config
      */
     #[ArrayShape(['name' => 'string', 'version' => 'string', 'type' => 'string'])]
-    protected function createMockOfPackageConfig(string $name, string $version)
+    protected function createMockOfPackageConfig(string $name, string $version): array
     {
         return [
             'name' => $name,
             'version' => $version,
-            'type' => $this->assetType->getComposerType(),
+            'type' => $this->assetType->getComposerType()
         ];
     }
 
@@ -279,6 +280,7 @@ abstract class AbstractAssetVcsRepository extends VcsRepository
      * @param string $branch The branch name
      *
      * @return PackageInterface
+     * @throws \ReflectionException
      */
     protected function overrideBranchAliasConfig(PackageInterface $package, string $aliasNormalized, string $branch): PackageInterface
     {
@@ -303,6 +305,7 @@ abstract class AbstractAssetVcsRepository extends VcsRepository
      */
     protected function addPackageAliases(PackageInterface $package, string $aliasNormalized): PackageInterface
     {
+        /** @var \Composer\Package\BasePackage $package */
         $alias = new AliasPackage($package, $aliasNormalized, $this->rootPackageVersion);
         $this->addPackage($alias);
 

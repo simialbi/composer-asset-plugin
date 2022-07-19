@@ -1,11 +1,10 @@
-NPM/Bower Dependency Manager for Composer
-=========================================
+NPM/Bower Dependency Manager for Composer v2
+============================================
 
-[![Latest Version](https://img.shields.io/packagist/v/fxp/composer-asset-plugin.svg)](https://packagist.org/packages/fxp/composer-asset-plugin)
-[![Build Status](https://img.shields.io/travis/com/fxpio/composer-asset-plugin.svg)](https://travis-ci.com/fxpio/composer-asset-plugin)
-[![Coverage Status](https://img.shields.io/coveralls/fxpio/composer-asset-plugin.svg)](https://coveralls.io/r/fxpio/composer-asset-plugin)
-[![SymfonyInsight](https://img.shields.io/symfony/i/grade/0d67ca33-5a72-46b8-b109-cfbf95673fce.svg)](https://insight.symfony.com/projects/0d67ca33-5a72-46b8-b109-cfbf95673fce)
-[![Packagist Downloads](https://img.shields.io/packagist/dt/fxp/composer-asset-plugin.svg)](https://packagist.org/packages/fxp/composer-asset-plugin/stats)
+[![Latest Stable Version](https://poser.pugx.org/simialbi/composer-asset-plugin/v/stable?format=flat-square)](https://packagist.org/packages/simialbi/composer-asset-plugin)
+[![Total Downloads](https://poser.pugx.org/simialbi/composer-asset-plugin/downloads?format=flat-square)](https://packagist.org/packages/simialbi/composer-asset-plugin)
+[![License](https://poser.pugx.org/simialbi/composer-asset-plugin/license?format=flat-square)](https://packagist.org/packages/simialbi/composer-asset-plugin)
+[![build](https://github.com/simialbi/composer-asset-plugin/actions/workflows/build.yml/badge.svg)](https://github.com/simialbi/composer-asset-plugin/actions/workflows/build.yml)
 
 The Composer Asset Plugin allows you to manage project assets (css, js, etc.) in your `composer.json`
 without installing NPM or Bower.
@@ -105,7 +104,7 @@ The bulk of the documentation is located in `Resources/doc/index.md`:
 
 [Read the FAQs](Resources/doc/faqs.md)
 
-[Read the Release Notes](https://github.com/fxpio/composer-asset-plugin/releases)
+[Read the Release Notes](https://github.com/simialbi/composer-asset-plugin/releases)
 
 Installation
 ------------

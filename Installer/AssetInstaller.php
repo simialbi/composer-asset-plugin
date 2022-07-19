@@ -19,6 +19,8 @@ use Composer\Util\Filesystem;
 use Fxp\Composer\AssetPlugin\Config\Config;
 use Fxp\Composer\AssetPlugin\Type\AssetTypeInterface;
 use Fxp\Composer\AssetPlugin\Util\AssetPlugin;
+use React\Promise\PromiseInterface;
+use function React\Promise\resolve;
 
 /**
  * Installer for asset packages.
@@ -42,7 +44,7 @@ class AssetInstaller extends LibraryInstaller
      * @param AssetTypeInterface $assetType
      * @param Filesystem|null $filesystem
      */
-    public function __construct(Config $config, IOInterface $io, Composer $composer, AssetTypeInterface $assetType, Filesystem $filesystem = null)
+    public function __construct(Config $config, IOInterface $io, Composer $composer, AssetTypeInterface $assetType, ?Filesystem $filesystem = null)
     {
         parent::__construct($io, $composer, $assetType->getComposerType(), $filesystem);
 
@@ -89,25 +91,35 @@ class AssetInstaller extends LibraryInstaller
     /**
      * {@inheritDoc}
      */
-    protected function installCode(PackageInterface $package): void
+    protected function installCode(PackageInterface $package): PromiseInterface|null
     {
         $package = AssetPlugin::addMainFiles($this->config, $package);
 
-        parent::installCode($package);
+        $promise = parent::installCode($package);
+        if (!$promise instanceof PromiseInterface) {
+            $promise = resolve();
+        }
 
-        $this->deleteIgnoredFiles($package);
+        return $promise->then(function () use ($package) {
+            $this->deleteIgnoredFiles($package);
+        });
     }
 
     /**
      * {@inheritDoc}
      */
-    protected function updateCode(PackageInterface $initial, PackageInterface $target): void
+    protected function updateCode(PackageInterface $initial, PackageInterface $target): PromiseInterface|null
     {
         $target = AssetPlugin::addMainFiles($this->config, $target);
 
-        parent::updateCode($initial, $target);
+        $promise = parent::updateCode($initial, $target);
+        if (!$promise instanceof PromiseInterface) {
+            $promise = resolve();
+        }
 
-        $this->deleteIgnoredFiles($target);
+        return $promise->then(function () use ($target) {
+            $this->deleteIgnoredFiles($target);
+        });
     }
 
     /**

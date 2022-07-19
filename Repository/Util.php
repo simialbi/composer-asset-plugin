@@ -79,7 +79,7 @@ class Util
             $rm->addRepository($repo);
         }
 
-        return $notAddedRepo;
+        return $notAddedRepo ?? $repos[$name];
     }
 
     /**

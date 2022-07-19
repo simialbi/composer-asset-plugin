@@ -215,7 +215,7 @@ class VcsPackageFilter
     protected function satisfyVersion(Link $require, string $normalizedVersion): bool
     {
         $constraintSame = $this->versionParser->parseConstraints($normalizedVersion);
-        $sameVersion = (bool)$require->getConstraint()->matches($constraintSame);
+        $sameVersion = $require->getConstraint()->matches($constraintSame);
 
         $consNormalizedVersion = FilterUtil::getVersionConstraint($normalizedVersion, $this->versionParser);
         $constraint = FilterUtil::getVersionConstraint($consNormalizedVersion->getPrettyString(), $this->versionParser);

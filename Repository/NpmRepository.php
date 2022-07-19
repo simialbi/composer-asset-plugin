@@ -59,6 +59,7 @@ class NpmRepository extends AbstractAssetsRepository
     {
         return $this->canonicalizeUrl($this->baseUrl . '/%package%');
     }
+
     /**
      * {@inheritDoc}
      */
@@ -80,6 +81,7 @@ class NpmRepository extends AbstractAssetsRepository
 
     /**
      * {@inheritDoc}
+     * @throws InvalidCreateRepositoryException
      */
     #[ArrayShape([
         'type' => 'string',

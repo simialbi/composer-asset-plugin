@@ -59,7 +59,7 @@ abstract class AbstractLazyCompletePackage extends CompletePackage implements La
     /**
      * {@inheritDoc}
      */
-    public function getNotificationUrl(): string
+    public function getNotificationUrl(): ?string
     {
         $this->initialize();
 
@@ -129,7 +129,7 @@ abstract class AbstractLazyCompletePackage extends CompletePackage implements La
     /**
      * {@inheritDoc}
      */
-    public function getDescription(): string
+    public function getDescription(): ?string
     {
         $this->initialize();
 
@@ -139,7 +139,7 @@ abstract class AbstractLazyCompletePackage extends CompletePackage implements La
     /**
      * {@inheritDoc}
      */
-    public function getHomepage(): string
+    public function getHomepage(): ?string
     {
         $this->initialize();
 

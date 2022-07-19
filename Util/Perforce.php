@@ -13,6 +13,7 @@ namespace Fxp\Composer\AssetPlugin\Util;
 
 use Composer\IO\IOInterface;
 use Composer\Util\Perforce as BasePerforce;
+use Composer\Util\Platform;
 use Composer\Util\ProcessExecutor;
 
 /**
@@ -25,7 +26,7 @@ class Perforce extends BasePerforce
     /**
      * @var string
      */
-    protected $filename;
+    protected string $filename;
 
     /**
      * {@inheritDoc}
@@ -54,8 +55,6 @@ class Perforce extends BasePerforce
      */
     public static function create($repoConfig, string|int $port, string $path, ProcessExecutor $process, IOInterface $io): static
     {
-        $isWindows = \defined('PHP_WINDOWS_VERSION_BUILD');
-
-        return new self($repoConfig, $port, $path, $process, $isWindows, $io);
+        return new self($repoConfig, $port, $path, $process, Platform::isWindows(), $io);
     }
 }

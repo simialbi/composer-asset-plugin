@@ -14,6 +14,7 @@ namespace Fxp\Composer\AssetPlugin\Repository\Vcs;
 use Composer\Cache;
 use Composer\Json\JsonFile;
 use Composer\Repository\Vcs\VcsDriverInterface;
+use Composer\Util\Http\Response;
 
 /**
  * Helper for VCS driver.
@@ -109,7 +110,10 @@ class Util
             $meth = $ref->getMethod($method);
             $meth->setAccessible(true);
 
-            $commit = JsonFile::parseJson($meth->invoke($driver, $resource), $resource);
+            /** @var Response $response */
+            $response = $meth->invoke($driver, $resource);
+
+            $commit = $response->decodeJson();
             $keys = explode('.', $resourceKey);
 
             while (!empty($keys)) {

@@ -13,7 +13,6 @@ namespace Fxp\Composer\AssetPlugin\Repository\Vcs;
 
 use Composer\Cache;
 use Composer\Downloader\TransportException;
-use Composer\Json\JsonFile;
 use Composer\Repository\Vcs\GitHubDriver as BaseGitHubDriver;
 use Composer\Util\Http\Response;
 use Fxp\Composer\AssetPlugin\Repository\Util as RepoUtil;
@@ -33,7 +32,7 @@ abstract class AbstractGitHubDriver extends BaseGitHubDriver
     /**
      * @var null|false|string
      */
-    protected string|null|false $redirectApi;
+    protected string|null|false $redirectApi = null;
 
     /**
      * {@inheritDoc}
@@ -238,7 +237,9 @@ abstract class AbstractGitHubDriver extends BaseGitHubDriver
      */
     protected function getRemoteContents(string $url): Response
     {
-        return $this->httpDownloader->get($url, []);
+        $options = $this->repoConfig['options'] ?? [];
+
+        return $this->httpDownloader->get($url, $options);
     }
 
     /**
