@@ -121,6 +121,9 @@ class GitHubDriver extends AbstractGitHubDriver
         $composer = JsonFile::parseJson($composer, $resource);
         $resource = "{$this->getApiUrl()}/repos/$this->owner/$this->repository/commits/" . urlencode($identifier);
         $composer = Util::addComposerTime($composer, 'commit.committer.date', $resource, $this);
+        if (isset($composer['support']) && is_scalar($composer['support'])) {
+            $composer['support'] = [];
+        }
 
         if (!isset($composer['support']['source'])) {
             $label = array_search($identifier, $this->getTags(), true) ?: array_search($identifier, $this->getBranches(), true) ?: $identifier;

@@ -103,6 +103,11 @@ class FxpAssetPlugin implements PluginInterface, EventSubscriberInterface
 
             $this->assetRepositoryManager->addRepositories($this->config->getArray('repositories'));
 
+            // Prevent Array loader deprecation message
+            set_error_handler(function () {
+
+            }, E_USER_DEPRECATED);
+
             AssetPlugin::addInstallers($this->config, $composer, $io);
         }
     }

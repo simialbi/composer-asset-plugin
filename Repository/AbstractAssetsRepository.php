@@ -159,7 +159,6 @@ abstract class AbstractAssetsRepository extends ComposerRepository
 
     /**
      * {@inheritDoc}
-     * @throws \Seld\JsonLint\ParsingException
      */
     public function search(string $query, int $mode = 0, ?string $type = null): array
     {
@@ -195,16 +194,10 @@ abstract class AbstractAssetsRepository extends ComposerRepository
         if ($this->hasProviders) {
             foreach ($packageNameMap as $name => $constraint) {
                 $matches = [];
-//                if (is_null($constraint) || $name === 'bower-asset/jquery') {
-//                    var_dump($name, $packageNameMap, $acceptableStability);
-//                    debug_print_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
-//                    exit;
-//                }
                 $candidates = $this->whatProvides($name, $constraint, $acceptableStability, $stabilityFlags, $alreadyLoaded);
                 foreach ($candidates as $candidate) {
-                    if ($candidate->getName() !== $name) {
-                        var_dump($candidate->getName(), $name);
-                        exit();
+                    if (!is_object($candidate) || $candidate->getName() !== $name) {
+                        continue;
                     }
 
                     $namesFound[$name] = true;
@@ -259,6 +252,7 @@ abstract class AbstractAssetsRepository extends ComposerRepository
         }
 
         $packages = null;
+        $data = null;
         try {
             $repoName = Util::convertAliasName($name);
             $packageName = Util::cleanPackageName($repoName);
@@ -269,12 +263,15 @@ abstract class AbstractAssetsRepository extends ComposerRepository
                 $contents = json_decode($contents, true);
 
                 if (isset($alreadyLoaded[$name])) {
-                    $packages = $contents;
+                    $data = $contents;
                 }
             }
 
-            if (!$packages) {
+            if (!$data) {
                 $data = $this->fetchFile($packageUrl, $cacheKey);
+            }
+
+            if (!$packages) {
                 $repo = $this->createVcsRepositoryConfig($data, Util::cleanPackageName($name));
                 $repo['asset-repository-manager'] = $this->assetRepositoryManager;
                 $repo['vcs-package-filter'] = $this->packageFilter;
@@ -324,6 +321,7 @@ abstract class AbstractAssetsRepository extends ComposerRepository
      * @param string $name
      *
      * @return null|array
+     * @throws \Composer\Repository\InvalidRepositoryException
      */
     protected function findWhatProvides(string $name): ?array
     {
@@ -448,7 +446,7 @@ abstract class AbstractAssetsRepository extends ComposerRepository
 
             foreach ($results as $item) {
                 if ($name === strtolower($item['name'])) {
-                    $providers = $this->whatProvides($item['name']);
+                    $providers = $this->whatProvides($item['name'], null);
 
                     break;
                 }
