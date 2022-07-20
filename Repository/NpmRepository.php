@@ -131,41 +131,6 @@ class NpmRepository extends AbstractAssetsRepository
     }
 
     /**
-     * {@inheritDoc}
-     */
-    protected function whatProvidesManageException(string $name, \Exception $exception): void
-    {
-        if ($exception instanceof InvalidCreateRepositoryException) {
-            $data = $exception->getData();
-
-            if (isset($data['versions']) && !empty($data['versions'])) {
-                $this->putArrayRepositoryConfig($data['versions'], $name);
-
-                return;
-            }
-        }
-
-        parent::whatProvidesManageException($name, $exception);
-    }
-
-    /**
-     * Create and put the array repository with the asset configs.
-     *
-     * @param array $packageConfigs The configs of assets package versions
-     * @param string $name The asset package name
-     *
-     * @return void
-     */
-    protected function putArrayRepositoryConfig(array $packageConfigs, string $name): void
-    {
-        $packages = $this->createArrayRepositoryConfig($packageConfigs);
-        $repo = new ArrayRepository($packages);
-        Util::addRepositoryInstance($this->io, $this->repositoryManager, $this->repos, $name, $repo);
-
-//        $this->providers[$name] = [];
-    }
-
-    /**
      * Create the array repository with the asset configs.
      *
      * A warning message is displayed if the constraint versions of packages

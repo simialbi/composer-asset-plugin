@@ -183,18 +183,25 @@ abstract class PackageUtil
     public static function convertArrayKey(array $asset, string $assetKey, array &$composer, array $composerKey): void
     {
         if (2 !== \count($composerKey)
-            || !\is_string($composerKey[0]) || !$composerKey[1] instanceof \Closure) {
+            || (!\is_string($composerKey[0]) && !\is_array($composerKey[0])) || !$composerKey[1] instanceof \Closure) {
             throw new InvalidArgumentException('The "composerKey" argument of asset packager converter must be an string or an array with the composer key and closure');
         }
 
         $closure = $composerKey[1];
         $composerKey = $composerKey[0];
-        $data = $asset[$assetKey] ?? null;
-        $previousData = $composer[$composerKey] ?? null;
-        $data = $closure($data, $previousData);
+        if (is_array($composerKey)) {
+            $data = $closure($asset[$assetKey] ?? null);
+            foreach ($composerKey as $item) {
+                $composer[$item] = $data[$item] ?? null;
+            }
+        } else {
+            $data = $asset[$assetKey] ?? null;
+            $previousData = $composer[$composerKey] ?? null;
+            $data = $closure($data, $previousData);
 
-        if (null !== $data) {
-            $composer[$composerKey] = $data;
+            if (null !== $data) {
+                $composer[$composerKey] = $data;
+            }
         }
     }
 

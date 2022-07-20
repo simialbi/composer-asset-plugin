@@ -269,9 +269,7 @@ abstract class AbstractAssetsRepository extends ComposerRepository
             if ($contents = $this->cache->read($cacheKey)) {
                 $contents = json_decode($contents, true);
 
-//                if (isset($alreadyLoaded[$name])) {
-                    $data = $contents;
-//                }
+                $data = $contents;
             }
 
             if (!$data) {
@@ -286,15 +284,11 @@ abstract class AbstractAssetsRepository extends ComposerRepository
                 $repo = Util::addRepository($this->io, $this->repositoryManager, $this->repos, $name, $repo);
                 /** @var \Fxp\Composer\AssetPlugin\Repository\AssetVcsRepository $repo */
 
-                $packages = $repo->loadPackages([$repoName => $constraint], $acceptableStability, $stabilityFlags, $alreadyLoaded)['packages'];
+                $packages = $repo->packages ?? $repo->loadPackages([$repoName => $constraint], $acceptableStability, $stabilityFlags, $alreadyLoaded)['packages'];
             }
-        } catch (TransportException $e) {
-            try {
-                $this->whatProvidesManageException($name, $e);
-            } catch (\Exception $e) {
-            }
+        } catch (TransportException) {
+            $packages = [];
         }
-
 
         return $packages;
     }
@@ -319,56 +313,6 @@ abstract class AbstractAssetsRepository extends ComposerRepository
     protected function buildPackageUrl(string $packageName): string
     {
         return str_replace('%package%', $packageName, $this->lazyProvidersUrl);
-    }
-
-    /**
-     * Finds what provides in cache or return empty array if the
-     * name is not a asset package.
-     *
-     * @param string $name
-     *
-     * @return null|array
-     * @throws \Composer\Repository\InvalidRepositoryException
-     */
-    protected function findWhatProvides(string $name): ?array
-    {
-        $assetPrefix = $this->assetType->getComposerVendorName() . '/';
-
-        if (!str_contains($name, $assetPrefix)) {
-            return [];
-        }
-
-        if (isset($this->providers[$name])) {
-            return $this->providers[$name];
-        }
-
-        $data = null;
-        if ($this->hasVcsRepository($name)) {
-            $this->providers[$name] = [];
-            $data = $this->providers[$name];
-        }
-
-        return $data;
-    }
-
-    /**
-     * Checks if the package vcs repository is already include in repository manager.
-     *
-     * @param string $name The package name of the vcs repository
-     *
-     * @return bool
-     * @throws \Composer\Repository\InvalidRepositoryException
-     */
-    protected function hasVcsRepository(string $name): bool
-    {
-        foreach ($this->repositoryManager->getRepositories() as $mRepo) {
-            if ($mRepo instanceof AssetVcsRepository
-                && $name === $mRepo->getComposerPackageName()) {
-                return true;
-            }
-        }
-
-        return false;
     }
 
     /**
@@ -410,58 +354,6 @@ abstract class AbstractAssetsRepository extends ComposerRepository
             'name' => $this->assetType->getComposerVendorName() . '/' . $item['name'],
             'description' => null,
         ];
-    }
-
-    /**
-     * Manage exception for "whatProvides" method.
-     *
-     * @param string $name
-     * @param \Exception $exception
-     *
-     * @return void
-     * @throws \Exception When exception is not a TransportException instance
-     */
-    protected function whatProvidesManageException(string $name, \Exception $exception): void
-    {
-        if ($exception instanceof TransportException) {
-            $this->fallbackWhatProvides($name, $exception);
-
-            return;
-        }
-
-        throw $exception;
-    }
-
-    /**
-     * Searchs if the registry has a package with the same name exists with a
-     * different camelcase.
-     *
-     * @param string $name
-     * @param TransportException $ex
-     *
-     * @return void
-     * @throws \Exception
-     */
-    protected function fallbackWhatProvides(string $name, TransportException $ex): void
-    {
-        $providers = [];
-
-        if (404 === $ex->getCode() && !$this->fallbackProviders) {
-            $this->fallbackProviders = true;
-            $repoName = Util::convertAliasName($name);
-            $results = $this->search($repoName);
-
-            foreach ($results as $item) {
-                if ($name === strtolower($item['name'])) {
-                    $providers = $this->whatProvides($item['name'], null);
-
-                    break;
-                }
-            }
-        }
-
-        $this->fallbackProviders = false;
-        $this->providers[$name] = $providers;
     }
 
     /**
@@ -520,7 +412,8 @@ abstract class AbstractAssetsRepository extends ComposerRepository
      */
     #[ArrayShape([
         'type' => 'string',
-        'url' => 'string'
+        'url' => 'string',
+        'registry-versions' => '?array'
     ])]
     abstract protected function createVcsRepositoryConfig(array $data, ?string $registryName = null): array;
 }

@@ -1,7 +1,11 @@
 <?php
-/**
- * @package composer-asset-plugin
- * @author Simon Karlen <simi.albi@outlook.com>
+/*
+ * This file is part of the Fxp Composer Asset Plugin package.
+ *
+ * (c) Simon Karlen <simi.albi@outlook.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
 
 namespace Fxp\Composer\AssetPlugin\Repository;
@@ -142,19 +146,11 @@ class ArtifactoryBowerRepository extends BowerRepository
                 foreach ($refs as $ref) {
                     if (preg_match('/^([a-f\d]{44})\s+refs\/tags\/(\S+)/', $ref, $matches)) {
                         try {
-                            $versionNormalized = $this->versionParser->normalize($matches[2]);
-                            $packages[] = [
+                            $packages[] = $this->assetType->getPackageConverter()->convert([
                                 'name' => $name,
-                                'version' => $matches[2],
-                                'version_normalized' => $versionNormalized,
-                                'dist' => [
-                                    'type' => 'tar',
-                                    'url' => $this->buildBinariesUrl($packageName, $matches[2]),
-                                    'reference' => $matches[1],
-                                    'shasum' => ''
-                                ],
-                                'type' => $this->getType() . '-asset-library'
-                            ];
+                                'version' => [$matches[2], $matches[1], $this->buildBinariesUrl($packageName, $matches[2])],
+                                'type' => $this->getType()
+                            ]);
                         } catch (\UnexpectedValueException) {
                         }
                     }
@@ -163,11 +159,8 @@ class ArtifactoryBowerRepository extends BowerRepository
             }
 
             $packages = $this->loader->loadPackages($packages);
-        } catch (TransportException $e) {
-            try {
-                $this->whatProvidesManageException($name, $e);
-            } catch (\Exception $e) {
-            }
+        } catch (TransportException) {
+            $packages = [];
         }
 
         return $packages;

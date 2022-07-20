@@ -26,7 +26,8 @@ class Assets
      */
     protected static array $typeClasses = [
         'npm' => 'Fxp\Composer\AssetPlugin\Type\NpmAssetType',
-        'bower' => 'Fxp\Composer\AssetPlugin\Type\BowerAssetType'
+        'bower' => 'Fxp\Composer\AssetPlugin\Type\BowerAssetType',
+        'bower-artifactory' => 'Fxp\Composer\AssetPlugin\Type\ArtifactoryBowerAssetType'
     ];
 
     /**

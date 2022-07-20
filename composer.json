@@ -1,6 +1,6 @@
 {
     "name": "simialbi/composer-asset-plugin",
-    "description": "NPM/Bower Dependency Manager for Composer",
+    "description": "NPM/Bower Dependency Manager for Composer 2",
     "keywords": [
         "npm",
         "bower",
@@ -8,6 +8,7 @@
         "package",
         "asset",
         "composer",
+        "composer2",
         "nodejs"
     ],
     "homepage": "https://github.com/fxpio/composer-asset-plugin",
