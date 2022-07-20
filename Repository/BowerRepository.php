@@ -53,11 +53,6 @@ class BowerRepository extends AbstractAssetsRepository
         return $this->canonicalizeUrl($this->baseUrl . '/search/%query%');
     }
 
-    protected function whatProvides(string $name, ConstraintInterface $constraint, ?array $acceptableStability = null, ?array $stabilityFlags = null, array $alreadyLoaded = []): array
-    {
-        return [];
-    }
-
     /**
      * {@inheritDoc}
      */
