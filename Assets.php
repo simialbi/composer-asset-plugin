@@ -26,7 +26,7 @@ class Assets
      */
     protected static array $typeClasses = [
         'npm' => 'Fxp\Composer\AssetPlugin\Type\NpmAssetType',
-        'bower' => 'Fxp\Composer\AssetPlugin\Type\BowerAssetType',
+        'bower' => 'Fxp\Composer\AssetPlugin\Type\BowerAssetType'
     ];
 
     /**
@@ -35,6 +35,7 @@ class Assets
     protected static array $registryFactoryClasses = [
         'default' => 'Fxp\Composer\AssetPlugin\Repository\DefaultRegistryFactory',
         'bower-private' => 'Fxp\Composer\AssetPlugin\Repository\BowerPrivateRegistryFactory',
+        'bower-artifactory' => 'Fxp\Composer\AssetPlugin\Repository\ArtifactoryBowerRegistryFactory'
     ];
 
     /**
@@ -42,7 +43,7 @@ class Assets
      */
     protected static array $defaultRegistryClasses = [
         'npm' => 'Fxp\Composer\AssetPlugin\Repository\NpmRepository',
-        'bower' => 'Fxp\Composer\AssetPlugin\Repository\BowerRepository',
+        'bower' => 'Fxp\Composer\AssetPlugin\Repository\BowerRepository'
     ];
 
     /**
@@ -57,7 +58,7 @@ class Assets
         'hg' => 'Fxp\Composer\AssetPlugin\Repository\AssetVcsRepository',
         'perforce' => 'Fxp\Composer\AssetPlugin\Repository\AssetVcsRepository',
         'svn' => 'Fxp\Composer\AssetPlugin\Repository\AssetVcsRepository',
-        'url' => 'Fxp\Composer\AssetPlugin\Repository\AssetVcsRepository',
+        'url' => 'Fxp\Composer\AssetPlugin\Repository\AssetVcsRepository'
     ];
 
     /**
@@ -67,12 +68,12 @@ class Assets
         'github' => 'Fxp\Composer\AssetPlugin\Repository\Vcs\GitHubDriver',
         'git-bitbucket' => 'Fxp\Composer\AssetPlugin\Repository\Vcs\GitBitbucketDriver',
         'git' => 'Fxp\Composer\AssetPlugin\Repository\Vcs\GitDriver',
-        'hg-bitbucket' => 'Fxp\Composer\AssetPlugin\Repository\Vcs\HgBitbucketDriver',
+//        'hg-bitbucket' => 'Fxp\Composer\AssetPlugin\Repository\Vcs\HgBitbucketDriver',
         'hg' => 'Fxp\Composer\AssetPlugin\Repository\Vcs\HgDriver',
         'perforce' => 'Fxp\Composer\AssetPlugin\Repository\Vcs\PerforceDriver',
         'url' => 'Fxp\Composer\AssetPlugin\Repository\Vcs\GitDriver',
         // svn must be last because identifying a subversion server for sure is practically impossible
-        'svn' => 'Fxp\Composer\AssetPlugin\Repository\Vcs\SvnDriver',
+        'svn' => 'Fxp\Composer\AssetPlugin\Repository\Vcs\SvnDriver'
     ];
 
     /**

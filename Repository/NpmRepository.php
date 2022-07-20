@@ -11,11 +11,14 @@
 
 namespace Fxp\Composer\AssetPlugin\Repository;
 
-use Composer\DependencyResolver\Pool;
+use Composer\Config;
+use Composer\EventDispatcher\EventDispatcher;
 use Composer\IO\IOInterface;
 use Composer\Package\CompletePackageInterface;
 use Composer\Package\Loader\ArrayLoader;
 use Composer\Repository\ArrayRepository;
+use Composer\Util\HttpDownloader;
+use Composer\Util\ProcessExecutor;
 use Fxp\Composer\AssetPlugin\Converter\NpmPackageUtil;
 use Fxp\Composer\AssetPlugin\Converter\PackageUtil;
 use Fxp\Composer\AssetPlugin\Exception\InvalidCreateRepositoryException;
@@ -28,6 +31,24 @@ use JetBrains\PhpStorm\ArrayShape;
  */
 class NpmRepository extends AbstractAssetsRepository
 {
+    /**
+     * {@inheritDoc}
+     */
+    public function __construct(
+        array            $repoConfig,
+        IOInterface      $io,
+        Config           $config,
+        HttpDownloader   $httpDownloader,
+        ?EventDispatcher $eventDispatcher = null,
+        ?ProcessExecutor $process = null
+    )
+    {
+        $cfg = $config->get('fxp-asset') ?? [];
+        $this->url = $cfg['npm-registry-url'] ?? 'https://registry.npmjs.org';
+
+        parent::__construct($repoConfig, $io, $config, $httpDownloader, $eventDispatcher, $process);
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -49,7 +70,7 @@ class NpmRepository extends AbstractAssetsRepository
      */
     protected function getUrl(): string
     {
-        return 'https://registry.npmjs.org';
+        return $this->url;
     }
 
     /**
@@ -132,7 +153,6 @@ class NpmRepository extends AbstractAssetsRepository
      *
      * @param array $packageConfigs The configs of assets package versions
      * @param string $name The asset package name
-     * @param Pool $pool The pool
      *
      * @return void
      */
@@ -142,7 +162,7 @@ class NpmRepository extends AbstractAssetsRepository
         $repo = new ArrayRepository($packages);
         Util::addRepositoryInstance($this->io, $this->repositoryManager, $this->repos, $name, $repo);
 
-        $this->providers[$name] = [];
+//        $this->providers[$name] = [];
     }
 
     /**

@@ -267,11 +267,11 @@ class VcsPackageFilter
             $this->package->getRequires(),
             $this->package->getDevRequires()
         );
-
-        if (null !== $this->installedRepository
-            && FilterUtil::checkConfigOption($this->config, 'optimize-with-installed-packages')) {
-            $this->initInstalledPackages();
-        }
+        // disabled because it breaks update
+//        if (null !== $this->installedRepository
+//            && FilterUtil::checkConfigOption($this->config, 'optimize-with-installed-packages')) {
+//            $this->initInstalledPackages();
+//        }
     }
 
     /**
@@ -281,9 +281,13 @@ class VcsPackageFilter
     {
         foreach ($this->installedRepository->getPackages() as $package) {
             $operator = $this->getFilterOperator($package);
-            $link = current($this->arrayLoader->parseLinks($this->package->getName(), $this->package->getVersion(), 'installed', [$package->getName() => $operator . $package->getPrettyVersion()]));
+            $link = current($this->arrayLoader->parseLinks(
+                $this->package->getName(),
+                $this->package->getVersion(),
+                'installed',
+                [$package->getName() => $operator . $package->getPrettyVersion()]
+            ));
             $link = $this->includeRootConstraint($package, $link);
-
             $this->requires[$package->getName()] = $link;
         }
     }

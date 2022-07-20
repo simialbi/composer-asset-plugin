@@ -11,7 +11,6 @@
 
 namespace Fxp\Composer\AssetPlugin\Repository;
 
-use Composer\Util\HttpDownloader;
 use Fxp\Composer\AssetPlugin\Config\Config;
 
 /**

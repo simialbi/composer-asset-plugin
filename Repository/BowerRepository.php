@@ -11,6 +11,7 @@
 
 namespace Fxp\Composer\AssetPlugin\Repository;
 
+use Composer\Semver\Constraint\ConstraintInterface;
 use JetBrains\PhpStorm\ArrayShape;
 
 /**

@@ -51,7 +51,7 @@ abstract class ConfigBuilder
     public static function validate(IOInterface $io, RootPackageInterface $package, string $commandName = null): void
     {
         if (null === $commandName || \in_array($commandName, ['install', 'update', 'validate', 'require', 'remove'], true)) {
-            $extra = (array)$package->getExtra();
+            $extra = $package->getExtra();
 
             foreach (self::$deprecatedOptions as $new => $old) {
                 if (\array_key_exists($old, $extra)) {
@@ -68,11 +68,12 @@ abstract class ConfigBuilder
      * @param IOInterface|null $io The composer input/output
      *
      * @return Config
+     * @throws \Seld\JsonLint\ParsingException
      */
     public static function build(Composer $composer, ?IOInterface $io = null): Config
     {
         $config = self::getConfigBase($composer, $io);
-        $config = self::injectDeprecatedConfig($config, (array)$composer->getPackage()->getExtra());
+        $config = self::injectDeprecatedConfig($config, $composer->getPackage()->getExtra());
 
         return new Config($config);
     }
@@ -103,6 +104,7 @@ abstract class ConfigBuilder
      * @param IOInterface|null $io The composer input/output
      *
      * @return array
+     * @throws \Seld\JsonLint\ParsingException
      */
     private static function getConfigBase(Composer $composer, ?IOInterface $io = null): array
     {

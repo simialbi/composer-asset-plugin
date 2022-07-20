@@ -25,6 +25,7 @@ use Composer\Semver\Constraint\ConstraintInterface;
 use Composer\Util\HttpDownloader;
 use Composer\Util\ProcessExecutor;
 use Fxp\Composer\AssetPlugin\Assets;
+use Fxp\Composer\AssetPlugin\Package\Version\VersionParser;
 use Fxp\Composer\AssetPlugin\Type\AssetTypeInterface;
 use JetBrains\PhpStorm\ArrayShape;
 
@@ -103,6 +104,11 @@ abstract class AbstractAssetsRepository extends ComposerRepository
     protected ProcessExecutor $process;
 
     /**
+     * @var VersionParser
+     */
+    protected VersionParser $versionParser;
+
+    /**
      * @var string
      */
     protected string $baseUrl;
@@ -131,6 +137,7 @@ abstract class AbstractAssetsRepository extends ComposerRepository
         ?ProcessExecutor $process = null
     )
     {
+        $this->config = $config;
         $repoConfig = array_merge($repoConfig, [
             'url' => $this->getUrl(),
         ]);
@@ -142,7 +149,6 @@ abstract class AbstractAssetsRepository extends ComposerRepository
         $this->io = $io;
         $this->repoConfig = $repoConfig;
         $this->httpDownloader = $httpDownloader;
-        $this->config = $config;
         $this->process = $process;
         $this->url = $repoConfig['url'];
         $this->baseUrl = rtrim(Preg::replace('{(?:/[^/\\\\]+\.json)?(?:[?#].*)?$}', '', $this->url), '/');
@@ -150,6 +156,7 @@ abstract class AbstractAssetsRepository extends ComposerRepository
         $this->lazyProvidersUrl = $this->getPackageUrl();
         $this->providersUrl = $this->lazyProvidersUrl;
         $this->searchUrl = $this->getSearchUrl();
+        $this->versionParser = new VersionParser();
         $this->hasProviders = true;
         $this->packageFilter = $repoConfig['vcs-package-filter'] ?? null;
         $this->repos = [];
@@ -262,9 +269,9 @@ abstract class AbstractAssetsRepository extends ComposerRepository
             if ($contents = $this->cache->read($cacheKey)) {
                 $contents = json_decode($contents, true);
 
-                if (isset($alreadyLoaded[$name])) {
+//                if (isset($alreadyLoaded[$name])) {
                     $data = $contents;
-                }
+//                }
             }
 
             if (!$data) {

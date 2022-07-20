@@ -78,6 +78,7 @@ class FxpAssetPlugin implements PluginInterface, EventSubscriberInterface
 
     /**
      * {@inheritDoc}
+     * @throws \Seld\JsonLint\ParsingException
      */
     public function activate(Composer $composer, IOInterface $io): void
     {
