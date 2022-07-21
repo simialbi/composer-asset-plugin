@@ -49,7 +49,7 @@ class BowerRepository extends AbstractAssetsRepository
      */
     protected function getSearchUrl(): string
     {
-        return $this->canonicalizeUrl($this->baseUrl . '/search/%query%');
+        return $this->canonicalizeUrl('https://libraries.io/api/bower-search?q=%query%');
     }
 
     /**

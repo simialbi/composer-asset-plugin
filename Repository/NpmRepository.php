@@ -45,16 +45,9 @@ class NpmRepository extends AbstractAssetsRepository
     {
         $cfg = $config->get('fxp-asset') ?? [];
         $this->url = $cfg['npm-registry-url'] ?? 'https://registry.npmjs.org';
+        $this->searchUrl = $cfg['npm-search-url'] ?? 'https://www.npmjs.com/search/suggestions?q=%query%';
 
         parent::__construct($repoConfig, $io, $config, $httpDownloader, $eventDispatcher, $process);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function search(string $query, int $mode = 0, ?string $type = null): array
-    {
-        return [];
     }
 
     /**
@@ -86,7 +79,7 @@ class NpmRepository extends AbstractAssetsRepository
      */
     protected function getSearchUrl(): string
     {
-        return $this->canonicalizeUrl($this->baseUrl . '/-/all');
+        return $this->canonicalizeUrl($this->searchUrl);
     }
 
     /**

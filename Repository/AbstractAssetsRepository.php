@@ -155,7 +155,7 @@ abstract class AbstractAssetsRepository extends ComposerRepository
         $this->assetType = Assets::createType($this->getType());
         $this->lazyProvidersUrl = $this->getPackageUrl();
         $this->providersUrl = $this->lazyProvidersUrl;
-        $this->searchUrl = $this->getSearchUrl();
+        $this->searchUrl = $this->searchUrl ?? $this->getSearchUrl();
         $this->versionParser = new VersionParser();
         $this->hasProviders = true;
         $this->packageFilter = $repoConfig['vcs-package-filter'] ?? null;
@@ -352,7 +352,7 @@ abstract class AbstractAssetsRepository extends ComposerRepository
     {
         return [
             'name' => $this->assetType->getComposerVendorName() . '/' . $item['name'],
-            'description' => null,
+            'description' => $item['description'] ?? null
         ];
     }
 
