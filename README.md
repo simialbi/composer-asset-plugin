@@ -33,22 +33,22 @@ This allows you to manage asset dependencies in a PHP based project very easily.
 - Automatically get and create the Asset VCS repositories of dependencies defined
   in each asset package (dev dependencies included)
 - Mapping conversion of asset package to composer package for:
-  - [NPM Package](https://www.npmjs.org/doc/package.json.html) - [package.json](Resources/doc/schema.md#npm-mapping)
-  - [Bower Package](http://bower.io/docs/creating-packages) - [bower.json](Resources/doc/schema.md#bower-mapping)
-- Conversion of [Semver version](Resources/doc/schema.md#verison-conversion) to the composer version
-- Conversion of [Semver range version](Resources/doc/schema.md#range-verison-conversion) to the composer range version
-- Conversion of [dependencies with URL](Resources/doc/schema.md#url-range-verison-conversion) to the composer dependencies with the creation of VCS repositories
-- Conversion of [multiple versions of the same dependency](Resources/doc/schema.md#multiple-versions-of-a-dependency-in-the-same-project) to different dependencies of composer
-- Add manually the [multiple versions of a same dependency in the project](Resources/doc/index.md#usage-with-multiple-versions-of-the-same-dependency)
-- Add a [custom config of VCS Repository](Resources/doc/index.md#usage-with-vcs-repository)
-- Override the [config of VCS Repository](Resources/doc/index.md#overriding-the-config-of-a-vcs-repository) defined by the asset registry directly in config section of root composer
+  - [NPM Package](https://www.npmjs.org/doc/package.json.html) - [package.json](resources/doc/schema.md#npm-mapping)
+  - [Bower Package](http://bower.io/docs/creating-packages) - [bower.json](resources/doc/schema.md#bower-mapping)
+- Conversion of [Semver version](resources/doc/schema.md#verison-conversion) to the composer version
+- Conversion of [Semver range version](resources/doc/schema.md#range-verison-conversion) to the composer range version
+- Conversion of [dependencies with URL](resources/doc/schema.md#url-range-verison-conversion) to the composer dependencies with the creation of VCS repositories
+- Conversion of [multiple versions of the same dependency](resources/doc/schema.md#multiple-versions-of-a-dependency-in-the-same-project) to different dependencies of composer
+- Add manually the [multiple versions of a same dependency in the project](resources/doc/index.md#usage-with-multiple-versions-of-the-same-dependency)
+- Add a [custom config of VCS Repository](resources/doc/index.md#usage-with-vcs-repository)
+- Override the [config of VCS Repository](resources/doc/index.md#overriding-the-config-of-a-vcs-repository) defined by the asset registry directly in config section of root composer
 - VCS drivers for:
-  - [Git](Resources/doc/index.md#usage-with-vcs-repository)
-  - [GitHub](Resources/doc/index.md#usage-with-vcs-repository) (compatible with repository redirects)
-  - [Git Bitbucket](Resources/doc/index.md#usage-with-vcs-repository)
-  - [Mercurial](Resources/doc/index.md#usage-with-vcs-repository)
-  - [SVN](Resources/doc/index.md#usage-with-vcs-repository)
-  - [Perforce](Resources/doc/index.md#usage-with-vcs-repository)
+  - [Git](resources/doc/index.md#usage-with-vcs-repository)
+  - [GitHub](resources/doc/index.md#usage-with-vcs-repository) (compatible with repository redirects)
+  - [Git Bitbucket](resources/doc/index.md#usage-with-vcs-repository)
+  - [Mercurial](resources/doc/index.md#usage-with-vcs-repository)
+  - [SVN](resources/doc/index.md#usage-with-vcs-repository)
+  - [Perforce](resources/doc/index.md#usage-with-vcs-repository)
 - Local cache system for:
   - package versions
   - package contents
@@ -95,16 +95,16 @@ Documentation
 
 The bulk of the documentation is located in `Resources/doc/index.md`:
 
-[Read the Documentation](Resources/doc/index.md)
+[Read the Documentation](resources/doc/index.md)
 
-[Read the FAQs](Resources/doc/faqs.md)
+[Read the FAQs](resources/doc/faqs.md)
 
 [Read the Release Notes](https://github.com/simialbi/composer-asset-plugin/releases)
 
 Installation
 ------------
 
-All the installation instructions are located in [documentation](Resources/doc/index.md).
+All the installation instructions are located in [documentation](resources/doc/index.md).
 
 License
 -------
