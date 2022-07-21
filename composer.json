@@ -34,15 +34,15 @@
     },
     "autoload": {
         "psr-4": {
-            "Fxp\\Composer\\AssetPlugin\\": ""
+            "Fxp\\Composer\\AssetPlugin\\": "src"
         },
         "exclude-from-classmap": [
-            "/Tests/"
+            "/tests/"
         ]
     },
     "autoload-dev": {
         "psr-4": {
-            "Fxp\\Composer\\AssetPlugin\\Tests": "Tests"
+            "Fxp\\Composer\\AssetPlugin\\Tests": "tests"
         }
     },
     "extra": {
