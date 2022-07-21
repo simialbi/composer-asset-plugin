@@ -14,15 +14,11 @@ This allows you to manage asset dependencies in a PHP based project very easily.
 
 > **Important:**
 >
-> The next major version of Composer Asset Plugin is so different, but also incompatible with the current version,
+> ⚠ This plugin is based on [François Pluchino](https://github.com/francoispluchino)'s [Version for composer 1](https://github.com/fxpio/composer-asset-plugin).
+> This v2 is not maintained by [François Pluchino](https://github.com/francoispluchino).
+> 
+> The next official major version of Composer Asset Plugin by [François Pluchino](https://github.com/francoispluchino) is so different, but also incompatible with the current version,
 > that it became a new project named [Foxy](https://github.com/fxpio/foxy).
->
-> Foxy is the new way to manage the assets of PHP libraries, because it works nativelly with all the features of
-> NPM or Yarn. However, this plugin will continue to be maintained by the community, without having new features.
->
-> You can read [the reasons for this new version](https://github.com/yiisoft/yii2/issues/14297#issuecomment-327565136),
-> or [the difference between Foxy and Fxp Composer Asset Plugin](https://github.com/fxpio/foxy/blob/master/Resources/doc/faqs.md#what-is-the-difference-between-foxy-and-fxp-composer-asset-plugin),
-> but also [how does Foxy work](https://github.com/fxpio/foxy/blob/master/Resources/doc/faqs.md#how-does-the-plugin-work).
 
 ##### Features include:
 
@@ -42,8 +38,8 @@ This allows you to manage asset dependencies in a PHP based project very easily.
 - Conversion of [Semver version](Resources/doc/schema.md#verison-conversion) to the composer version
 - Conversion of [Semver range version](Resources/doc/schema.md#range-verison-conversion) to the composer range version
 - Conversion of [dependencies with URL](Resources/doc/schema.md#url-range-verison-conversion) to the composer dependencies with the creation of VCS repositories
-- Conversion of [multiple versions of the same dependency](Resources/doc/schema.md#multiple-version-of-depdendency-in-the-same-project) to different dependencies of composer
-- Add manually the [multiple versions of a same dependency in the project](Resources/doc/index.md#usage-with-multiple-version-of-a-same-dependency)
+- Conversion of [multiple versions of the same dependency](Resources/doc/schema.md#multiple-versions-of-a-dependency-in-the-same-project) to different dependencies of composer
+- Add manually the [multiple versions of a same dependency in the project](Resources/doc/index.md#usage-with-multiple-versions-of-the-same-dependency)
 - Add a [custom config of VCS Repository](Resources/doc/index.md#usage-with-vcs-repository)
 - Override the [config of VCS Repository](Resources/doc/index.md#overriding-the-config-of-a-vcs-repository) defined by the asset registry directly in config section of root composer
 - VCS drivers for:
@@ -51,7 +47,6 @@ This allows you to manage asset dependencies in a PHP based project very easily.
   - [GitHub](Resources/doc/index.md#usage-with-vcs-repository) (compatible with repository redirects)
   - [Git Bitbucket](Resources/doc/index.md#usage-with-vcs-repository)
   - [Mercurial](Resources/doc/index.md#usage-with-vcs-repository)
-  - [Mercurial Bitbucket](Resources/doc/index.md#usage-with-vcs-repository)
   - [SVN](Resources/doc/index.md#usage-with-vcs-repository)
   - [Perforce](Resources/doc/index.md#usage-with-vcs-repository)
 - Local cache system for:
@@ -70,7 +65,7 @@ This allows you to manage asset dependencies in a PHP based project very easily.
   - `licenses`
   - `remove`
   - `require`
-  - `search` (bower only)
+  - `search`
   - `show`
   - `status`
 
@@ -122,9 +117,9 @@ About
 -----
 
 Fxp Composer Asset Plugin is a [François Pluchino](https://github.com/francoispluchino) initiative.
-See also the list of [contributors](https://github.com/fxpio/composer-asset-plugin/contributors).
+See also the list of [contributors](https://github.com/simialbi/composer-asset-plugin/contributors).
 
 Reporting an issue or a feature request
 ---------------------------------------
 
-Issues and feature requests are tracked in the [Github issue tracker](https://github.com/fxpio/composer-asset-plugin/issues).
+Issues and feature requests are tracked in the [Github issue tracker](https://github.com/simialbi/composer-asset-plugin/issues).
