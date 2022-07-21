@@ -7,13 +7,13 @@ Basic Usage
 
 ## Installation
 
-See the [Release Notes](https://github.com/fxpio/composer-asset-plugin/releases)
+See the [Release Notes](https://github.com/simialbi/composer-asset-plugin/releases)
 to know the Composer version required.
 
 ### Global scope (per user) installation
 
 ```shell
-$ composer global require "fxp/composer-asset-plugin:~1.3"
+$ composer global require "simialbi/composer-asset-plugin:2.0.0-beta.2"
 ```
 
 ### Project scope installation
@@ -35,7 +35,7 @@ It must be prefixed with `{asset-type}-asset/`.
 ```json
 {
     "require": {
-        "npm-asset/bootstrap": "dev-master"
+        "npm-asset/bootstrap": "^5.2.0"
     }
 }
 ```
@@ -45,7 +45,7 @@ It must be prefixed with `{asset-type}-asset/`.
 ```json
 {
     "require": {
-        "bower-asset/bootstrap": "dev-master"
+        "bower-asset/bootstrap": "^5.2.0"
     }
 }
 ```
@@ -115,7 +115,6 @@ Add the following to your `composer.json`:
 | GitHub              | `npm-github`        | `bower-github`        |
 | Git Bitbucket       | `npm-git-bitbucket` | `bower-git-bitbucket` |
 | Mercurial           | `npm-hg`            | `bower-hg`            |
-| Mercurial Bitbucket | `npm-hg-bitbucket`  | `bower-hg-bitbucket`  |
 | SVN                 | `npm-svn`           | `bower-svn`           |
 | Perforce            | `npm-perforce`      | `bower-perforce`      |
 
@@ -135,7 +134,7 @@ Repository.
                 {
                     "type": "bower-vcs",
                     "url": "https://github.com/vendor/exemple-asset-name.git",
-                    "name": "bower-asset/exemple-asset-name"
+                    "name": "bower-asset/example-asset-name"
                 }
             ]
         }
@@ -150,7 +149,7 @@ You can also use the standard format of Composer for naming your VCS Repository:
     "config": {
         "fxp-asset": {
             "repositories": {
-                "bower-asset/exemple-asset-name": {
+                "bower-asset/example-asset-name": {
                     "type": "bower-vcs",
                     "url": "https://github.com/vendor/exemple-asset-name.git"
                 }
@@ -189,7 +188,7 @@ The dependencies will then be placed in the following directories:
 The root Composer package has a feature: all asset dependencies added will have automatically
 a filter applied, before the importation of the branches and the tags.
 
-In this way, all versions are not accepted by the constraint of version and they will be
+In this way, all versions are not accepted by the constraint of version, and they will be
 skipped to the importation, and will not be injected in the `Pool`. Of course, all constraints
 of versions are functional (exact version, range, wildcard, tilde operator).
 
@@ -205,7 +204,7 @@ The root `composer.json`:
         "npm-asset/example-asset2": ">=2.3@RC",
         "npm-asset/example-asset3": ">=1.3@beta",
         "npm-asset/example-asset4": "~0.9@alpha",
-        "npm-asset/example-asset4": "2.1.*",
+        "npm-asset/example-asset4": "2.1.*"
     }
 }
 ```
@@ -222,7 +221,7 @@ imports of definitions packages. In addition to filter with the dependencies in 
 Composer package, the plugin filters the imports of packages definitions with the previous
 versions of the packages installed.
 
-However it may happen that Composer throws an exception, indicating that it can not find a
+However, it may happen that Composer throws an exception, indicating that it can not find a
 compatible version. This happens if a dependency uses a new version lower than the installed
 version.
 
@@ -384,9 +383,9 @@ managed by Composer for the package name.
 
 For this reason, the NPM scope `@<vendor>/` is converted into `<vendor>--`.
 
-NPM package name              | Composer package name
-------------------------------|-----------------------------------------
-`@<vendor>/<dependency-name>` | `npm-asset/<vendor>--<dependency-name>`
+|  NPM package name             | Composer package name                   |
+|-------------------------------|-----------------------------------------|
+| `@<vendor>/<dependency-name>` | `npm-asset/<vendor>--<dependency-name>` |
 
 ### Use the Ignore Files Manager in the Composer scripts
 
@@ -469,10 +468,10 @@ option `config.fxp-asset.registry-options.{type}-searchable` in the root project
 }
 ```
 
-### Use no-api option of VCS Githhub driver
+### Use no-api option of VCS GitHub driver
 
 If you want to use the [no-api](https://getcomposer.org/doc/05-repositories.md#git-alternatives) option
-for your Github assets, you can add the option `config.fxp-asset.vcs-driver-options.github-no-api` in
+for your GitHub assets, you can add the option `config.fxp-asset.vcs-driver-options.github-no-api` in
 the root project `composer.json` file. By default, this option is to `false`. The option `config.fxp-asset.pattern-skip-version`
 can be used to exclude tags via a regular expression.
 
@@ -513,7 +512,7 @@ the `bower-asset/example-asset1` package.
 
 ### Solve the conflicts of asset dependencies
 
-Bower include a [resolution section](https://jaketrent.com/post/bower-resolutions) to
+Bower includes a [resolution section](https://jaketrent.com/post/bower-resolutions) to
 solve the conflicts between 2 same dependencies but with different versions.
 
 As for NPM, it's possible to install several versions of the same dependency by different
@@ -575,7 +574,7 @@ file with your text editor.
 ### Define the config in a environment variable
 
 You can define each option (`config.fxp-asset.*`) directly in the PHP environment variables. For
-this, all variables will start with `FXP_ASSET__` and uppercased, and each `-` will replaced by `_`.
+this, all variables will start with `FXP_ASSET__` and uppercase, and each `-` will be replaced by `_`.
 
 The accepted value types are:
 
@@ -625,7 +624,7 @@ The config values are retrieved in priority in:
 
 ### Disable the plugin
 
-When you working on multiple PHP projects, you do not necessarily need to use the plugin. It's
+When you're working on multiple PHP projects, you do not necessarily need to use the plugin. It's
 possible to disable the plugin with the `config.fxp-asset.enabled` option with the `false` value.
 
 For example, you can disable the plugin globally (for all your projects), and enable it only
