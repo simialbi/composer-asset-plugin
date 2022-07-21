@@ -23,45 +23,45 @@ class MockIO extends BaseIO
     /**
      * @var bool
      */
-    protected $verbose;
+    protected bool $verbose;
 
     /**
      * @var array
      */
-    protected $traces;
+    protected array $traces;
 
     /**
      * Constructor.
      *
      * @param bool $verbose
      */
-    public function __construct($verbose)
+    public function __construct(bool $verbose)
     {
         $this->verbose = $verbose;
-        $this->traces = array();
+        $this->traces = [];
     }
 
-    public function isInteractive()
+    public function isInteractive(): bool
     {
         return false;
     }
 
-    public function isVerbose()
+    public function isVerbose(): bool
     {
         return $this->verbose;
     }
 
-    public function isVeryVerbose()
+    public function isVeryVerbose(): bool
     {
         return $this->verbose;
     }
 
-    public function isDebug()
+    public function isDebug(): bool
     {
         return false;
     }
 
-    public function isDecorated()
+    public function isDecorated(): bool
     {
         return false;
     }
@@ -70,7 +70,7 @@ class MockIO extends BaseIO
     {
         $pos = max(\count($this->traces) - 1, 0);
         if (isset($this->traces[$pos])) {
-            $messages = $this->traces[$pos].$messages;
+            $messages = $this->traces[$pos] . $messages;
         }
         $this->traces[$pos] = $messages;
         if ($newline) {
@@ -116,7 +116,7 @@ class MockIO extends BaseIO
     {
     }
 
-    public function select($question, $choices, $default, $attempts = false, $errorMessage = 'Value "%s" is invalid', $multiselect = false)
+    public function select($question, $choices, $default, $attempts = false, $errorMessage = 'Value "%s" is invalid', $multiselect = false): array|bool|int|string
     {
         return $default;
     }
@@ -126,7 +126,7 @@ class MockIO extends BaseIO
      *
      * @return array
      */
-    public function getTraces()
+    public function getTraces(): array
     {
         return $this->traces;
     }

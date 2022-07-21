@@ -27,122 +27,113 @@ use Fxp\Composer\AssetPlugin\Config\ConfigBuilder;
 final class ConfigTest extends \PHPUnit\Framework\TestCase
 {
     /**
-     * @var Composer|\PHPUnit_Framework_MockObject_MockObject
+     * @var Composer|\PHPUnit\Framework\MockObject\MockObject
      */
-    protected $composer;
+    protected \PHPUnit\Framework\MockObject\MockObject|Composer $composer;
 
     /**
-     * @var Config|\PHPUnit_Framework_MockObject_MockObject
+     * @var Config|\PHPUnit\Framework\MockObject\MockObject
      */
-    protected $composerConfig;
+    protected \PHPUnit\Framework\MockObject\MockObject|Config $composerConfig;
 
     /**
-     * @var IOInterface|\PHPUnit_Framework_MockObject_MockObject
+     * @var IOInterface|\PHPUnit\Framework\MockObject\MockObject
      */
-    protected $io;
+    protected \PHPUnit\Framework\MockObject\MockObject|IOInterface $io;
 
     /**
-     * @var \PHPUnit_Framework_MockObject_MockObject|RootPackageInterface
+     * @var \PHPUnit\Framework\MockObject\MockObject|RootPackageInterface
      */
-    protected $package;
+    protected \PHPUnit\Framework\MockObject\MockObject|RootPackageInterface $package;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->composer = $this->getMockBuilder(Composer::class)->disableOriginalConstructor()->getMock();
         $this->composerConfig = $this->getMockBuilder(Config::class)->disableOriginalConstructor()->getMock();
         $this->io = $this->getMockBuilder(IOInterface::class)->getMock();
         $this->package = $this->getMockBuilder(RootPackageInterface::class)->getMock();
 
-        $this->composer->expects(static::any())
+        $this->composer->expects(self::any())
             ->method('getPackage')
-            ->willReturn($this->package)
-        ;
+            ->willReturn($this->package);
 
-        $this->composer->expects(static::any())
+        $this->composer->expects(self::any())
             ->method('getConfig')
-            ->willReturn($this->composerConfig)
-        ;
+            ->willReturn($this->composerConfig);
     }
 
-    public function getDataForGetConfig()
+    public function getDataForGetConfig(): array
     {
-        return array(
-            array('foo',                 42,                           42),
-            array('bar',                 'foo',                        'empty'),
-            array('baz',                 false,                        true),
-            array('repositories',        42,                           0),
-            array('global-composer-foo', 90,                           0),
-            array('global-composer-bar', 70,                           0),
-            array('global-config-foo',   23,                           0),
-            array('env-boolean',         false,                        true,    'FXP_ASSET__ENV_BOOLEAN=false'),
-            array('env-integer',         -32,                          0,       'FXP_ASSET__ENV_INTEGER=-32'),
-            array('env-json',            array('foo' => 'bar'),        array(), 'FXP_ASSET__ENV_JSON="{"foo": "bar"}"'),
-            array('env-json-array',      array(array('foo' => 'bar')), array(), 'FXP_ASSET__ENV_JSON_ARRAY="[{"foo": "bar"}]"'),
-            array('env-string',          'baz',                        'foo',   'FXP_ASSET__ENV_STRING=baz'),
-        );
+        return [
+            ['foo', 42, 42],
+            ['bar', 'foo', 'empty'],
+            ['baz', false, true],
+            ['repositories', 42, 0],
+            ['global-composer-foo', 90, 0],
+            ['global-composer-bar', 70, 0],
+            ['global-config-foo', 23, 0],
+            ['env-boolean', false, true, 'FXP_ASSET__ENV_BOOLEAN=false'],
+            ['env-integer', -32, 0, 'FXP_ASSET__ENV_INTEGER=-32'],
+            ['env-json', ['foo' => 'bar'], [], 'FXP_ASSET__ENV_JSON="{"foo": "bar"}"'],
+            ['env-json-array', [['foo' => 'bar']], [], 'FXP_ASSET__ENV_JSON_ARRAY="[{"foo": "bar"}]"'],
+            ['env-string', 'baz', 'foo', 'FXP_ASSET__ENV_STRING=baz'],
+        ];
     }
 
     /**
      * @dataProvider getDataForGetConfig
      *
-     * @param string      $key      The key
-     * @param mixed       $expected The expected value
-     * @param null|mixed  $default  The default value
-     * @param null|string $env      The env variable
+     * @param string $key The key
+     * @param mixed $expected The expected value
+     * @param mixed|null $default The default value
+     * @param string|null $env The env variable
      */
-    public function testGetConfig($key, $expected, $default = null, $env = null)
+    public function testGetConfig(string $key, mixed $expected, mixed $default = null, ?string $env = null)
     {
         // add env variables
         if (null !== $env) {
             putenv($env);
         }
 
-        $globalPath = realpath(__DIR__.'/../Fixtures/package/global');
-        $this->composerConfig->expects(static::any())
+        $globalPath = realpath(__DIR__ . '/../Fixtures/package/global');
+        $this->composerConfig->expects(self::any())
             ->method('has')
             ->with('home')
-            ->willReturn(true)
-        ;
+            ->willReturn(true);
 
-        $this->composerConfig->expects(static::any())
+        $this->composerConfig->expects(self::any())
             ->method('get')
             ->with('home')
-            ->willReturn($globalPath)
-        ;
+            ->willReturn($globalPath);
 
-        $this->package->expects(static::any())
+        $this->package->expects(self::any())
             ->method('getExtra')
-            ->willReturn(array(
+            ->willReturn([
                 'asset-baz' => false,
                 'asset-repositories' => 42,
-            ))
-        ;
+            ]);
 
-        $this->package->expects(static::any())
+        $this->package->expects(self::any())
             ->method('getConfig')
-            ->willReturn(array(
-                'fxp-asset' => array(
+            ->willReturn([
+                'fxp-asset' => [
                     'bar' => 'foo',
                     'baz' => false,
                     'env-foo' => 55,
-                ),
-            ))
-        ;
+                ],
+            ]);
 
         if (0 === strpos($key, 'global-')) {
-            $this->io->expects(static::atLeast(2))
+            $this->io->expects(self::atLeast(2))
                 ->method('isDebug')
-                ->willReturn(true)
-            ;
+                ->willReturn(true);
 
-            $this->io->expects(static::at(1))
+            $this->io->expects(self::at(1))
                 ->method('writeError')
-                ->with(sprintf('Loading fxp-asset config in file %s/composer.json', $globalPath))
-            ;
-            $this->io->expects(static::at(3))
+                ->with(sprintf('Loading fxp-asset config in file %s/composer.json', $globalPath));
+            $this->io->expects(self::at(3))
                 ->method('writeError')
-                ->with(sprintf('Loading fxp-asset config in file %s/config.json', $globalPath))
-            ;
+                ->with(sprintf('Loading fxp-asset config in file %s/config.json', $globalPath));
         }
 
         $config = ConfigBuilder::build($this->composer, $this->io);
@@ -152,18 +143,14 @@ final class ConfigTest extends \PHPUnit\Framework\TestCase
         if (null !== $env) {
             $envKey = substr($env, 0, strpos($env, '='));
             putenv($envKey);
-            static::assertFalse(getenv($envKey));
+            self::assertFalse(getenv($envKey));
         }
 
-        static::assertSame($expected, $value);
+        self::assertSame($expected, $value);
         // test cache
-        static::assertSame($expected, $config->get($key, $default));
+        self::assertSame($expected, $config->get($key, $default));
     }
 
-    /**
-     * @expectedException \Fxp\Composer\AssetPlugin\Exception\InvalidArgumentException
-     * @expectedExceptionMessage The "FXP_ASSET__ENV_JSON" environment variable isn't a valid JSON
-     */
     public function testGetEnvConfigWithInvalidJson()
     {
         putenv('FXP_ASSET__ENV_JSON="{"foo"}"');
@@ -177,7 +164,9 @@ final class ConfigTest extends \PHPUnit\Framework\TestCase
         }
 
         putenv('FXP_ASSET__ENV_JSON');
-        static::assertFalse(getenv('FXP_ASSET__ENV_JSON'));
+        self::assertFalse(getenv('FXP_ASSET__ENV_JSON'));
+        self::expectException('\Fxp\Composer\AssetPlugin\Exception\InvalidArgumentException');
+        self::expectExceptionMessage('The "FXP_ASSET__ENV_JSON" environment variable isn\'t a valid JSON');
 
         if (null === $ex) {
             throw new \Exception('The expected exception was not thrown');
@@ -188,7 +177,7 @@ final class ConfigTest extends \PHPUnit\Framework\TestCase
 
     public function testValidateConfig()
     {
-        $deprecated = array(
+        $deprecated = [
             'asset-installer-paths' => 'deprecated',
             'asset-ignore-files' => 'deprecated',
             'asset-private-bower-registries' => 'deprecated',
@@ -199,18 +188,16 @@ final class ConfigTest extends \PHPUnit\Framework\TestCase
             'asset-registry-options' => 'deprecated',
             'asset-vcs-driver-options' => 'deprecated',
             'asset-main-files' => 'deprecated',
-        );
+        ];
 
-        $this->package->expects(static::any())
+        $this->package->expects(self::any())
             ->method('getExtra')
-            ->willReturn($deprecated)
-        ;
+            ->willReturn($deprecated);
 
         foreach (array_keys($deprecated) as $i => $option) {
-            $this->io->expects(static::at($i))
+            $this->io->expects(self::at($i))
                 ->method('write')
-                ->with('<warning>The "extra.'.$option.'" option is deprecated, use the "config.fxp-asset.'.substr($option, 6).'" option</warning>')
-            ;
+                ->with('<warning>The "extra.' . $option . '" option is deprecated, use the "config.fxp-asset.' . substr($option, 6) . '" option</warning>');
         }
 
         ConfigBuilder::validate($this->io, $this->package);

@@ -24,23 +24,24 @@ final class AssetsTest extends \PHPUnit\Framework\TestCase
 {
     public function testGetTypes()
     {
-        static::assertEquals(array(
+        self::assertEquals([
             'npm',
             'bower',
-        ), Assets::getTypes());
+            'bower-artifactory'
+        ], Assets::getTypes());
     }
 
     public function testDefaultGetRegistries()
     {
-        static::assertEquals(array(
+        self::assertEquals([
             'npm',
-            'bower',
-        ), array_keys(Assets::getDefaultRegistries()));
+            'bower'
+        ], array_keys(Assets::getDefaultRegistries()));
     }
 
     public function testGetVcsRepositoryDrivers()
     {
-        static::assertEquals(array(
+        self::assertEquals([
             'vcs',
             'github',
             'git-bitbucket',
@@ -49,29 +50,26 @@ final class AssetsTest extends \PHPUnit\Framework\TestCase
             'hg',
             'perforce',
             'svn',
-            'url',
-        ), array_keys(Assets::getVcsRepositoryDrivers()));
+            'url'
+        ], array_keys(Assets::getVcsRepositoryDrivers()));
     }
 
     public function testGetVcsDrivers()
     {
-        static::assertEquals(array(
+        self::assertEquals([
             'github',
             'git-bitbucket',
             'git',
-            'hg-bitbucket',
             'hg',
             'perforce',
             'url',
-            'svn',
-        ), array_keys(Assets::getVcsDrivers()));
+            'svn'
+        ], array_keys(Assets::getVcsDrivers()));
     }
 
-    /**
-     * @expectedException \Fxp\Composer\AssetPlugin\Exception\InvalidArgumentException
-     */
     public function testCreationOfInvalidType()
     {
+        self::expectError();
         Assets::createType(null);
     }
 
@@ -79,20 +77,20 @@ final class AssetsTest extends \PHPUnit\Framework\TestCase
     {
         $type = Assets::createType('npm');
 
-        static::assertInstanceOf('Fxp\Composer\AssetPlugin\Type\AssetTypeInterface', $type);
+        self::assertInstanceOf('Fxp\Composer\AssetPlugin\Type\AssetTypeInterface', $type);
     }
 
     public function testCreationOfBowerAsset()
     {
         $type = Assets::createType('bower');
 
-        static::assertInstanceOf('Fxp\Composer\AssetPlugin\Type\AssetTypeInterface', $type);
+        self::assertInstanceOf('Fxp\Composer\AssetPlugin\Type\AssetTypeInterface', $type);
     }
 
     public function testCreationOfPrivateBowerAsset()
     {
         $type = Assets::createType('bower');
 
-        static::assertInstanceOf('Fxp\Composer\AssetPlugin\Type\AssetTypeInterface', $type);
+        self::assertInstanceOf('Fxp\Composer\AssetPlugin\Type\AssetTypeInterface', $type);
     }
 }

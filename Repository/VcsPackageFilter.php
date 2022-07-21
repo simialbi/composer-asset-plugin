@@ -49,7 +49,7 @@ class VcsPackageFilter
     /**
      * @var InstalledFilesystemRepository|null
      */
-    protected ?InstalledFilesystemRepository $installedRepository;
+    protected ?InstalledFilesystemRepository $installedRepository = null;
 
     /**
      * @var VersionParser

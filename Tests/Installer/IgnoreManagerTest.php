@@ -26,21 +26,21 @@ final class IgnoreManagerTest extends \PHPUnit\Framework\TestCase
     /**
      * @var string
      */
-    private $target;
+    private string $target;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $fs = new Filesystem();
-        $this->target = sys_get_temp_dir().'/composer-foo';
+        $this->target = sys_get_temp_dir() . '/composer-foo';
 
         foreach ($this->getFixtureFiles() as $filename) {
-            $path = $this->target.'/'.$filename;
+            $path = $this->target . '/' . $filename;
             $fs->ensureDirectoryExists(\dirname($path));
             @file_put_contents($path, '');
         }
     }
 
-    protected function tearDown()
+    protected function tearDown(): void
     {
         $fs = new Filesystem();
         $fs->remove($this->target);
@@ -61,36 +61,36 @@ final class IgnoreManagerTest extends \PHPUnit\Framework\TestCase
 
         $ignorer->cleanup();
 
-        static::assertFileNotExists($this->target.'/.hidden');
-        static::assertFileExists($this->target.'/CHANGELOG');
-        static::assertFileNotExists($this->target.'/README');
+        self::assertFileDoesNotExist($this->target . '/.hidden');
+        self::assertFileExists($this->target . '/CHANGELOG');
+        self::assertFileDoesNotExist($this->target . '/README');
 
-        static::assertFileNotExists($this->target.'/lib/autoload.php');
-        static::assertFileNotExists($this->target.'/lib');
+        self::assertFileDoesNotExist($this->target . '/lib/autoload.php');
+        self::assertFileDoesNotExist($this->target . '/lib');
 
-        static::assertFileNotExists($this->target.'/src/.hidden');
-        static::assertFileNotExists($this->target.'/src/doc');
-        static::assertFileExists($this->target.'/src');
+        self::assertFileDoesNotExist($this->target . '/src/.hidden');
+        self::assertFileDoesNotExist($this->target . '/src/doc');
+        self::assertFileExists($this->target . '/src');
 
-        static::assertFileNotExists($this->target.'/src/foo/.hidden');
-        static::assertFileExists($this->target.'/src/foo/empty.html');
-        static::assertFileNotExists($this->target.'/src/foo/empty.md');
-        static::assertFileNotExists($this->target.'/src/foo/empty.txt');
-        static::assertFileExists($this->target.'/src/foo/small.txt');
-        static::assertFileExists($this->target.'/src/foo');
+        self::assertFileDoesNotExist($this->target . '/src/foo/.hidden');
+        self::assertFileExists($this->target . '/src/foo/empty.html');
+        self::assertFileDoesNotExist($this->target . '/src/foo/empty.md');
+        self::assertFileDoesNotExist($this->target . '/src/foo/empty.txt');
+        self::assertFileExists($this->target . '/src/foo/small.txt');
+        self::assertFileExists($this->target . '/src/foo');
 
-        static::assertFileExists($this->target.'/src/lib/empty.txt');
-        static::assertFileExists($this->target.'/src/lib');
+        self::assertFileExists($this->target . '/src/lib/empty.txt');
+        self::assertFileExists($this->target . '/src/lib');
 
-        static::assertFileExists($this->target.'/src/lib/foo/empty.txt');
-        static::assertFileExists($this->target.'/src/lib/foo/small.txt');
-        static::assertFileExists($this->target.'/src/lib/foo');
+        self::assertFileExists($this->target . '/src/lib/foo/empty.txt');
+        self::assertFileExists($this->target . '/src/lib/foo/small.txt');
+        self::assertFileExists($this->target . '/src/lib/foo');
 
-        static::assertFileExists($this->target.'/src/tests/empty.html');
-        static::assertFileExists($this->target.'/src/tests');
+        self::assertFileExists($this->target . '/src/tests/empty.html');
+        self::assertFileExists($this->target . '/src/tests');
 
-        static::assertFileNotExists($this->target.'/tests/bootstrap.php');
-        static::assertFileNotExists($this->target.'/tests');
+        self::assertFileDoesNotExist($this->target . '/tests/bootstrap.php');
+        self::assertFileDoesNotExist($this->target . '/tests');
     }
 
     public function testDeleteIgnoredFilesWithDisabledManager()
@@ -109,36 +109,36 @@ final class IgnoreManagerTest extends \PHPUnit\Framework\TestCase
 
         $ignorer->cleanup();
 
-        static::assertFileExists($this->target.'/.hidden');
-        static::assertFileExists($this->target.'/CHANGELOG');
-        static::assertFileExists($this->target.'/README');
+        self::assertFileExists($this->target . '/.hidden');
+        self::assertFileExists($this->target . '/CHANGELOG');
+        self::assertFileExists($this->target . '/README');
 
-        static::assertFileExists($this->target.'/lib/autoload.php');
-        static::assertFileExists($this->target.'/lib');
+        self::assertFileExists($this->target . '/lib/autoload.php');
+        self::assertFileExists($this->target . '/lib');
 
-        static::assertFileExists($this->target.'/src/.hidden');
-        static::assertFileExists($this->target.'/src/doc');
-        static::assertFileExists($this->target.'/src');
+        self::assertFileExists($this->target . '/src/.hidden');
+        self::assertFileExists($this->target . '/src/doc');
+        self::assertFileExists($this->target . '/src');
 
-        static::assertFileExists($this->target.'/src/foo/.hidden');
-        static::assertFileExists($this->target.'/src/foo/empty.html');
-        static::assertFileExists($this->target.'/src/foo/empty.md');
-        static::assertFileExists($this->target.'/src/foo/empty.txt');
-        static::assertFileExists($this->target.'/src/foo/small.txt');
-        static::assertFileExists($this->target.'/src/foo');
+        self::assertFileExists($this->target . '/src/foo/.hidden');
+        self::assertFileExists($this->target . '/src/foo/empty.html');
+        self::assertFileExists($this->target . '/src/foo/empty.md');
+        self::assertFileExists($this->target . '/src/foo/empty.txt');
+        self::assertFileExists($this->target . '/src/foo/small.txt');
+        self::assertFileExists($this->target . '/src/foo');
 
-        static::assertFileExists($this->target.'/src/lib/empty.txt');
-        static::assertFileExists($this->target.'/src/lib');
+        self::assertFileExists($this->target . '/src/lib/empty.txt');
+        self::assertFileExists($this->target . '/src/lib');
 
-        static::assertFileExists($this->target.'/src/lib/foo/empty.txt');
-        static::assertFileExists($this->target.'/src/lib/foo/small.txt');
-        static::assertFileExists($this->target.'/src/lib/foo');
+        self::assertFileExists($this->target . '/src/lib/foo/empty.txt');
+        self::assertFileExists($this->target . '/src/lib/foo/small.txt');
+        self::assertFileExists($this->target . '/src/lib/foo');
 
-        static::assertFileExists($this->target.'/src/tests/empty.html');
-        static::assertFileExists($this->target.'/src/tests');
+        self::assertFileExists($this->target . '/src/tests/empty.html');
+        self::assertFileExists($this->target . '/src/tests');
 
-        static::assertFileExists($this->target.'/tests/bootstrap.php');
-        static::assertFileExists($this->target.'/tests');
+        self::assertFileExists($this->target . '/tests/bootstrap.php');
+        self::assertFileExists($this->target . '/tests');
     }
 
     public function testIgnoreAllFilesExceptAFew()
@@ -152,36 +152,36 @@ final class IgnoreManagerTest extends \PHPUnit\Framework\TestCase
 
         $ignorer->cleanup();
 
-        static::assertFileNotExists($this->target.'/.hidden');
-        static::assertFileNotExists($this->target.'/CHANGELOG');
-        static::assertFileExists($this->target.'/README');
+        self::assertFileDoesNotExist($this->target . '/.hidden');
+        self::assertFileDoesNotExist($this->target . '/CHANGELOG');
+        self::assertFileExists($this->target . '/README');
 
-        static::assertFileExists($this->target.'/lib/autoload.php');
-        static::assertFileExists($this->target.'/lib');
+        self::assertFileExists($this->target . '/lib/autoload.php');
+        self::assertFileExists($this->target . '/lib');
 
-        static::assertFileNotExists($this->target.'/src/.hidden');
-        static::assertFileNotExists($this->target.'/src/doc');
-        static::assertFileNotExists($this->target.'/src');
+        self::assertFileDoesNotExist($this->target . '/src/.hidden');
+        self::assertFileDoesNotExist($this->target . '/src/doc');
+        self::assertFileDoesNotExist($this->target . '/src');
 
-        static::assertFileNotExists($this->target.'/src/foo/.hidden');
-        static::assertFileNotExists($this->target.'/src/foo/empty.html');
-        static::assertFileNotExists($this->target.'/src/foo/empty.md');
-        static::assertFileNotExists($this->target.'/src/foo/empty.txt');
-        static::assertFileNotExists($this->target.'/src/foo/small.txt');
-        static::assertFileNotExists($this->target.'/src/foo');
+        self::assertFileDoesNotExist($this->target . '/src/foo/.hidden');
+        self::assertFileDoesNotExist($this->target . '/src/foo/empty.html');
+        self::assertFileDoesNotExist($this->target . '/src/foo/empty.md');
+        self::assertFileDoesNotExist($this->target . '/src/foo/empty.txt');
+        self::assertFileDoesNotExist($this->target . '/src/foo/small.txt');
+        self::assertFileDoesNotExist($this->target . '/src/foo');
 
-        static::assertFileNotExists($this->target.'/src/lib/empty.txt');
-        static::assertFileNotExists($this->target.'/src/lib');
+        self::assertFileDoesNotExist($this->target . '/src/lib/empty.txt');
+        self::assertFileDoesNotExist($this->target . '/src/lib');
 
-        static::assertFileNotExists($this->target.'/src/lib/foo/empty.txt');
-        static::assertFileNotExists($this->target.'/src/lib/foo/small.txt');
-        static::assertFileNotExists($this->target.'/src/lib/foo');
+        self::assertFileDoesNotExist($this->target . '/src/lib/foo/empty.txt');
+        self::assertFileDoesNotExist($this->target . '/src/lib/foo/small.txt');
+        self::assertFileDoesNotExist($this->target . '/src/lib/foo');
 
-        static::assertFileNotExists($this->target.'/src/tests/empty.html');
-        static::assertFileNotExists($this->target.'/src/tests');
+        self::assertFileDoesNotExist($this->target . '/src/tests/empty.html');
+        self::assertFileDoesNotExist($this->target . '/src/tests');
 
-        static::assertFileExists($this->target.'/tests/bootstrap.php');
-        static::assertFileExists($this->target.'/tests');
+        self::assertFileExists($this->target . '/tests/bootstrap.php');
+        self::assertFileExists($this->target . '/tests');
     }
 
     public function testIgnoreAllFilesExceptAFewWithDoubleAsterisks()
@@ -193,44 +193,44 @@ final class IgnoreManagerTest extends \PHPUnit\Framework\TestCase
 
         $ignorer->cleanup();
 
-        static::assertFileExists($this->target.'/.hidden');
-        static::assertFileNotExists($this->target.'/CHANGELOG');
-        static::assertFileNotExists($this->target.'/README');
+        self::assertFileExists($this->target . '/.hidden');
+        self::assertFileDoesNotExist($this->target . '/CHANGELOG');
+        self::assertFileDoesNotExist($this->target . '/README');
 
-        static::assertFileNotExists($this->target.'/lib/autoload.php');
-        static::assertFileNotExists($this->target.'/lib');
+        self::assertFileDoesNotExist($this->target . '/lib/autoload.php');
+        self::assertFileDoesNotExist($this->target . '/lib');
 
-        static::assertFileNotExists($this->target.'/src/.hidden');
-        static::assertFileNotExists($this->target.'/src/doc');
-        static::assertFileExists($this->target.'/src');
+        self::assertFileDoesNotExist($this->target . '/src/.hidden');
+        self::assertFileDoesNotExist($this->target . '/src/doc');
+        self::assertFileExists($this->target . '/src');
 
-        static::assertFileNotExists($this->target.'/src/foo/.hidden');
-        static::assertFileNotExists($this->target.'/src/foo/empty.html');
-        static::assertFileNotExists($this->target.'/src/foo/empty.md');
-        static::assertFileExists($this->target.'/src/foo/empty.txt');
-        static::assertFileExists($this->target.'/src/foo/small.txt');
-        static::assertFileExists($this->target.'/src/foo');
+        self::assertFileDoesNotExist($this->target . '/src/foo/.hidden');
+        self::assertFileDoesNotExist($this->target . '/src/foo/empty.html');
+        self::assertFileDoesNotExist($this->target . '/src/foo/empty.md');
+        self::assertFileExists($this->target . '/src/foo/empty.txt');
+        self::assertFileExists($this->target . '/src/foo/small.txt');
+        self::assertFileExists($this->target . '/src/foo');
 
-        static::assertFileNotExists($this->target.'/src/lib/empty.txt');
-        static::assertFileNotExists($this->target.'/src/lib');
+        self::assertFileDoesNotExist($this->target . '/src/lib/empty.txt');
+        self::assertFileDoesNotExist($this->target . '/src/lib');
 
-        static::assertFileNotExists($this->target.'/src/lib/foo/empty.txt');
-        static::assertFileNotExists($this->target.'/src/lib/foo/small.txt');
-        static::assertFileNotExists($this->target.'/src/lib/foo');
+        self::assertFileDoesNotExist($this->target . '/src/lib/foo/empty.txt');
+        self::assertFileDoesNotExist($this->target . '/src/lib/foo/small.txt');
+        self::assertFileDoesNotExist($this->target . '/src/lib/foo');
 
-        static::assertFileNotExists($this->target.'/src/tests/empty.html');
-        static::assertFileNotExists($this->target.'/src/tests');
+        self::assertFileDoesNotExist($this->target . '/src/tests/empty.html');
+        self::assertFileDoesNotExist($this->target . '/src/tests');
 
-        static::assertFileNotExists($this->target.'/tests/bootstrap.php');
-        static::assertFileNotExists($this->target.'/tests');
+        self::assertFileDoesNotExist($this->target . '/tests/bootstrap.php');
+        self::assertFileDoesNotExist($this->target . '/tests');
     }
 
     /**
      * @return array
      */
-    protected function getFixtureFiles()
+    protected function getFixtureFiles(): array
     {
-        return array(
+        return [
             '.hidden',
             'CHANGELOG',
             'README',
@@ -247,6 +247,6 @@ final class IgnoreManagerTest extends \PHPUnit\Framework\TestCase
             'src/lib/foo/small.txt',
             'src/tests/empty.html',
             'tests/bootstrap.php',
-        );
+        ];
     }
 }

@@ -28,14 +28,15 @@ class MockAssetRepository implements RepositoryInterface
      * Constructor.
      */
     public function __construct(
-        array $repoConfig,
-        IOInterface $io,
-        Config $config,
+        array           $repoConfig,
+        IOInterface     $io,
+        Config          $config,
         EventDispatcher $eventDispatcher = null
-    ) {
+    )
+    {
     }
 
-    public function hasPackage(PackageInterface $package)
+    public function hasPackage(PackageInterface $package): bool
     {
         return false;
     }
@@ -44,23 +45,41 @@ class MockAssetRepository implements RepositoryInterface
     {
     }
 
-    public function findPackages($name, $version = null)
+    public function findPackages($name, $version = null): array
     {
-        return array();
+        return [];
     }
 
-    public function getPackages()
+    public function getPackages(): array
     {
-        return array();
+        return [];
     }
 
-    public function search($query, $mode = 0, $type = null)
+    public function search($query, $mode = 0, $type = null): array
     {
-        return array();
+        return [];
     }
 
-    public function count()
+    public function count(): int
     {
         return 0;
+    }
+
+    public function loadPackages(array $packageNameMap, array $acceptableStabilities, array $stabilityFlags, array $alreadyLoaded = []): array
+    {
+        return [
+            'namesFound' => [],
+            'packages' => []
+        ];
+    }
+
+    public function getProviders(string $packageName): array
+    {
+        return [];
+    }
+
+    public function getRepoName(): string
+    {
+        return 'MockAssetRepository';
     }
 }

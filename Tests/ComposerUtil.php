@@ -26,7 +26,7 @@ abstract class ComposerUtil
      *
      * @return string
      */
-    public static function getValueByVersion(array $value)
+    public static function getValueByVersion(array $value): string
     {
         $versionParser = new VersionParser();
         $composerVersionConstraint = $versionParser->parseConstraints(Composer::VERSION);

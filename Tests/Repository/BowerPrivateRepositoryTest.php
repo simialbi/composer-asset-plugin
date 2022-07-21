@@ -14,6 +14,9 @@ namespace Fxp\Composer\AssetPlugin\Tests\Repository;
 use Composer\Config;
 use Composer\EventDispatcher\EventDispatcher;
 use Composer\IO\IOInterface;
+use Composer\Semver\Constraint\Constraint;
+use Composer\Util\HttpDownloader;
+use Fxp\Composer\AssetPlugin\Repository\AbstractAssetsRepository;
 use Fxp\Composer\AssetPlugin\Repository\BowerPrivateRepository;
 
 /**
@@ -25,52 +28,49 @@ use Fxp\Composer\AssetPlugin\Repository\BowerPrivateRepository;
  */
 final class BowerPrivateRepositoryTest extends AbstractAssetsRepositoryTest
 {
-    /**
-     * @expectedException \Fxp\Composer\AssetPlugin\Exception\InvalidCreateRepositoryException
-     * @expectedExceptionMessage The "repository.url" parameter of "existing" bower asset package must be present for create a VCS Repository
-     */
     public function testWhatProvidesWithInvalidPrivateUrl()
     {
-        $name = $this->getType().'-asset/existing';
+        self::expectException('\Fxp\Composer\AssetPlugin\Exception\InvalidCreateRepositoryException');
+        self::expectExceptionMessage('The "repository.url" parameter of "existing" bower asset package must be present for create a VCS Repository');
+        $name = $this->getType() . '-asset/existing';
         $rfs = $this->replaceRegistryRfsByMock();
-        $rfs->expects(static::any())
+        $rfs->expects(self::any())
             ->method('getContents')
-            ->willReturn(json_encode(array()))
-        ;
+            ->willReturn(json_encode([]));
 
-        $this->registry->whatProvides($this->pool, $name);
+        $this->registry->loadPackages([$name => new Constraint('=', '0.1.0')], [], []);
     }
 
-    protected function getType()
+    protected function getType(): string
     {
         return 'bower';
     }
 
-    protected function getRegistry(array $repoConfig, IOInterface $io, Config $config, EventDispatcher $eventDispatcher = null)
+    protected function getRegistry(array $repoConfig, IOInterface $io, Config $config, HttpDownloader $httpDownloader, EventDispatcher $eventDispatcher = null): AbstractAssetsRepository
     {
-        return new BowerPrivateRepository($repoConfig, $io, $config, $eventDispatcher);
+        return new BowerPrivateRepository($repoConfig, $io, $config, $httpDownloader, $eventDispatcher);
     }
 
-    protected function getMockPackageForVcsConfig()
+    protected function getMockPackageForVcsConfig(): array
     {
-        return array(
-            'url' => 'http://foo.tld',
-        );
+        return [
+            'url' => 'http://foo.tld'
+        ];
     }
 
-    protected function getMockSearchResult($name = 'mock-package')
+    protected function getMockSearchResult(string $name = 'mock-package'): array
     {
-        return array(
-            array(
-                'name' => $name,
-            ),
-        );
+        return [
+            [
+                'name' => $name
+            ]
+        ];
     }
 
-    protected function getCustomRepoConfig()
+    protected function getCustomRepoConfig(): array
     {
-        return array(
-            'private-registry-url' => 'http://foo.tld',
-        );
+        return [
+            'private-registry-url' => 'http://foo.tld'
+        ];
     }
 }

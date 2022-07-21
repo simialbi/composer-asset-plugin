@@ -24,7 +24,7 @@ use Fxp\Composer\AssetPlugin\Type\AssetTypeInterface;
  */
 final class NpmPackageConverterTest extends AbstractPackageConverterTest
 {
-    protected function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -38,32 +38,32 @@ final class NpmPackageConverterTest extends AbstractPackageConverterTest
     {
         $composer = $this->converter->convert($this->asset);
 
-        static::assertArrayHasKey('name', $composer);
-        static::assertSame('ASSET/'.$this->asset['name'], $composer['name']);
+        self::assertArrayHasKey('name', $composer);
+        self::assertSame('ASSET/' . $this->asset['name'], $composer['name']);
 
-        static::assertArrayHasKey('type', $composer);
-        static::assertSame('ASSET_TYPE', $composer['type']);
+        self::assertArrayHasKey('type', $composer);
+        self::assertSame('ASSET_TYPE', $composer['type']);
 
-        static::assertArrayHasKey('description', $composer);
-        static::assertSame($this->asset['description'], $composer['description']);
+        self::assertArrayHasKey('description', $composer);
+        self::assertSame($this->asset['description'], $composer['description']);
 
-        static::assertArrayHasKey('version', $composer);
-        static::assertSame('1.0.0-pre', $composer['version']);
+        self::assertArrayHasKey('version', $composer);
+        self::assertSame('1.0.0-pre', $composer['version']);
 
-        static::assertArrayHasKey('keywords', $composer);
-        static::assertSame($this->asset['keywords'], $composer['keywords']);
+        self::assertArrayHasKey('keywords', $composer);
+        self::assertSame($this->asset['keywords'], $composer['keywords']);
 
-        static::assertArrayHasKey('homepage', $composer);
-        static::assertSame($this->asset['homepage'], $composer['homepage']);
+        self::assertArrayHasKey('homepage', $composer);
+        self::assertSame($this->asset['homepage'], $composer['homepage']);
 
-        static::assertArrayHasKey('license', $composer);
-        static::assertSame($this->asset['license'], $composer['license']);
+        self::assertArrayHasKey('license', $composer);
+        self::assertSame($this->asset['license'], $composer['license']);
 
-        static::assertArrayHasKey('authors', $composer);
-        static::assertSame(array_merge(array($this->asset['author']), $this->asset['contributors']), $composer['authors']);
+        self::assertArrayHasKey('authors', $composer);
+        self::assertSame(array_merge([$this->asset['author']], $this->asset['contributors']), $composer['authors']);
 
-        static::assertArrayHasKey('require', $composer);
-        static::assertSame(array(
+        self::assertArrayHasKey('require', $composer);
+        self::assertSame([
             'ASSET/library1' => '>= 1.0.0',
             'ASSET/library2' => '>= 1.0.0',
             'ASSET/library2-0.9.0' => '0.9.0',
@@ -86,78 +86,78 @@ final class NpmPackageConverterTest extends AbstractPackageConverterTest
             'ASSET/test-library19-file' => '*',
             'ASSET/test-library20-file' => '*',
             'ASSET/library21' => '1 || 2',
-        ), $composer['require']);
+        ], $composer['require']);
 
-        static::assertArrayNotHasKey('require-dev', $composer);
+        self::assertArrayNotHasKey('require-dev', $composer);
 
-        static::assertArrayHasKey('bin', $composer);
-        static::assertInternalType('array', $composer['bin']);
-        static::assertSame($this->asset['bin'], $composer['bin'][0]);
+        self::assertArrayHasKey('bin', $composer);
+        self::assertIsArray($composer['bin']);
+        self::assertSame($this->asset['bin'], $composer['bin'][0]);
 
-        static::assertArrayHasKey('extra', $composer);
+        self::assertArrayHasKey('extra', $composer);
 
-        static::assertArrayHasKey('npm-asset-bugs', $composer['extra']);
-        static::assertSame($this->asset['bugs'], $composer['extra']['npm-asset-bugs']);
+        self::assertArrayHasKey('npm-asset-bugs', $composer['extra']);
+        self::assertSame($this->asset['bugs'], $composer['extra']['npm-asset-bugs']);
 
-        static::assertArrayHasKey('npm-asset-files', $composer['extra']);
-        static::assertSame($this->asset['files'], $composer['extra']['npm-asset-files']);
+        self::assertArrayHasKey('npm-asset-files', $composer['extra']);
+        self::assertSame($this->asset['files'], $composer['extra']['npm-asset-files']);
 
-        static::assertArrayHasKey('npm-asset-main', $composer['extra']);
-        static::assertSame($this->asset['main'], $composer['extra']['npm-asset-main']);
+        self::assertArrayHasKey('npm-asset-main', $composer['extra']);
+        self::assertSame($this->asset['main'], $composer['extra']['npm-asset-main']);
 
-        static::assertArrayHasKey('npm-asset-man', $composer['extra']);
-        static::assertSame($this->asset['man'], $composer['extra']['npm-asset-man']);
+        self::assertArrayHasKey('npm-asset-man', $composer['extra']);
+        self::assertSame($this->asset['man'], $composer['extra']['npm-asset-man']);
 
-        static::assertArrayHasKey('npm-asset-directories', $composer['extra']);
-        static::assertSame($this->asset['directories'], $composer['extra']['npm-asset-directories']);
+        self::assertArrayHasKey('npm-asset-directories', $composer['extra']);
+        self::assertSame($this->asset['directories'], $composer['extra']['npm-asset-directories']);
 
-        static::assertArrayHasKey('npm-asset-repository', $composer['extra']);
-        static::assertSame($this->asset['repository'], $composer['extra']['npm-asset-repository']);
+        self::assertArrayHasKey('npm-asset-repository', $composer['extra']);
+        self::assertSame($this->asset['repository'], $composer['extra']['npm-asset-repository']);
 
-        static::assertArrayHasKey('npm-asset-scripts', $composer['extra']);
-        static::assertSame($this->asset['scripts'], $composer['extra']['npm-asset-scripts']);
+        self::assertArrayHasKey('npm-asset-scripts', $composer['extra']);
+        self::assertSame($this->asset['scripts'], $composer['extra']['npm-asset-scripts']);
 
-        static::assertArrayHasKey('npm-asset-config', $composer['extra']);
-        static::assertSame($this->asset['config'], $composer['extra']['npm-asset-config']);
+        self::assertArrayHasKey('npm-asset-config', $composer['extra']);
+        self::assertSame($this->asset['config'], $composer['extra']['npm-asset-config']);
 
-        static::assertArrayHasKey('npm-asset-bundled-dependencies', $composer['extra']);
-        static::assertSame($this->asset['bundledDependencies'], $composer['extra']['npm-asset-bundled-dependencies']);
+        self::assertArrayHasKey('npm-asset-bundled-dependencies', $composer['extra']);
+        self::assertSame($this->asset['bundledDependencies'], $composer['extra']['npm-asset-bundled-dependencies']);
 
-        static::assertArrayHasKey('npm-asset-optional-dependencies', $composer['extra']);
-        static::assertSame($this->asset['optionalDependencies'], $composer['extra']['npm-asset-optional-dependencies']);
+        self::assertArrayHasKey('npm-asset-optional-dependencies', $composer['extra']);
+        self::assertSame($this->asset['optionalDependencies'], $composer['extra']['npm-asset-optional-dependencies']);
 
-        static::assertArrayHasKey('npm-asset-engines', $composer['extra']);
-        static::assertSame($this->asset['engines'], $composer['extra']['npm-asset-engines']);
+        self::assertArrayHasKey('npm-asset-engines', $composer['extra']);
+        self::assertSame($this->asset['engines'], $composer['extra']['npm-asset-engines']);
 
-        static::assertArrayHasKey('npm-asset-engine-strict', $composer['extra']);
-        static::assertSame($this->asset['engineStrict'], $composer['extra']['npm-asset-engine-strict']);
+        self::assertArrayHasKey('npm-asset-engine-strict', $composer['extra']);
+        self::assertSame($this->asset['engineStrict'], $composer['extra']['npm-asset-engine-strict']);
 
-        static::assertArrayHasKey('npm-asset-os', $composer['extra']);
-        static::assertSame($this->asset['os'], $composer['extra']['npm-asset-os']);
+        self::assertArrayHasKey('npm-asset-os', $composer['extra']);
+        self::assertSame($this->asset['os'], $composer['extra']['npm-asset-os']);
 
-        static::assertArrayHasKey('npm-asset-cpu', $composer['extra']);
-        static::assertSame($this->asset['cpu'], $composer['extra']['npm-asset-cpu']);
+        self::assertArrayHasKey('npm-asset-cpu', $composer['extra']);
+        self::assertSame($this->asset['cpu'], $composer['extra']['npm-asset-cpu']);
 
-        static::assertArrayHasKey('npm-asset-prefer-global', $composer['extra']);
-        static::assertSame($this->asset['preferGlobal'], $composer['extra']['npm-asset-prefer-global']);
+        self::assertArrayHasKey('npm-asset-prefer-global', $composer['extra']);
+        self::assertSame($this->asset['preferGlobal'], $composer['extra']['npm-asset-prefer-global']);
 
-        static::assertArrayHasKey('npm-asset-private', $composer['extra']);
-        static::assertSame($this->asset['private'], $composer['extra']['npm-asset-private']);
+        self::assertArrayHasKey('npm-asset-private', $composer['extra']);
+        self::assertSame($this->asset['private'], $composer['extra']['npm-asset-private']);
 
-        static::assertArrayHasKey('npm-asset-publish-config', $composer['extra']);
-        static::assertSame($this->asset['publishConfig'], $composer['extra']['npm-asset-publish-config']);
+        self::assertArrayHasKey('npm-asset-publish-config', $composer['extra']);
+        self::assertSame($this->asset['publishConfig'], $composer['extra']['npm-asset-publish-config']);
 
-        static::assertArrayNotHasKey('time', $composer);
-        static::assertArrayNotHasKey('support', $composer);
-        static::assertArrayNotHasKey('conflict', $composer);
-        static::assertArrayNotHasKey('replace', $composer);
-        static::assertArrayNotHasKey('provide', $composer);
-        static::assertArrayNotHasKey('suggest', $composer);
-        static::assertArrayNotHasKey('autoload', $composer);
-        static::assertArrayNotHasKey('autoload-dev', $composer);
-        static::assertArrayNotHasKey('include-path', $composer);
-        static::assertArrayNotHasKey('target-dir', $composer);
-        static::assertArrayNotHasKey('archive', $composer);
+        self::assertArrayNotHasKey('time', $composer);
+        self::assertArrayNotHasKey('support', $composer);
+        self::assertArrayNotHasKey('conflict', $composer);
+        self::assertArrayNotHasKey('replace', $composer);
+        self::assertArrayNotHasKey('provide', $composer);
+        self::assertArrayNotHasKey('suggest', $composer);
+        self::assertArrayNotHasKey('autoload', $composer);
+        self::assertArrayNotHasKey('autoload-dev', $composer);
+        self::assertArrayNotHasKey('include-path', $composer);
+        self::assertArrayNotHasKey('target-dir', $composer);
+        self::assertArrayNotHasKey('archive', $composer);
     }
 
     public function testConvertWithScope()
@@ -165,41 +165,41 @@ final class NpmPackageConverterTest extends AbstractPackageConverterTest
         $this->asset = $this->loadPackage('npm-scope.json');
         $composer = $this->converter->convert($this->asset);
 
-        static::assertArrayHasKey('name', $composer);
-        static::assertSame('ASSET/scope--test', $composer['name']);
+        self::assertArrayHasKey('name', $composer);
+        self::assertSame('ASSET/scope--test', $composer['name']);
 
-        static::assertArrayHasKey('require', $composer);
-        static::assertSame(array(
+        self::assertArrayHasKey('require', $composer);
+        self::assertSame([
             'ASSET/scope--library1' => '>= 1.0.0',
             'ASSET/scope2--library2' => '>= 1.0.0',
-        ), $composer['require']);
+        ], $composer['require']);
 
-        static::assertArrayNotHasKey('require-dev', $composer);
+        self::assertArrayNotHasKey('require-dev', $composer);
     }
 
-    public function getConvertDistData()
+    public function getConvertDistData(): array
     {
-        return array(
-            array(array('type' => null), array()),
-            array(array('foo' => 'http://example.com'), array()), // unknown downloader type
-            array(array('gzip' => 'http://example.com'), array('type' => 'gzip', 'url' => 'https://example.com')),
-            array(array('tarball' => 'http://example.com'), array('type' => 'tar', 'url' => 'https://example.com')),
-            array(
-                array('shasum' => 'abcdef0123456789abcdef0123456789abcdef01'),
-                array('shasum' => 'abcdef0123456789abcdef0123456789abcdef01'),
-            ),
-        );
+        return [
+            [['type' => null], []],
+            [['foo' => 'http://example.com'], []], // unknown downloader type
+            [['gzip' => 'http://example.com'], ['type' => 'gzip', 'url' => 'https://example.com']],
+            [['tarball' => 'http://example.com'], ['type' => 'tar', 'url' => 'https://example.com']],
+            [
+                ['shasum' => 'abcdef0123456789abcdef0123456789abcdef01'],
+                ['shasum' => 'abcdef0123456789abcdef0123456789abcdef01'],
+            ],
+        ];
     }
 
     /**
      * @dataProvider getConvertDistData
      *
-     * @param array $value  The value must be converted
+     * @param array $value The value must be converted
      * @param array $result The result of convertion
      */
-    public function testConvertDist($value, $result)
+    public function testConvertDist(array $value, array $result)
     {
-        static::assertSame($result, NpmPackageUtil::convertDist($value));
+        self::assertSame($result, NpmPackageUtil::convertDist($value));
     }
 
     /**
@@ -209,8 +209,8 @@ final class NpmPackageConverterTest extends AbstractPackageConverterTest
      *
      * @return array
      */
-    private function loadPackage($package = 'npm.json')
+    private function loadPackage(string $package = 'npm.json'): array
     {
-        return (array) json_decode(file_get_contents(__DIR__.'/../Fixtures/package/'.$package), true);
+        return (array)json_decode(file_get_contents(__DIR__ . '/../Fixtures/package/' . $package), true);
     }
 }

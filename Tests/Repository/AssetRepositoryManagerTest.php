@@ -15,6 +15,7 @@ use Composer\DependencyResolver\Pool;
 use Composer\IO\IOInterface;
 use Composer\Repository\RepositoryInterface;
 use Composer\Repository\RepositoryManager;
+use Composer\Util\HttpDownloader;
 use Fxp\Composer\AssetPlugin\Config\Config;
 use Fxp\Composer\AssetPlugin\Repository\AssetRepositoryManager;
 use Fxp\Composer\AssetPlugin\Repository\ResolutionManager;
@@ -30,52 +31,58 @@ use Fxp\Composer\AssetPlugin\Repository\VcsPackageFilter;
 final class AssetRepositoryManagerTest extends \PHPUnit\Framework\TestCase
 {
     /**
-     * @var \PHPUnit_Framework_MockObject_MockObject|RepositoryManager
+     * @var \PHPUnit\Framework\MockObject\MockObject|RepositoryManager
      */
-    protected $rm;
+    protected RepositoryManager|\PHPUnit\Framework\MockObject\MockObject $rm;
 
     /**
-     * @var IOInterface|\PHPUnit_Framework_MockObject_MockObject
+     * @var IOInterface|\PHPUnit\Framework\MockObject\MockObject
      */
-    protected $io;
+    protected \PHPUnit\Framework\MockObject\MockObject|IOInterface $io;
 
     /**
      * @var Config
      */
-    protected $config;
+    protected Config $config;
 
     /**
-     * @var \PHPUnit_Framework_MockObject_MockObject|VcsPackageFilter
+     * @var \PHPUnit\Framework\MockObject\MockObject|VcsPackageFilter
      */
-    protected $filter;
+    protected \PHPUnit\Framework\MockObject\MockObject|VcsPackageFilter $filter;
 
     /**
-     * @var \PHPUnit_Framework_MockObject_MockObject|ResolutionManager
+     * @var \PHPUnit\Framework\MockObject\MockObject|ResolutionManager
      */
-    protected $resolutionManager;
+    protected ResolutionManager|\PHPUnit\Framework\MockObject\MockObject $resolutionManager;
+
+    /**
+     * @var \PHPUnit\Framework\MockObject\MockObject|HttpDownloader
+     */
+    protected HttpDownloader|\PHPUnit\Framework\MockObject\MockObject $httpDownloader;
 
     /**
      * @var AssetRepositoryManager
      */
-    protected $assetRepositoryManager;
+    protected AssetRepositoryManager $assetRepositoryManager;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->io = $this->getMockBuilder(IOInterface::class)->getMock();
         $this->rm = $this->getMockBuilder(RepositoryManager::class)->disableOriginalConstructor()->getMock();
-        $this->config = new Config(array());
+        $this->config = new Config([]);
+        $this->httpDownloader = $this->getMockBuilder(HttpDownloader::class)->disableOriginalConstructor()->getMock();
         $this->filter = $this->getMockBuilder(VcsPackageFilter::class)->disableOriginalConstructor()->getMock();
 
         $this->resolutionManager = $this->getMockBuilder(ResolutionManager::class)->getMock();
-        $this->assetRepositoryManager = new AssetRepositoryManager($this->io, $this->rm, $this->config, $this->filter);
+        $this->assetRepositoryManager = new AssetRepositoryManager($this->io, $this->rm, $this->config, $this->httpDownloader, $this->filter);
     }
 
-    public function getDataForSolveResolutions()
+    public function getDataForSolveResolutions(): array
     {
-        return array(
-            array(true),
-            array(false),
-        );
+        return [
+            [true],
+            [false],
+        ];
     }
 
     /**
@@ -83,67 +90,57 @@ final class AssetRepositoryManagerTest extends \PHPUnit\Framework\TestCase
      *
      * @param bool $withResolutionManager
      */
-    public function testSolveResolutions($withResolutionManager)
+    public function testSolveResolutions(bool $withResolutionManager)
     {
-        $expected = array(
-            'name' => 'foo/bar',
-        );
+        $expected = [
+            'name' => 'foo/bar'
+        ];
 
         if ($withResolutionManager) {
             $this->assetRepositoryManager->setResolutionManager($this->resolutionManager);
-            $this->resolutionManager->expects(static::once())
+            $this->resolutionManager->expects(self::once())
                 ->method('solveResolutions')
                 ->with($expected)
-                ->willReturn($expected)
-            ;
+                ->willReturn($expected);
         } else {
-            $this->resolutionManager->expects(static::never())
-                ->method('solveResolutions')
-            ;
+            $this->resolutionManager->expects(self::never())
+                ->method('solveResolutions');
         }
 
         $data = $this->assetRepositoryManager->solveResolutions($expected);
 
-        static::assertSame($expected, $data);
+        self::assertSame($expected, $data);
     }
 
     public function testAddRepositoryInPool()
     {
-        $repos = array(
-            array(
+        $repos = [
+            [
                 'name' => 'foo/bar',
                 'type' => 'asset-vcs',
-                'url' => 'https://github.com/helloguest/helloguest-ui-app.git',
-            ),
-        );
+                'url' => 'https://github.com/helloguest/helloguest-ui-app.git'
+            ]
+        ];
 
-        $repoConfigExpected = array_merge($repos[0], array(
+        $repoConfigExpected = array_merge($repos[0], [
             'asset-repository-manager' => $this->assetRepositoryManager,
-            'vcs-package-filter' => $this->filter,
-        ));
+            'vcs-package-filter' => $this->filter
+        ]);
 
         $repo = $this->getMockBuilder(RepositoryInterface::class)->getMock();
 
-        $this->rm->expects(static::once())
+        $this->rm->expects(self::once())
             ->method('createRepository')
             ->with('asset-vcs', $repoConfigExpected)
-            ->willReturn($repo)
-        ;
+            ->willReturn($repo);
 
         $this->assetRepositoryManager->addRepositories($repos);
-
-        /** @var \PHPUnit_Framework_MockObject_MockObject|Pool $pool */
-        $pool = $this->getMockBuilder(Pool::class)->disableOriginalConstructor()->getMock();
-        $pool->expects(static::once())
-            ->method('addRepository')
-            ->with($repo)
-        ;
 
         $this->assetRepositoryManager->setPool($pool);
     }
 
     public function testGetConfig()
     {
-        static::assertSame($this->config, $this->assetRepositoryManager->getConfig());
+        self::assertSame($this->config, $this->assetRepositoryManager->getConfig());
     }
 }

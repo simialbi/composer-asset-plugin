@@ -30,76 +30,60 @@ use Fxp\Composer\AssetPlugin\Installer\IgnoreManager;
 final class IgnoreFactoryTest extends \PHPUnit\Framework\TestCase
 {
     /**
-     * @var Composer|\PHPUnit_Framework_MockObject_MockObject
+     * @var Composer|\PHPUnit\Framework\MockObject\MockObject
      */
-    protected $composer;
+    protected \PHPUnit\Framework\MockObject\MockObject|Composer $composer;
 
     /**
-     * @var Config|\PHPUnit_Framework_MockObject_MockObject
+     * @var Config|\PHPUnit\Framework\MockObject\MockObject
      */
-    protected $config;
+    protected \PHPUnit\Framework\MockObject\MockObject|Config $config;
 
     /**
-     * @var \PHPUnit_Framework_MockObject_MockObject|RootPackageInterface
+     * @var \PHPUnit\Framework\MockObject\MockObject|RootPackageInterface
      */
-    protected $rootPackage;
+    protected \PHPUnit\Framework\MockObject\MockObject|RootPackageInterface $rootPackage;
 
     /**
-     * @var PackageInterface|\PHPUnit_Framework_MockObject_MockObject
+     * @var PackageInterface|\PHPUnit\Framework\MockObject\MockObject
      */
-    protected $package;
+    protected PackageInterface|\PHPUnit\Framework\MockObject\MockObject $package;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->config = $this->getMockBuilder('Composer\Config')->getMock();
-        $this->config->expects(static::any())
+        $this->config->expects(self::any())
             ->method('get')
             ->willReturnCallback(function ($key) {
-                $value = null;
-
-                switch ($key) {
-                    case 'cache-repo-dir':
-                        $value = sys_get_temp_dir().'/composer-test-repo-cache';
-
-                        break;
-                    case 'vendor-dir':
-                        $value = sys_get_temp_dir().'/composer-test/vendor';
-
-                        break;
-                }
-
-                return $value;
-            })
-        ;
+                return match ($key) {
+                    'cache-repo-dir' => sys_get_temp_dir() . '/composer-test-repo-cache',
+                    'vendor-dir' => sys_get_temp_dir() . '/composer-test/vendor',
+                    default => null,
+                };
+            });
 
         $this->rootPackage = $this->getMockBuilder('Composer\Package\RootPackageInterface')->getMock();
         $this->package = $this->getMockBuilder('Composer\Package\PackageInterface')->getMock();
-        $this->package->expects(static::any())
+        $this->package->expects(self::any())
             ->method('getName')
-            ->willReturn('foo-asset/foo')
-        ;
+            ->willReturn('foo-asset/foo');
 
         $this->composer = $this->getMockBuilder('Composer\Composer')->getMock();
-        $this->composer->expects(static::any())
+        $this->composer->expects(self::any())
             ->method('getPackage')
-            ->willReturn($this->rootPackage)
-        ;
-        $this->composer->expects(static::any())
+            ->willReturn($this->rootPackage);
+        $this->composer->expects(self::any())
             ->method('getConfig')
-            ->willReturn($this->config)
-        ;
+            ->willReturn($this->config);
     }
 
-    protected function tearDown()
+    protected function tearDown(): void
     {
-        $this->composer = null;
-        $this->config = null;
-        $this->rootPackage = null;
-        $this->package = null;
+        unset($this->composer, $this->config, $this->rootPackage, $this->package);
 
         $fs = new Filesystem();
-        $fs->remove(sys_get_temp_dir().'/composer-test-repo-cache');
-        $fs->remove(sys_get_temp_dir().'/composer-test');
+        $fs->remove(sys_get_temp_dir() . '/composer-test-repo-cache');
+        $fs->remove(sys_get_temp_dir() . '/composer-test');
     }
 
     public function testCreateWithoutIgnoreFiles()
@@ -107,35 +91,34 @@ final class IgnoreFactoryTest extends \PHPUnit\Framework\TestCase
         $config = ConfigBuilder::build($this->composer);
         $manager = IgnoreFactory::create($config, $this->composer, $this->package);
 
-        static::assertTrue($manager->isEnabled());
-        static::assertFalse($manager->hasPattern());
-        $this->validateInstallDir($manager, $this->config->get('vendor-dir').'/'.$this->package->getName());
+        self::assertTrue($manager->isEnabled());
+        self::assertFalse($manager->hasPattern());
+        $this->validateInstallDir($manager, $this->config->get('vendor-dir') . '/' . $this->package->getName());
     }
 
     public function testCreateWithIgnoreFiles()
     {
-        $config = array(
-            'fxp-asset' => array(
-                'ignore-files' => array(
-                    'foo-asset/foo' => array(
+        $config = [
+            'fxp-asset' => [
+                'ignore-files' => [
+                    'foo-asset/foo' => [
                         'PATTERN',
-                    ),
-                    'foo-asset/bar' => array(),
-                ),
-            ),
-        );
+                    ],
+                    'foo-asset/bar' => [],
+                ],
+            ],
+        ];
 
-        $this->rootPackage->expects(static::any())
+        $this->rootPackage->expects(self::any())
             ->method('getConfig')
-            ->willReturn($config)
-        ;
+            ->willReturn($config);
 
         $config = ConfigBuilder::build($this->composer);
         $manager = IgnoreFactory::create($config, $this->composer, $this->package);
 
-        static::assertTrue($manager->isEnabled());
-        static::assertTrue($manager->hasPattern());
-        $this->validateInstallDir($manager, $this->config->get('vendor-dir').'/'.$this->package->getName());
+        self::assertTrue($manager->isEnabled());
+        self::assertTrue($manager->hasPattern());
+        $this->validateInstallDir($manager, $this->config->get('vendor-dir') . '/' . $this->package->getName());
     }
 
     public function testCreateWithCustomInstallDir()
@@ -144,94 +127,91 @@ final class IgnoreFactoryTest extends \PHPUnit\Framework\TestCase
         $config = ConfigBuilder::build($this->composer);
         $manager = IgnoreFactory::create($config, $this->composer, $this->package, $installDir);
 
-        static::assertTrue($manager->isEnabled());
-        static::assertFalse($manager->hasPattern());
+        self::assertTrue($manager->isEnabled());
+        self::assertFalse($manager->hasPattern());
         $this->validateInstallDir($manager, rtrim($installDir, '/'));
     }
 
     public function testCreateWithEnablingOfIgnoreFiles()
     {
-        $config = array(
-            'fxp-asset' => array(
-                'ignore-files' => array(
+        $config = [
+            'fxp-asset' => [
+                'ignore-files' => [
                     'foo-asset/foo' => true,
-                    'foo-asset/bar' => array(),
-                ),
-            ),
-        );
+                    'foo-asset/bar' => [],
+                ],
+            ],
+        ];
 
-        $this->rootPackage->expects(static::any())
+        $this->rootPackage->expects(self::any())
             ->method('getConfig')
-            ->willReturn($config)
-        ;
+            ->willReturn($config);
 
         $config = ConfigBuilder::build($this->composer);
         $manager = IgnoreFactory::create($config, $this->composer, $this->package);
 
-        static::assertTrue($manager->isEnabled());
-        static::assertFalse($manager->hasPattern());
-        $this->validateInstallDir($manager, $this->config->get('vendor-dir').'/'.$this->package->getName());
+        self::assertTrue($manager->isEnabled());
+        self::assertFalse($manager->hasPattern());
+        $this->validateInstallDir($manager, $this->config->get('vendor-dir') . '/' . $this->package->getName());
     }
 
     public function testCreateWithDisablingOfIgnoreFiles()
     {
-        $config = array(
-            'fxp-asset' => array(
-                'ignore-files' => array(
+        $config = [
+            'fxp-asset' => [
+                'ignore-files' => [
                     'foo-asset/foo' => false,
-                    'foo-asset/bar' => array(),
-                ),
-            ),
-        );
+                    'foo-asset/bar' => [],
+                ],
+            ],
+        ];
 
-        $this->rootPackage->expects(static::any())
+        $this->rootPackage->expects(self::any())
             ->method('getConfig')
-            ->willReturn($config)
-        ;
+            ->willReturn($config);
 
         $config = ConfigBuilder::build($this->composer);
         $manager = IgnoreFactory::create($config, $this->composer, $this->package);
 
-        static::assertFalse($manager->isEnabled());
-        static::assertFalse($manager->hasPattern());
-        $this->validateInstallDir($manager, $this->config->get('vendor-dir').'/'.$this->package->getName());
+        self::assertFalse($manager->isEnabled());
+        self::assertFalse($manager->hasPattern());
+        $this->validateInstallDir($manager, $this->config->get('vendor-dir') . '/' . $this->package->getName());
     }
 
     public function testCreateWithCustomIgnoreSection()
     {
-        $config = array(
-            'fxp-asset' => array(
-                'custom-ignore-files' => array(
-                    'foo-asset/foo' => array(
+        $config = [
+            'fxp-asset' => [
+                'custom-ignore-files' => [
+                    'foo-asset/foo' => [
                         'PATTERN',
-                    ),
-                    'foo-asset/bar' => array(),
-                ),
-            ),
-        );
+                    ],
+                    'foo-asset/bar' => [],
+                ],
+            ],
+        ];
 
-        $this->rootPackage->expects(static::any())
+        $this->rootPackage->expects(self::any())
             ->method('getConfig')
-            ->willReturn($config)
-        ;
+            ->willReturn($config);
 
         $config = ConfigBuilder::build($this->composer);
         $manager = IgnoreFactory::create($config, $this->composer, $this->package, null, 'custom-ignore-files');
 
-        static::assertTrue($manager->isEnabled());
-        static::assertTrue($manager->hasPattern());
-        $this->validateInstallDir($manager, $this->config->get('vendor-dir').'/'.$this->package->getName());
+        self::assertTrue($manager->isEnabled());
+        self::assertTrue($manager->hasPattern());
+        $this->validateInstallDir($manager, $this->config->get('vendor-dir') . '/' . $this->package->getName());
     }
 
     /**
      * @param string $installDir
      */
-    protected function validateInstallDir(IgnoreManager $manager, $installDir)
+    protected function validateInstallDir(IgnoreManager $manager, string $installDir)
     {
         $ref = new \ReflectionClass($manager);
         $prop = $ref->getProperty('installDir');
         $prop->setAccessible(true);
 
-        static::assertSame($installDir, $prop->getValue($manager));
+        self::assertSame($installDir, $prop->getValue($manager));
     }
 }

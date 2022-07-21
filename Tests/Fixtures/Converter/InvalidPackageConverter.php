@@ -20,7 +20,7 @@ use Fxp\Composer\AssetPlugin\Converter\AbstractPackageConverter;
  */
 class InvalidPackageConverter extends AbstractPackageConverter
 {
-    protected function getMapKeys()
+    protected function getMapKeys(): array
     {
         return array_merge(parent::getMapKeys(), array(
             'name' => array(null, function ($value) {

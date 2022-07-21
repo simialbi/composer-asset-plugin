@@ -25,29 +25,27 @@ abstract class AbstractAssetTypeTest extends \PHPUnit\Framework\TestCase
     /**
      * @var PackageConverterInterface
      */
-    protected $packageConverter;
+    protected \PHPUnit\Framework\MockObject\MockObject|PackageConverterInterface $packageConverter;
 
     /**
      * @var VersionConverterInterface
      */
-    protected $versionConverter;
+    protected VersionConverterInterface|\PHPUnit\Framework\MockObject\MockObject $versionConverter;
 
     /**
      * @var AssetTypeInterface
      */
-    protected $type;
+    protected AssetTypeInterface $type;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->packageConverter = $this->getMockBuilder('Fxp\Composer\AssetPlugin\Converter\PackageConverterInterface')->getMock();
         $this->versionConverter = $this->getMockBuilder('Fxp\Composer\AssetPlugin\Converter\VersionConverterInterface')->getMock();
     }
 
-    protected function tearDown()
+    protected function tearDown(): void
     {
-        $this->packageConverter = null;
-        $this->versionConverter = null;
-        $this->type = null;
+        unset($this->packageConverter, $this->versionConverter, $this->type);
     }
 
     public function testConverter()

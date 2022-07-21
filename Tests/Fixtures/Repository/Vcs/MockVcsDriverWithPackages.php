@@ -18,60 +18,60 @@ namespace Fxp\Composer\AssetPlugin\Tests\Fixtures\Repository\Vcs;
  */
 class MockVcsDriverWithPackages extends MockVcsDriver
 {
-    protected $composer = array(
-        'branch:master' => array(
+    protected array $composer = [
+        'branch:master' => [
             'name' => 'foobar',
             'version' => '2.0',
-        ),
-        'branch:1.x' => array(
+        ],
+        'branch:1.x' => [
             'name' => 'foobar',
             'version' => '1.1',
-        ),
-        'tag:v1.0.0' => array(
+        ],
+        'tag:v1.0.0' => [
             'name' => 'foobar',
             'version' => '1.0',
-        ),
-        'tag:v1.0.1' => array(
+        ],
+        'tag:v1.0.1' => [
             'name' => 'foobar',
-        ),
-        'tag:invalid' => array(
+        ],
+        'tag:invalid' => [
             'name' => 'foobar',
             'description' => 'invalid tag name',
-        ),
-    );
+        ],
+    ];
 
-    public function getRootIdentifier()
+    public function getRootIdentifier(): string
     {
         return 'master';
     }
 
-    public function hasComposerFile($identifier)
+    public function hasComposerFile($identifier): bool
     {
-        return isset($this->composer['branch:'.$identifier])
-            || isset($this->composer['tag:'.$identifier]);
+        return isset($this->composer['branch:' . $identifier])
+            || isset($this->composer['tag:' . $identifier]);
     }
 
-    public function getComposerInformation($identifier)
+    public function getComposerInformation($identifier): ?array
     {
         $composer = null;
 
         if ($this->hasComposerFile($identifier)) {
-            if (isset($this->composer['branch:'.$identifier])) {
-                $composer = $this->composer['branch:'.$identifier];
-            } elseif (isset($this->composer['tag:'.$identifier])) {
-                $composer = $this->composer['tag:'.$identifier];
+            if (isset($this->composer['branch:' . $identifier])) {
+                $composer = $this->composer['branch:' . $identifier];
+            } elseif (isset($this->composer['tag:' . $identifier])) {
+                $composer = $this->composer['tag:' . $identifier];
             }
         }
 
         return $composer;
     }
 
-    public function getBranches()
+    public function getBranches(): array
     {
         return $this->getDataPackages('branch');
     }
 
-    public function getTags()
+    public function getTags(): array
     {
         return $this->getDataPackages('tag');
     }
@@ -81,12 +81,12 @@ class MockVcsDriverWithPackages extends MockVcsDriver
      *
      * @return array
      */
-    protected function getDataPackages($type)
+    protected function getDataPackages(string $type): array
     {
-        $packages = array();
+        $packages = [];
 
         foreach ($this->composer as $name => $data) {
-            if (0 === strpos($name, $type.':')) {
+            if (str_starts_with($name, $type . ':')) {
                 $name = substr($name, strpos($name, ':') + 1);
                 $packages[$name] = $data;
             }

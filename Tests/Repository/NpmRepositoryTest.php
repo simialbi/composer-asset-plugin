@@ -15,6 +15,9 @@ use Composer\Config;
 use Composer\Downloader\TransportException;
 use Composer\EventDispatcher\EventDispatcher;
 use Composer\IO\IOInterface;
+use Composer\Semver\Constraint\Constraint;
+use Composer\Util\HttpDownloader;
+use Fxp\Composer\AssetPlugin\Repository\AbstractAssetsRepository;
 use Fxp\Composer\AssetPlugin\Repository\NpmRepository;
 
 /**
@@ -28,169 +31,158 @@ final class NpmRepositoryTest extends AbstractAssetsRepositoryTest
 {
     public function testWhatProvidesWithCamelcasePackageName()
     {
-        $name = $this->getType().'-asset/CamelCasePackage';
+        $name = $this->getType() . '-asset/CamelCasePackage';
         $rfs = $this->replaceRegistryRfsByMock();
-        $rfs->expects(static::any())
+        $rfs->expects(self::any())
             ->method('getContents')
-            ->will(static::throwException(new TransportException('Package not found', 404)))
-        ;
+            ->will(self::throwException(new TransportException('Package not found', 404)));
 
-        static::assertCount(0, $this->rm->getRepositories());
-        static::assertCount(0, $this->registry->whatProvides($this->pool, $name));
-        static::assertCount(0, $this->registry->whatProvides($this->pool, $name));
-        static::assertCount(0, $this->rm->getRepositories());
+        self::assertCount(0, $this->rm->getRepositories());
+        self::assertCount(0, $this->registry->loadPackages([$name => new Constraint('=', '0.1.0')], [], [])['namesFound']);
+        self::assertCount(0, $this->rm->getRepositories());
     }
 
     public function testWatProvidesWithoutRepositoryUrl()
     {
-        $name = $this->getType().'-asset/foobar';
+        $name = $this->getType() . '-asset/foobar';
         $rfs = $this->replaceRegistryRfsByMock();
-        $rfs->expects(static::any())
+        $rfs->expects(self::any())
             ->method('getContents')
-            ->willReturn(json_encode(array(
-                'repository' => array(
-                    'type' => 'vcs',
-                ),
-                'versions' => array(
-                    '1.0.0' => array(
+            ->willReturn(json_encode([
+                'repository' => [
+                    'type' => 'vcs'
+                ],
+                'versions' => [
+                    '1.0.0' => [
                         'name' => 'foobar',
                         'version' => '0.0.1',
-                        'dependencies' => array(),
-                        'dist' => array(
+                        'dependencies' => [],
+                        'dist' => [
                             'shasum' => '1d408b3fdb76923b9543d96fb4c9dfd535d9cb5d',
-                            'tarball' => 'http://registry.tld/foobar/-/foobar-1.0.0.tgz',
-                        ),
-                    ),
-                ),
-                'time' => array(
-                    '1.0.0' => '2016-09-20T13:48:47.730Z',
-                ),
-            )))
-        ;
+                            'tarball' => 'http://registry.tld/foobar/-/foobar-1.0.0.tgz'
+                        ]
+                    ]
+                ],
+                'time' => [
+                    '1.0.0' => '2016-09-20T13:48:47.730Z'
+                ]
+            ]));
 
-        static::assertCount(0, $this->rm->getRepositories());
-        static::assertCount(0, $this->registry->whatProvides($this->pool, $name));
-        static::assertCount(0, $this->registry->whatProvides($this->pool, $name));
-        static::assertCount(1, $this->rm->getRepositories());
+        self::assertCount(0, $this->rm->getRepositories());
+        self::assertCount(0, $this->registry->loadPackages([$name => new Constraint('=', '0.0.1')], [], [])['namesFound']);
+        self::assertCount(1, $this->rm->getRepositories());
     }
 
     public function testWhatProvidesWithBrokenVersionConstraint()
     {
-        $name = $this->getType().'-asset/foobar';
+        $name = $this->getType() . '-asset/foobar';
         $rfs = $this->replaceRegistryRfsByMock();
-        $rfs->expects(static::any())
+        $rfs->expects(self::any())
             ->method('getContents')
-            ->willReturn(json_encode(array(
-                'repository' => array(
+            ->willReturn(json_encode([
+                'repository' => [
                     'type' => 'vcs',
-                ),
-                'versions' => array(
-                    '1.0.0' => array(
+                ],
+                'versions' => [
+                    '1.0.0' => [
                         'name' => 'foobar',
                         'version' => '0.0.1',
-                        'dependencies' => array(),
-                        'dist' => array(
+                        'dependencies' => [],
+                        'dist' => [
                             'shasum' => '1d408b3fdb76923b9543d96fb4c9dfd535d9cb5d',
                             'tarball' => 'http://registry.tld/foobar/-/foobar-1.0.0.tgz',
-                        ),
-                    ),
-                    '1.0.1' => array(
+                        ],
+                    ],
+                    '1.0.1' => [
                         'name' => 'foobar',
                         'version' => '0.0.1',
-                        'dependencies' => array(
+                        'dependencies' => [
                             // This constraint is invalid. Whole version package version should be skipped.
                             'library1' => '^1.2,,<2.0',
-                        ),
-                        'dist' => array(
+                        ],
+                        'dist' => [
                             'shasum' => '1d408b3fdb76923b9543d96fb4c9acd535d9cb7a',
                             'tarball' => 'http://registry.tld/foobar/-/foobar-1.0.1.tgz',
-                        ),
-                    ),
-                    '1.0.2' => array(
+                        ],
+                    ],
+                    '1.0.2' => [
                         'name' => 'foobar',
                         'version' => '0.0.1',
-                        'dependencies' => array(
+                        'dependencies' => [
                             'library1' => '^1.2,<2.0',
-                        ),
-                        'dist' => array(
+                        ],
+                        'dist' => [
                             'shasum' => '1d408b3fdb76923b9543d96fb4c9acd535d9cb7a',
                             'tarball' => 'http://registry.tld/foobar/-/foobar-1.0.1.tgz',
-                        ),
-                    ),
-                ),
-                'time' => array(
+                        ],
+                    ],
+                ],
+                'time' => [
                     '1.0.0' => '2016-09-20T13:48:47.730Z',
-                ),
-            )))
-        ;
+                ],
+            ]));
 
-        static::assertCount(0, $this->rm->getRepositories());
-        static::assertCount(0, $this->registry->whatProvides($this->pool, $name));
-        static::assertCount(0, $this->registry->whatProvides($this->pool, $name));
-        static::assertCount(1, $this->rm->getRepositories());
-        static::assertCount(2, $this->rm->getRepositories()[0]->getPackages());
+        self::assertCount(0, $this->rm->getRepositories());
+        self::assertCount(0, $this->registry->loadPackages([$name => new Constraint('=', '0.0.1')], [], [])['namesFound']);
+        self::assertCount(1, $this->rm->getRepositories());
+        self::assertCount(2, $this->rm->getRepositories()[0]->getPackages());
     }
 
-    /**
-     * @expectedException \Fxp\Composer\AssetPlugin\Exception\InvalidCreateRepositoryException
-     * @expectedExceptionMessage "repository.url" parameter of "foobar"
-     */
     public function testWatProvidesWithoutRepositoryUrlAndWithoutVersions()
     {
-        $name = $this->getType().'-asset/foobar';
+        self::expectException('\Fxp\Composer\AssetPlugin\Exception\InvalidCreateRepositoryException');
+        self::expectExceptionMessage('"repository.url" parameter of "foobar"');
+        $name = $this->getType() . '-asset/foobar';
         $rfs = $this->replaceRegistryRfsByMock();
-        $rfs->expects(static::any())
+        $rfs->expects(self::any())
             ->method('getContents')
-            ->willReturn(json_encode(array()))
-        ;
+            ->willReturn(json_encode([]));
 
-        static::assertCount(0, $this->rm->getRepositories());
+        self::assertCount(0, $this->rm->getRepositories());
 
-        $this->registry->whatProvides($this->pool, $name);
+        $this->registry->loadPackages([$name => new Constraint('=', '0.0.1')], [], []);
     }
 
     public function testWhatProvidesWithGitPlusHttpsUrl()
     {
-        $name = $this->getType().'-asset/existing';
+        $name = $this->getType() . '-asset/existing';
         $rfs = $this->replaceRegistryRfsByMock();
-        $rfs->expects(static::any())
+        $rfs->expects(self::any())
             ->method('getContents')
-            ->willReturn(json_encode(array(
-                'repository' => array(
+            ->willReturn(json_encode([
+                'repository' => [
                     'type' => 'vcs',
                     'url' => 'git+https://foo.tld',
-                ),
-            )))
-        ;
+                ],
+            ]));
 
-        static::assertCount(0, $this->rm->getRepositories());
-        static::assertCount(0, $this->registry->whatProvides($this->pool, $name));
-        static::assertCount(0, $this->registry->whatProvides($this->pool, $name));
-        static::assertCount(1, $this->rm->getRepositories());
+        self::assertCount(0, $this->rm->getRepositories());
+        self::assertCount(0, $this->registry->loadPackages([$name => new Constraint('=', '0.0.1')], [], [])['namesFound']);
+        self::assertCount(1, $this->rm->getRepositories());
     }
 
-    protected function getType()
+    protected function getType(): string
     {
         return 'npm';
     }
 
-    protected function getRegistry(array $repoConfig, IOInterface $io, Config $config, EventDispatcher $eventDispatcher = null)
+    protected function getRegistry(array $repoConfig, IOInterface $io, Config $config, HttpDownloader $httpDownloader, EventDispatcher $eventDispatcher = null): AbstractAssetsRepository
     {
-        return new NpmRepository($repoConfig, $io, $config, $eventDispatcher);
+        return new NpmRepository($repoConfig, $io, $config, $httpDownloader, $eventDispatcher);
     }
 
-    protected function getMockPackageForVcsConfig()
+    protected function getMockPackageForVcsConfig(): array
     {
-        return array(
-            'repository' => array(
+        return [
+            'repository' => [
                 'type' => 'vcs',
-                'url' => 'http://foo.tld',
-            ),
-        );
+                'url' => 'http://foo.tld'
+            ]
+        ];
     }
 
-    protected function getMockSearchResult($name = 'mock-package')
+    protected function getMockSearchResult(string $name = 'mock-package'): array
     {
-        return array();
+        return [];
     }
 }

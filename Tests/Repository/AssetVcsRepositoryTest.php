@@ -17,6 +17,7 @@ use Composer\Package\AliasPackage;
 use Composer\Package\CompletePackage;
 use Composer\Package\PackageInterface;
 use Composer\Repository\InvalidRepositoryException;
+use Composer\Util\HttpDownloader;
 use Fxp\Composer\AssetPlugin\Repository\AssetRepositoryManager;
 use Fxp\Composer\AssetPlugin\Repository\AssetVcsRepository;
 use Fxp\Composer\AssetPlugin\Repository\VcsPackageFilter;
@@ -35,56 +36,58 @@ final class AssetVcsRepositoryTest extends \PHPUnit\Framework\TestCase
     /**
      * @var Config
      */
-    protected $config;
+    protected Config $config;
 
     /**
      * @var EventDispatcher
      */
-    protected $dispatcher;
+    protected EventDispatcher $dispatcher;
 
     /**
      * @var MockIO
      */
-    protected $io;
+    protected MockIO $io;
 
     /**
-     * @var AssetRepositoryManager
+     * @var \PHPUnit\Framework\MockObject\MockObject|HttpDownloader
      */
-    protected $assetRepositoryManager;
+    protected \PHPUnit\Framework\MockObject\MockObject|HttpDownloader $httpDownloader;
+
+    /**
+     * @var \PHPUnit\Framework\MockObject\MockObject|AssetRepositoryManager
+     */
+    protected \PHPUnit\Framework\MockObject\MockObject|AssetRepositoryManager $assetRepositoryManager;
 
     /**
      * @var AssetVcsRepository
      */
-    protected $repository;
+    protected AssetVcsRepository $repository;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->config = new Config();
         /** @var EventDispatcher $dispatcher */
         $dispatcher = $this->getMockBuilder('Composer\EventDispatcher\EventDispatcher')
             ->disableOriginalConstructor()
-            ->getMock()
-        ;
+            ->getMock();
         $this->dispatcher = $dispatcher;
         $this->assetRepositoryManager = $this->getMockBuilder(AssetRepositoryManager::class)
             ->disableOriginalConstructor()
-            ->getMock()
-        ;
+            ->getMock();
+        $this->httpDownloader = $this->getMockBuilder(HttpDownloader::class)
+            ->disableOriginalConstructor()
+            ->getMock();
 
-        $this->assetRepositoryManager->expects(static::any())
+        $this->assetRepositoryManager->expects(self::any())
             ->method('solveResolutions')
             ->willReturnCallback(function ($value) {
                 return $value;
-            })
-        ;
+            });
     }
 
-    protected function tearDown()
+    protected function tearDown(): void
     {
-        $this->config = null;
-        $this->dispatcher = null;
-        $this->io = null;
-        $this->repository = null;
+        unset($this->config, $this->dispatcher, $this->io, $this->repository);
     }
 
     /**
@@ -92,14 +95,14 @@ final class AssetVcsRepositoryTest extends \PHPUnit\Framework\TestCase
      *
      * @return array
      */
-    public function getDefaultDrivers()
+    public function getDefaultDrivers(): array
     {
-        return array(
-            array('npm-github', 'http://example.org/foo.git', 'Fxp\Composer\AssetPlugin\Repository\Vcs\GitHubDriver'),
-            array('npm-git', 'http://example.org/foo.git', 'Fxp\Composer\AssetPlugin\Repository\Vcs\GitDriver'),
-            array('bower-github', 'http://example.org/foo.git', 'Fxp\Composer\AssetPlugin\Repository\Vcs\GitHubDriver'),
-            array('bower-git', 'http://example.org/foo.git', 'Fxp\Composer\AssetPlugin\Repository\Vcs\GitDriver'),
-        );
+        return [
+            ['npm-github', 'http://example.org/foo.git', 'Fxp\Composer\AssetPlugin\Repository\Vcs\GitHubDriver'],
+            ['npm-git', 'http://example.org/foo.git', 'Fxp\Composer\AssetPlugin\Repository\Vcs\GitDriver'],
+            ['bower-github', 'http://example.org/foo.git', 'Fxp\Composer\AssetPlugin\Repository\Vcs\GitHubDriver'],
+            ['bower-git', 'http://example.org/foo.git', 'Fxp\Composer\AssetPlugin\Repository\Vcs\GitDriver'],
+        ];
     }
 
     /**
@@ -108,10 +111,10 @@ final class AssetVcsRepositoryTest extends \PHPUnit\Framework\TestCase
      * @param string $type
      * @param string $url
      */
-    public function testDefaultConstructor($type, $url)
+    public function testDefaultConstructor(string $type, string $url)
     {
-        $this->init(false, $type, $url, '', false, array());
-        static::assertEquals(0, $this->repository->count());
+        $this->init(false, $type, $url, '', false, []);
+        self::assertEquals(0, $this->repository->count());
     }
 
     /**
@@ -119,12 +122,12 @@ final class AssetVcsRepositoryTest extends \PHPUnit\Framework\TestCase
      *
      * @return array
      */
-    public function getMockDrivers()
+    public function getMockDrivers(): array
     {
-        return array(
-            array('npm-mock', 'http://example.org/foo', 'Fxp\Composer\AssetPlugin\Tests\Fixtures\Repository\Vcs\MockVcsDriver'),
-            array('bower-mock', 'http://example.org/foo', 'Fxp\Composer\AssetPlugin\Tests\Fixtures\Repository\Vcs\MockVcsDriver'),
-        );
+        return [
+            ['npm-mock', 'http://example.org/foo', 'Fxp\Composer\AssetPlugin\Tests\Fixtures\Repository\Vcs\MockVcsDriver'],
+            ['bower-mock', 'http://example.org/foo', 'Fxp\Composer\AssetPlugin\Tests\Fixtures\Repository\Vcs\MockVcsDriver'],
+        ];
     }
 
     /**
@@ -133,12 +136,11 @@ final class AssetVcsRepositoryTest extends \PHPUnit\Framework\TestCase
      * @param string $type
      * @param string $url
      * @param string $class
-     *
-     * @expectedException \Composer\Repository\InvalidRepositoryException
-     * @expectedExceptionMessageRegExp /No valid (bower|package).json was found in any branch or tag of http:\/\/example.org\/foo, could not load a package from it./
      */
-    public function testNotDriverFound($type, $url, $class)
+    public function testNotDriverFound(string $type, string $url, string $class)
     {
+        self::expectException('\Composer\Repository\InvalidRepositoryException');
+        self::expectExceptionMessageMatches('/No valid (bower|package).json was found in any branch or tag of http:\/\/example.org\/foo, could not load a package from it./');
         $this->init(false, $type, $url, $class);
         $this->repository->getPackages();
     }
@@ -149,11 +151,10 @@ final class AssetVcsRepositoryTest extends \PHPUnit\Framework\TestCase
      * @param string $type
      * @param string $url
      * @param string $class
-     *
-     * @expectedException \Composer\Repository\InvalidRepositoryException
      */
-    public function testWithoutValidPackage($type, $url, $class)
+    public function testWithoutValidPackage(string $type, string $url, string $class)
     {
+        self::expectException('\Composer\Repository\InvalidRepositoryException');
         $this->init(true, $type, $url, $class);
         $this->repository->getPackages();
     }
@@ -163,14 +164,14 @@ final class AssetVcsRepositoryTest extends \PHPUnit\Framework\TestCase
      *
      * @return array
      */
-    public function getMockDriversSkipParsing()
+    public function getMockDriversSkipParsing(): array
     {
-        return array(
-            array('npm-mock', 'http://example.org/foo', 'Fxp\Composer\AssetPlugin\Tests\Fixtures\Repository\Vcs\MockVcsDriverSkipParsing', false),
-            array('bower-mock', 'http://example.org/foo', 'Fxp\Composer\AssetPlugin\Tests\Fixtures\Repository\Vcs\MockVcsDriverSkipParsing', false),
-            array('npm-mock', 'http://example.org/foo', 'Fxp\Composer\AssetPlugin\Tests\Fixtures\Repository\Vcs\MockVcsDriverSkipParsing', true),
-            array('bower-mock', 'http://example.org/foo', 'Fxp\Composer\AssetPlugin\Tests\Fixtures\Repository\Vcs\MockVcsDriverSkipParsing', true),
-        );
+        return [
+            ['npm-mock', 'http://example.org/foo', 'Fxp\Composer\AssetPlugin\Tests\Fixtures\Repository\Vcs\MockVcsDriverSkipParsing', false],
+            ['bower-mock', 'http://example.org/foo', 'Fxp\Composer\AssetPlugin\Tests\Fixtures\Repository\Vcs\MockVcsDriverSkipParsing', false],
+            ['npm-mock', 'http://example.org/foo', 'Fxp\Composer\AssetPlugin\Tests\Fixtures\Repository\Vcs\MockVcsDriverSkipParsing', true],
+            ['bower-mock', 'http://example.org/foo', 'Fxp\Composer\AssetPlugin\Tests\Fixtures\Repository\Vcs\MockVcsDriverSkipParsing', true],
+        ];
     }
 
     /**
@@ -179,16 +180,16 @@ final class AssetVcsRepositoryTest extends \PHPUnit\Framework\TestCase
      * @param string $type
      * @param string $url
      * @param string $class
-     * @param bool   $verbose
+     * @param bool $verbose
      */
-    public function testSkipParsingFile($type, $url, $class, $verbose)
+    public function testSkipParsingFile(string $type, string $url, string $class, bool $verbose)
     {
-        $validTraces = array('');
+        $validTraces = [''];
         if ($verbose) {
-            $validTraces = array(
+            $validTraces = [
                 '<error>Skipped parsing ROOT, MESSAGE with ROOT</error>',
                 '',
-            );
+            ];
         }
 
         $this->init(true, $type, $url, $class, $verbose);
@@ -198,7 +199,7 @@ final class AssetVcsRepositoryTest extends \PHPUnit\Framework\TestCase
         } catch (InvalidRepositoryException $e) {
             // for analysis the IO traces
         }
-        static::assertSame($validTraces, $this->io->getTraces());
+        self::assertSame($validTraces, $this->io->getTraces());
     }
 
     /**
@@ -206,14 +207,14 @@ final class AssetVcsRepositoryTest extends \PHPUnit\Framework\TestCase
      *
      * @return array
      */
-    public function getMockDriversWithExceptions()
+    public function getMockDriversWithExceptions(): array
     {
-        return array(
-            array('npm-mock', 'http://example.org/foo', 'Fxp\Composer\AssetPlugin\Tests\Fixtures\Repository\Vcs\MockVcsDriverWithException'),
-            array('bower-mock', 'http://example.org/foo', 'Fxp\Composer\AssetPlugin\Tests\Fixtures\Repository\Vcs\MockVcsDriverWithException'),
-            array('npm-mock', 'http://example.org/foo', 'Fxp\Composer\AssetPlugin\Tests\Fixtures\Repository\Vcs\MockVcsDriverWithException'),
-            array('bower-mock', 'http://example.org/foo', 'Fxp\Composer\AssetPlugin\Tests\Fixtures\Repository\Vcs\MockVcsDriverWithException'),
-        );
+        return [
+            ['npm-mock', 'http://example.org/foo', 'Fxp\Composer\AssetPlugin\Tests\Fixtures\Repository\Vcs\MockVcsDriverWithException'],
+            ['bower-mock', 'http://example.org/foo', 'Fxp\Composer\AssetPlugin\Tests\Fixtures\Repository\Vcs\MockVcsDriverWithException'],
+            ['npm-mock', 'http://example.org/foo', 'Fxp\Composer\AssetPlugin\Tests\Fixtures\Repository\Vcs\MockVcsDriverWithException'],
+            ['bower-mock', 'http://example.org/foo', 'Fxp\Composer\AssetPlugin\Tests\Fixtures\Repository\Vcs\MockVcsDriverWithException'],
+        ];
     }
 
     /**
@@ -222,12 +223,11 @@ final class AssetVcsRepositoryTest extends \PHPUnit\Framework\TestCase
      * @param string $type
      * @param string $url
      * @param string $class
-     *
-     * @expectedException \ErrorException
-     * @expectedExceptionMessage Error to retrieve the tags
      */
-    public function testInitFullDriverWithUncachedException($type, $url, $class)
+    public function testInitFullDriverWithUncachedException(string $type, string $url, string $class)
     {
+        self::expectException('\ErrorException');
+        self::expectExceptionMessage('Error to retrieve the tags');
         $this->init(true, $type, $url, $class);
 
         $this->repository->getComposerPackageName();
@@ -238,14 +238,14 @@ final class AssetVcsRepositoryTest extends \PHPUnit\Framework\TestCase
      *
      * @return array
      */
-    public function getMockDriversWithVersions()
+    public function getMockDriversWithVersions(): array
     {
-        return array(
-            array('npm-mock', 'http://example.org/foo', 'Fxp\Composer\AssetPlugin\Tests\Fixtures\Repository\Vcs\MockVcsDriverWithPackages', false),
-            array('bower-mock', 'http://example.org/foo', 'Fxp\Composer\AssetPlugin\Tests\Fixtures\Repository\Vcs\MockVcsDriverWithPackages', false),
-            array('npm-mock', 'http://example.org/foo', 'Fxp\Composer\AssetPlugin\Tests\Fixtures\Repository\Vcs\MockVcsDriverWithPackages', true),
-            array('bower-mock', 'http://example.org/foo', 'Fxp\Composer\AssetPlugin\Tests\Fixtures\Repository\Vcs\MockVcsDriverWithPackages', true),
-        );
+        return [
+            ['npm-mock', 'http://example.org/foo', 'Fxp\Composer\AssetPlugin\Tests\Fixtures\Repository\Vcs\MockVcsDriverWithPackages', false],
+            ['bower-mock', 'http://example.org/foo', 'Fxp\Composer\AssetPlugin\Tests\Fixtures\Repository\Vcs\MockVcsDriverWithPackages', false],
+            ['npm-mock', 'http://example.org/foo', 'Fxp\Composer\AssetPlugin\Tests\Fixtures\Repository\Vcs\MockVcsDriverWithPackages', true],
+            ['bower-mock', 'http://example.org/foo', 'Fxp\Composer\AssetPlugin\Tests\Fixtures\Repository\Vcs\MockVcsDriverWithPackages', true],
+        ];
     }
 
     /**
@@ -254,16 +254,16 @@ final class AssetVcsRepositoryTest extends \PHPUnit\Framework\TestCase
      * @param string $type
      * @param string $url
      * @param string $class
-     * @param bool   $verbose
+     * @param bool $verbose
      */
-    public function testRepositoryPackageName($type, $url, $class, $verbose)
+    public function testRepositoryPackageName(string $type, string $url, string $class, bool $verbose)
     {
         $packageName = 'asset-package-name';
-        $valid = str_replace('-mock', '-asset', $type).'/'.$packageName;
+        $valid = str_replace('-mock', '-asset', $type) . '/' . $packageName;
 
         $this->init(true, $type, $url, $class, $verbose, null, $packageName);
 
-        static::assertEquals($valid, $this->repository->getComposerPackageName());
+        self::assertEquals($valid, $this->repository->getComposerPackageName());
     }
 
     /**
@@ -272,35 +272,35 @@ final class AssetVcsRepositoryTest extends \PHPUnit\Framework\TestCase
      * @param string $type
      * @param string $url
      * @param string $class
-     * @param bool   $verbose
+     * @param bool $verbose
      */
-    public function testWithTagsAndBranchs($type, $url, $class, $verbose)
+    public function testWithTagsAndBranchs(string $type, string $url, string $class, bool $verbose)
     {
-        $validPackageName = substr($type, 0, strpos($type, '-')).'-asset/foobar';
-        $validTraces = array('');
+        $validPackageName = substr($type, 0, strpos($type, '-')) . '-asset/foobar';
+        $validTraces = [''];
         if ($verbose) {
-            $validTraces = array(
+            $validTraces = [
                 '<warning>Skipped tag invalid, invalid tag name</warning>',
                 '',
-            );
+            ];
         }
 
         $this->init(true, $type, $url, $class, $verbose);
 
         /** @var PackageInterface[] $packages */
         $packages = $this->repository->getPackages();
-        static::assertCount(7, $packages);
+        self::assertCount(7, $packages);
 
         foreach ($packages as $package) {
             if ($package instanceof AliasPackage) {
                 $package = $package->getAliasOf();
             }
 
-            static::assertInstanceOf('Composer\Package\CompletePackage', $package);
-            static::assertSame($validPackageName, $package->getName());
+            self::assertInstanceOf('Composer\Package\CompletePackage', $package);
+            self::assertSame($validPackageName, $package->getName());
         }
 
-        static::assertSame($validTraces, $this->io->getTraces());
+        self::assertSame($validTraces, $this->io->getTraces());
     }
 
     /**
@@ -308,14 +308,14 @@ final class AssetVcsRepositoryTest extends \PHPUnit\Framework\TestCase
      *
      * @return array
      */
-    public function getMockDriversWithVersionsAndWithoutName()
+    public function getMockDriversWithVersionsAndWithoutName(): array
     {
-        return array(
-            array('npm-mock', 'http://example.org/foo', 'Fxp\Composer\AssetPlugin\Tests\Fixtures\Repository\Vcs\MockVcsDriverWithUrlPackages', false),
-            array('bower-mock', 'http://example.org/foo', 'Fxp\Composer\AssetPlugin\Tests\Fixtures\Repository\Vcs\MockVcsDriverWithUrlPackages', false),
-            array('npm-mock', 'http://example.org/foo', 'Fxp\Composer\AssetPlugin\Tests\Fixtures\Repository\Vcs\MockVcsDriverWithUrlPackages', true),
-            array('bower-mock', 'http://example.org/foo', 'Fxp\Composer\AssetPlugin\Tests\Fixtures\Repository\Vcs\MockVcsDriverWithUrlPackages', true),
-        );
+        return [
+            ['npm-mock', 'http://example.org/foo', 'Fxp\Composer\AssetPlugin\Tests\Fixtures\Repository\Vcs\MockVcsDriverWithUrlPackages', false],
+            ['bower-mock', 'http://example.org/foo', 'Fxp\Composer\AssetPlugin\Tests\Fixtures\Repository\Vcs\MockVcsDriverWithUrlPackages', false],
+            ['npm-mock', 'http://example.org/foo', 'Fxp\Composer\AssetPlugin\Tests\Fixtures\Repository\Vcs\MockVcsDriverWithUrlPackages', true],
+            ['bower-mock', 'http://example.org/foo', 'Fxp\Composer\AssetPlugin\Tests\Fixtures\Repository\Vcs\MockVcsDriverWithUrlPackages', true],
+        ];
     }
 
     /**
@@ -324,35 +324,35 @@ final class AssetVcsRepositoryTest extends \PHPUnit\Framework\TestCase
      * @param string $type
      * @param string $url
      * @param string $class
-     * @param bool   $verbose
+     * @param bool $verbose
      */
-    public function testWithTagsAndBranchsWithoutPackageName($type, $url, $class, $verbose)
+    public function testWithTagsAndBranchsWithoutPackageName(string $type, string $url, string $class, bool $verbose)
     {
         $validPackageName = $url;
-        $validTraces = array('');
+        $validTraces = [''];
         if ($verbose) {
-            $validTraces = array(
+            $validTraces = [
                 '<warning>Skipped tag invalid, invalid tag name</warning>',
                 '',
-            );
+            ];
         }
 
         $this->init(true, $type, $url, $class, $verbose);
 
         /** @var PackageInterface[] $packages */
         $packages = $this->repository->getPackages();
-        static::assertCount(7, $packages);
+        self::assertCount(7, $packages);
 
         foreach ($packages as $package) {
             if ($package instanceof AliasPackage) {
                 $package = $package->getAliasOf();
             }
 
-            static::assertInstanceOf('Composer\Package\CompletePackage', $package);
-            static::assertSame($validPackageName, $package->getName());
+            self::assertInstanceOf('Composer\Package\CompletePackage', $package);
+            self::assertSame($validPackageName, $package->getName());
         }
 
-        static::assertSame($validTraces, $this->io->getTraces());
+        self::assertSame($validTraces, $this->io->getTraces());
     }
 
     /**
@@ -361,35 +361,35 @@ final class AssetVcsRepositoryTest extends \PHPUnit\Framework\TestCase
      * @param string $type
      * @param string $url
      * @param string $class
-     * @param bool   $verbose
+     * @param bool $verbose
      */
-    public function testWithTagsAndBranchsWithRegistryPackageName($type, $url, $class, $verbose)
+    public function testWithTagsAndBranchesWithRegistryPackageName(string $type, string $url, string $class, bool $verbose)
     {
-        $validPackageName = substr($type, 0, strpos($type, '-')).'-asset/registry-foobar';
-        $validTraces = array('');
+        $validPackageName = substr($type, 0, strpos($type, '-')) . '-asset/registry-foobar';
+        $validTraces = [''];
         if ($verbose) {
-            $validTraces = array(
+            $validTraces = [
                 '<warning>Skipped tag invalid, invalid tag name</warning>',
                 '',
-            );
+            ];
         }
 
         $this->init(true, $type, $url, $class, $verbose, null, 'registry-foobar');
 
         /** @var PackageInterface[] $packages */
         $packages = $this->repository->getPackages();
-        static::assertCount(7, $packages);
+        self::assertCount(7, $packages);
 
         foreach ($packages as $package) {
             if ($package instanceof AliasPackage) {
                 $package = $package->getAliasOf();
             }
 
-            static::assertInstanceOf('Composer\Package\CompletePackage', $package);
-            static::assertSame($validPackageName, $package->getName());
+            self::assertInstanceOf('Composer\Package\CompletePackage', $package);
+            self::assertSame($validPackageName, $package->getName());
         }
 
-        static::assertSame($validTraces, $this->io->getTraces());
+        self::assertSame($validTraces, $this->io->getTraces());
     }
 
     /**
@@ -398,43 +398,41 @@ final class AssetVcsRepositoryTest extends \PHPUnit\Framework\TestCase
      * @param string $type
      * @param string $url
      * @param string $class
-     * @param bool   $verbose
+     * @param bool $verbose
      */
-    public function testWithFilterTags($type, $url, $class, $verbose)
+    public function testWithFilterTags(string $type, string $url, string $class, bool $verbose)
     {
-        $validPackageName = substr($type, 0, strpos($type, '-')).'-asset/registry-foobar';
-        $validTraces = array('');
+        $validPackageName = substr($type, 0, strpos($type, '-')) . '-asset/registry-foobar';
+        $validTraces = [''];
         if ($verbose) {
-            $validTraces = array();
+            $validTraces = [];
         }
 
         $filter = $this->getMockBuilder('Fxp\Composer\AssetPlugin\Repository\VcsPackageFilter')
             ->disableOriginalConstructor()
-            ->getMock()
-        ;
+            ->getMock();
 
-        $filter->expects(static::any())
+        $filter->expects(self::any())
             ->method('skip')
-            ->willReturn(true)
-        ;
+            ->willReturn(true);
 
         /* @var VcsPackageFilter $filter */
         $this->init(true, $type, $url, $class, $verbose, null, 'registry-foobar', $filter);
 
         /** @var PackageInterface[] $packages */
         $packages = $this->repository->getPackages();
-        static::assertCount(5, $packages);
+        self::assertCount(5, $packages);
 
         foreach ($packages as $package) {
             if ($package instanceof AliasPackage) {
                 $package = $package->getAliasOf();
             }
 
-            static::assertInstanceOf('Composer\Package\CompletePackage', $package);
-            static::assertSame($validPackageName, $package->getName());
+            self::assertInstanceOf('Composer\Package\CompletePackage', $package);
+            self::assertSame($validPackageName, $package->getName());
         }
 
-        static::assertSame($validTraces, $this->io->getTraces());
+        self::assertSame($validTraces, $this->io->getTraces());
     }
 
     /**
@@ -444,9 +442,9 @@ final class AssetVcsRepositoryTest extends \PHPUnit\Framework\TestCase
      * @param string $url
      * @param string $class
      */
-    public function testPackageWithRegistryVersions($type, $url, $class)
+    public function testPackageWithRegistryVersions(string $type, string $url, string $class)
     {
-        $registryPackages = array(
+        $registryPackages = [
             new CompletePackage('package1', '0.1.0.0', '0.1'),
             new CompletePackage('package1', '0.2.0.0', '0.2'),
             new CompletePackage('package1', '0.3.0.0', '0.3'),
@@ -457,37 +455,53 @@ final class AssetVcsRepositoryTest extends \PHPUnit\Framework\TestCase
             new CompletePackage('package1', '0.8.0.0', '0.8'),
             new CompletePackage('package1', '0.9.0.0', '0.9'),
             new CompletePackage('package1', '1.0.0.0', '1.0'),
-        );
+        ];
 
         $this->init(true, $type, $url, $class, false, null, 'registry-foobar', null, $registryPackages);
 
         /** @var PackageInterface[] $packages */
         $packages = $this->repository->getPackages();
-        static::assertCount(10, $packages);
-        static::assertSame($registryPackages, $packages);
+        self::assertCount(10, $packages);
+        self::assertSame($registryPackages, $packages);
     }
 
     /**
      * Init the test.
      *
-     * @param bool        $supported
-     * @param string      $type
-     * @param string      $url
-     * @param string      $class
-     * @param bool        $verbose
-     * @param null|array  $drivers
-     * @param null|string $registryName
+     * @param bool $supported
+     * @param string $type
+     * @param string $url
+     * @param string $class
+     * @param bool $verbose
+     * @param array|null $drivers
+     * @param string|null $registryName
      */
-    protected function init($supported, $type, $url, $class, $verbose = false, $drivers = null, $registryName = null, VcsPackageFilter $vcsPackageFilter = null, array $registryPackages = array())
+    protected function init(
+        bool             $supported,
+        string           $type,
+        string           $url,
+        string           $class,
+        bool             $verbose = false,
+        array            $drivers = null,
+        string           $registryName = null,
+        VcsPackageFilter $vcsPackageFilter = null,
+        array            $registryPackages = []
+    )
     {
         MockVcsDriver::$supported = $supported;
         $driverType = substr($type, strpos($type, '-') + 1);
-        $repoConfig = array('type' => $type, 'url' => $url, 'name' => $registryName, 'vcs-package-filter' => $vcsPackageFilter, 'asset-repository-manager' => $this->assetRepositoryManager);
+        $repoConfig = [
+            'type' => $type,
+            'url' => $url,
+            'name' => $registryName,
+            'vcs-package-filter' => $vcsPackageFilter,
+            'asset-repository-manager' => $this->assetRepositoryManager
+        ];
 
         if (null === $drivers) {
-            $drivers = array(
+            $drivers = [
                 $driverType => $class,
-            );
+            ];
         }
 
         if (\count($registryPackages) > 0) {
@@ -495,7 +509,7 @@ final class AssetVcsRepositoryTest extends \PHPUnit\Framework\TestCase
         }
 
         $this->io = $this->createIO($verbose);
-        $this->repository = new AssetVcsRepository($repoConfig, $this->io, $this->config, $this->dispatcher, $drivers);
+        $this->repository = new AssetVcsRepository($repoConfig, $this->io, $this->config, $this->httpDownloader, $this->dispatcher, null, $drivers);
     }
 
     /**
@@ -503,7 +517,7 @@ final class AssetVcsRepositoryTest extends \PHPUnit\Framework\TestCase
      *
      * @return MockIO
      */
-    protected function createIO($verbose = false)
+    protected function createIO(bool $verbose = false): MockIO
     {
         return new MockIO($verbose);
     }

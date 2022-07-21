@@ -25,76 +25,82 @@ class MockVcsDriver implements VcsDriverInterface
     /**
      * @var bool
      */
-    public static $supported = true;
+    public static bool $supported = true;
 
     /**
      * @var mixed
      */
-    public $contents;
+    public mixed $contents;
 
-    public function initialize()
+    public function initialize(): void
     {
         // no action
     }
 
-    public function getComposerInformation($identifier)
+    public function getComposerInformation($identifier): ?array
     {
+        return null;
     }
 
-    public function getRootIdentifier()
+    public function getRootIdentifier(): string
     {
+        return '';
     }
 
-    public function getBranches()
+    public function getBranches(): array
     {
-        return array();
+        return [];
     }
 
-    public function getTags()
+    public function getTags(): array
     {
-        return array();
+        return [];
     }
 
-    public function getDist($identifier)
+    public function getDist($identifier): ?array
     {
+        return null;
     }
 
-    public function getSource($identifier)
+    public function getSource($identifier): array
     {
+        return [];
     }
 
-    public function getUrl()
+    public function getUrl(): string
     {
+        return '';
     }
 
-    public function hasComposerFile($identifier)
+    public function hasComposerFile($identifier): bool
     {
         return false;
     }
 
-    public function cleanup()
+    public function cleanup(): void
     {
         // no action
     }
 
-    public static function supports(IOInterface $io, Config $config, $url, $deep = false)
+    public static function supports(IOInterface $io, Config $config, $url, $deep = false): bool
     {
         return static::$supported;
     }
 
-    public function getFileContent($file, $identifier)
+    public function getFileContent($file, $identifier): ?string
     {
+        return null;
     }
 
-    public function getChangeDate($identifier)
+    public function getChangeDate($identifier): ?\DateTimeImmutable
     {
-        return new \DateTime();
+        return null;
     }
 
     /**
      * @return mixed
      */
-    protected function getContents()
+    protected function getContents(): mixed
     {
         return $this->contents;
     }

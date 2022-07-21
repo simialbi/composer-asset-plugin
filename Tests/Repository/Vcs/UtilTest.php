@@ -23,13 +23,13 @@ use Fxp\Composer\AssetPlugin\Tests\Fixtures\Repository\Vcs\MockVcsDriver;
  */
 final class UtilTest extends \PHPUnit\Framework\TestCase
 {
-    public function getDataProvider()
+    public function getDataProvider(): array
     {
-        return array(
-            array('key'),
-            array('key.subkey'),
-            array('key.subkey.subsubkey'),
-        );
+        return [
+            ['key'],
+            ['key.subkey'],
+            ['key.subkey.subsubkey']
+        ];
     }
 
     /**
@@ -37,11 +37,11 @@ final class UtilTest extends \PHPUnit\Framework\TestCase
      *
      * @param string $resourceKey
      */
-    public function testAddComposerTimeWithSimpleKey($resourceKey)
+    public function testAddComposerTimeWithSimpleKey(string $resourceKey)
     {
-        $composer = array(
+        $composer = [
             'name' => 'test',
-        );
+        ];
         $driver = new MockVcsDriver();
 
         $value = null;
@@ -50,19 +50,19 @@ final class UtilTest extends \PHPUnit\Framework\TestCase
 
         for ($i = $start; $i >= 0; --$i) {
             if (null === $value) {
-                $value = 'level '.$i;
+                $value = 'level ' . $i;
             }
 
-            $value = array($keys[$i] => $value);
+            $value = [$keys[$i] => $value];
         }
 
         $driver->contents = json_encode($value);
-        $composerValid = array_merge($composer, array(
-            'time' => 'level '.(\count($keys) - 1),
-        ));
+        $composerValid = array_merge($composer, [
+            'time' => 'level ' . (\count($keys) - 1),
+        ]);
 
         $composer = Util::addComposerTime($composer, $resourceKey, 'http://example.tld', $driver);
 
-        static::assertSame($composerValid, $composer);
+        self::assertSame($composerValid, $composer);
     }
 }

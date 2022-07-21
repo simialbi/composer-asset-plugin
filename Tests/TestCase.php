@@ -12,6 +12,7 @@
 namespace Fxp\Composer\AssetPlugin\Tests;
 
 use Composer\Package\AliasPackage;
+use Composer\Package\BasePackage;
 use Composer\Semver\Constraint\Constraint;
 use Composer\Semver\VersionParser;
 use Composer\Util\Filesystem;
@@ -25,16 +26,16 @@ use Symfony\Component\Process\ExecutableFinder;
  */
 abstract class TestCase extends \PHPUnit\Framework\TestCase
 {
-    private static $parser;
-    private static $executableCache = array();
+    private static VersionParser $parser;
+    private static array $executableCache = [];
 
-    public static function getUniqueTmpDirectory()
+    public static function getUniqueTmpDirectory(): bool|string
     {
         $attempts = 5;
         $root = sys_get_temp_dir();
 
         do {
-            $unique = $root.\DIRECTORY_SEPARATOR.uniqid('composer-test-'.rand(1000, 9000));
+            $unique = $root . \DIRECTORY_SEPARATOR . uniqid('composer-test-' . rand(1000, 9000));
 
             if (!file_exists($unique) && Silencer::call('mkdir', $unique, 0777)) {
                 return realpath($unique);
@@ -44,7 +45,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
         throw new \RuntimeException('Failed to create a unique temporary directory.');
     }
 
-    protected static function getVersionParser()
+    protected static function getVersionParser(): VersionParser
     {
         if (!self::$parser) {
             self::$parser = new VersionParser();
@@ -53,33 +54,33 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
         return self::$parser;
     }
 
-    protected function getVersionConstraint($operator, $version)
+    protected function getVersionConstraint(string $operator, string $version): Constraint
     {
         $constraint = new Constraint(
             $operator,
             self::getVersionParser()->normalize($version)
         );
 
-        $constraint->setPrettyString($operator.' '.$version);
+        $constraint->setPrettyString($operator . ' ' . $version);
 
         return $constraint;
     }
 
-    protected function getPackage($name, $version, $class = 'Composer\Package\Package')
+    protected function getPackage(string $name, string $version, string $class = 'Composer\Package\Package')
     {
         $normVersion = self::getVersionParser()->normalize($version);
 
         return new $class($name, $normVersion, $version);
     }
 
-    protected function getAliasPackage($package, $version)
+    protected function getAliasPackage(BasePackage $package, string $version): AliasPackage
     {
         $normVersion = self::getVersionParser()->normalize($version);
 
         return new AliasPackage($package, $normVersion, $version);
     }
 
-    protected static function ensureDirectoryExistsAndClear($directory)
+    protected static function ensureDirectoryExistsAndClear(string $directory)
     {
         $fs = new Filesystem();
 
@@ -94,18 +95,16 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
      * Check whether or not the given name is an available executable.
      *
      * @param string $executableName the name of the binary to test
-     *
-     * @throws \PHPUnit_Framework_SkippedTestError
      */
-    protected function skipIfNotExecutable($executableName)
+    protected function skipIfNotExecutable(string $executableName)
     {
         if (!isset(self::$executableCache[$executableName])) {
             $finder = new ExecutableFinder();
-            self::$executableCache[$executableName] = (bool) $finder->find($executableName);
+            self::$executableCache[$executableName] = (bool)$finder->find($executableName);
         }
 
         if (false === self::$executableCache[$executableName]) {
-            static::markTestSkipped($executableName.' is not found or not executable.');
+            static::markTestSkipped($executableName . ' is not found or not executable.');
         }
     }
 }

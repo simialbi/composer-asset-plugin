@@ -232,11 +232,11 @@ class LazyAssetPackageLoader implements LazyLoaderInterface
     }
 
     /**
-     * @param bool|array $data
+     * @param array|null $data
      *
      * @return array
      */
-    protected function validateData(bool|array $data): array
+    protected function validateData(?array $data): array
     {
         return \is_array($data) ? $data : [];
     }

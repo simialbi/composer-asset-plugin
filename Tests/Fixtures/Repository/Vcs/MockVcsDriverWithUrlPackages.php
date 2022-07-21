@@ -18,20 +18,20 @@ namespace Fxp\Composer\AssetPlugin\Tests\Fixtures\Repository\Vcs;
  */
 class MockVcsDriverWithUrlPackages extends MockVcsDriverWithPackages
 {
-    protected $composer = array(
-        'branch:master' => array(
+    protected array $composer = [
+        'branch:master' => [
             'version' => '2.0',
-        ),
-        'branch:1.x' => array(
+        ],
+        'branch:1.x' => [
             'version' => '1.1',
-        ),
-        'tag:v1.0.0' => array(
+        ],
+        'tag:v1.0.0' => [
             'version' => '1.0',
-        ),
-        'tag:v1.0.1' => array(
-        ),
-        'tag:invalid' => array(
+        ],
+        'tag:v1.0.1' => [
+        ],
+        'tag:invalid' => [
             'description' => 'invalid tag name',
-        ),
-    );
+        ],
+    ];
 }

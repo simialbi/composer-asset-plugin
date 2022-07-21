@@ -30,49 +30,49 @@ final class GitDriverTest extends \PHPUnit\Framework\TestCase
     /**
      * @var Config
      */
-    private $config;
+    private Config $config;
 
     /**
-     * @var AssetRepositoryManager|\PHPUnit_Framework_MockObject_MockObject
+     * @var AssetRepositoryManager|\PHPUnit\Framework\MockObject\MockObject
      */
-    private $assetRepositoryManager;
+    private \PHPUnit\Framework\MockObject\MockObject|AssetRepositoryManager $assetRepositoryManager;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->assetRepositoryManager = $this->getMockBuilder(AssetRepositoryManager::class)->disableOriginalConstructor()->getMock();
         $this->config = new Config();
-        $this->config->merge(array(
-            'config' => array(
-                'home' => sys_get_temp_dir().'/composer-test',
-                'cache-repo-dir' => sys_get_temp_dir().'/composer-test-cache',
-                'cache-vcs-dir' => sys_get_temp_dir().'/composer-test-cache',
-            ),
-        ));
+        $this->config->merge([
+            'config' => [
+                'home' => sys_get_temp_dir() . '/composer-test',
+                'cache-repo-dir' => sys_get_temp_dir() . '/composer-test-cache',
+                'cache-vcs-dir' => sys_get_temp_dir() . '/composer-test-cache'
+            ]
+        ]);
 
         // Mock for skip asset
         $fs = new Filesystem();
-        $fs->ensureDirectoryExists(sys_get_temp_dir().'/composer-test-cache/https---github.com-fxpio-composer-asset-plugin.git');
-        file_put_contents(sys_get_temp_dir().'/composer-test-cache/https---github.com-fxpio-composer-asset-plugin.git/config', '');
+        $fs->ensureDirectoryExists(sys_get_temp_dir() . '/composer-test-cache/https---github.com-fxpio-composer-asset-plugin.git');
+        file_put_contents(sys_get_temp_dir() . '/composer-test-cache/https---github.com-fxpio-composer-asset-plugin.git/config', '');
     }
 
-    protected function tearDown()
+    protected function tearDown(): void
     {
         $fs = new Filesystem();
 
-        if (file_exists(sys_get_temp_dir().'/composer-test-cache')) {
-            chmod(sys_get_temp_dir().'/composer-test-cache', 0777);
+        if (file_exists(sys_get_temp_dir() . '/composer-test-cache')) {
+            chmod(sys_get_temp_dir() . '/composer-test-cache', 0777);
         }
 
-        $fs->removeDirectory(sys_get_temp_dir().'/composer-test');
-        $fs->removeDirectory(sys_get_temp_dir().'/composer-test-cache');
+        $fs->removeDirectory(sys_get_temp_dir() . '/composer-test');
+        $fs->removeDirectory(sys_get_temp_dir() . '/composer-test-cache');
     }
 
-    public function getAssetTypes()
+    public function getAssetTypes(): array
     {
-        return array(
-            array('npm', 'package.json'),
-            array('bower', 'bower.json'),
-        );
+        return [
+            ['npm', 'package.json'],
+            ['bower', 'bower.json']
+        ];
     }
 
     /**
@@ -81,46 +81,43 @@ final class GitDriverTest extends \PHPUnit\Framework\TestCase
      * @param string $type
      * @param string $filename
      */
-    public function testPublicRepositoryWithEmptyComposer($type, $filename)
+    public function testPublicRepositoryWithEmptyComposer(string $type, string $filename)
     {
-        $this->assetRepositoryManager->expects(static::any())
+        $this->assetRepositoryManager->expects(self::any())
             ->method('getConfig')
-            ->willReturn(new \Fxp\Composer\AssetPlugin\Config\Config(array()))
-        ;
+            ->willReturn(new \Fxp\Composer\AssetPlugin\Config\Config([]));
 
         $repoUrl = 'https://github.com/fxpio/composer-asset-plugin';
         $identifier = 'v0.0.0';
         $io = $this->getMockBuilder('Composer\IO\IOInterface')->getMock();
 
-        $repoConfig = array(
+        $repoConfig = [
             'url' => $repoUrl,
             'asset-type' => $type,
             'filename' => $filename,
-            'asset-repository-manager' => $this->assetRepositoryManager,
-        );
+            'asset-repository-manager' => $this->assetRepositoryManager
+        ];
 
         $process = $this->getMockBuilder('Composer\Util\ProcessExecutor')->getMock();
-        $process->expects(static::any())
+        $process->expects(self::any())
             ->method('splitLines')
-            ->willReturn(array())
-        ;
-        $process->expects(static::any())
+            ->willReturn([]);
+        $process->expects(self::any())
             ->method('execute')
             ->willReturnCallback(function () {
                 return 0;
-            })
-        ;
+            });
 
         /** @var IOInterface $io */
         /** @var ProcessExecutor $process */
         $gitDriver = new GitDriver($repoConfig, $io, $this->config, $process, null);
         $gitDriver->initialize();
 
-        $validEmpty = array(
-            '_nonexistent_package' => true,
-        );
+        $validEmpty = [
+            '_nonexistent_package' => true
+        ];
 
-        static::assertSame($validEmpty, $gitDriver->getComposerInformation($identifier));
+        self::assertSame($validEmpty, $gitDriver->getComposerInformation($identifier));
     }
 
     /**
@@ -129,50 +126,47 @@ final class GitDriverTest extends \PHPUnit\Framework\TestCase
      * @param string $type
      * @param string $filename
      */
-    public function testLocalRepositoryWithEmptyComposer($type, $filename)
+    public function testLocalRepositoryWithEmptyComposer(string $type, string $filename)
     {
-        $this->assetRepositoryManager->expects(static::any())
+        $this->assetRepositoryManager->expects(self::any())
             ->method('getConfig')
-            ->willReturn(new \Fxp\Composer\AssetPlugin\Config\Config(array()))
-        ;
+            ->willReturn(new \Fxp\Composer\AssetPlugin\Config\Config([]));
 
-        $path = sys_get_temp_dir().'/composer-test/local-repository.git';
+        $path = sys_get_temp_dir() . '/composer-test/local-repository.git';
         $fs = new Filesystem();
         $fs->ensureDirectoryExists($path);
 
-        $repoUrl = 'file://'.$path;
+        $repoUrl = 'file://' . $path;
         $identifier = 'v0.0.0';
         $io = $this->getMockBuilder('Composer\IO\IOInterface')->getMock();
 
-        $repoConfig = array(
+        $repoConfig = [
             'url' => $repoUrl,
             'asset-type' => $type,
             'filename' => $filename,
-            'asset-repository-manager' => $this->assetRepositoryManager,
-        );
+            'asset-repository-manager' => $this->assetRepositoryManager
+        ];
 
         $process = $this->getMockBuilder('Composer\Util\ProcessExecutor')->getMock();
-        $process->expects(static::any())
+        $process->expects(self::any())
             ->method('splitLines')
-            ->willReturn(array())
-        ;
-        $process->expects(static::any())
+            ->willReturn([]);
+        $process->expects(self::any())
             ->method('execute')
             ->willReturnCallback(function () {
                 return 0;
-            })
-        ;
+            });
 
         /** @var IOInterface $io */
         /** @var ProcessExecutor $process */
         $gitDriver = new GitDriver($repoConfig, $io, $this->config, $process, null);
         $gitDriver->initialize();
 
-        $validEmpty = array(
-            '_nonexistent_package' => true,
-        );
+        $validEmpty = [
+            '_nonexistent_package' => true
+        ];
 
-        static::assertSame($validEmpty, $gitDriver->getComposerInformation($identifier));
+        self::assertSame($validEmpty, $gitDriver->getComposerInformation($identifier));
     }
 
     /**
@@ -181,63 +175,63 @@ final class GitDriverTest extends \PHPUnit\Framework\TestCase
      * @param string $type
      * @param string $filename
      */
-    public function testPublicRepositoryWithSkipUpdate($type, $filename)
+    public function testPublicRepositoryWithSkipUpdate(string $type, string $filename)
     {
-        $this->assetRepositoryManager->expects(static::any())
+        $this->assetRepositoryManager->expects(self::any())
             ->method('getConfig')
-            ->willReturn(new \Fxp\Composer\AssetPlugin\Config\Config(array('git-skip-update' => '1 hour')))
-        ;
+            ->willReturn(new \Fxp\Composer\AssetPlugin\Config\Config(['git-skip-update' => '1 hour']));
 
         $repoUrl = 'https://github.com/fxpio/composer-asset-plugin.git';
         $identifier = '92bebbfdcde75ef2368317830e54b605bc938123';
         $io = $this->getMockBuilder('Composer\IO\IOInterface')->getMock();
 
-        $repoConfig = array(
+        $repoConfig = [
             'url' => $repoUrl,
             'asset-type' => $type,
             'filename' => $filename,
             'asset-repository-manager' => $this->assetRepositoryManager,
-        );
+        ];
 
+        $httpDownloader = $this->getMockBuilder('Composer\Util\HttpDownloader')
+            ->disableOriginalConstructor()
+            ->getMock();
         $process = $this->getMockBuilder('Composer\Util\ProcessExecutor')->getMock();
-        $process->expects(static::any())
+        $process->expects(self::any())
             ->method('splitLines')
-            ->willReturn(array())
-        ;
-        $process->expects(static::any())
+            ->willReturn([]);
+        $process->expects(self::any())
             ->method('execute')
             ->willReturnCallback(function ($command, &$output = null) use ($identifier, $repoConfig) {
                 if ($command === sprintf('git show %s', sprintf('%s:%s', escapeshellarg($identifier), $repoConfig['filename']))) {
                     $output = '{"name": "foo"}';
-                } elseif (false !== strpos($command, 'git log')) {
+                } elseif (str_contains($command, 'git log')) {
                     $date = new \DateTime(null, new \DateTimeZone('UTC'));
                     $output = $date->getTimestamp();
                 }
 
                 return 0;
-            })
-        ;
+            });
 
         /** @var IOInterface $io */
         /** @var ProcessExecutor $process */
-        $gitDriver1 = new GitDriver($repoConfig, $io, $this->config, $process, null);
+        $gitDriver1 = new GitDriver($repoConfig, $io, $this->config, $httpDownloader, $process);
         $gitDriver1->initialize();
 
-        $gitDriver2 = new GitDriver($repoConfig, $io, $this->config, $process, null);
+        $gitDriver2 = new GitDriver($repoConfig, $io, $this->config, $httpDownloader, $process);
         $gitDriver2->initialize();
 
-        $validEmpty = array(
+        $validEmpty = [
             '_nonexistent_package' => true,
-        );
+        ];
 
         $composer1 = $gitDriver1->getComposerInformation($identifier);
         $composer2 = $gitDriver2->getComposerInformation($identifier);
 
-        static::assertNotNull($composer1);
-        static::assertNotNull($composer2);
-        static::assertSame($composer1, $composer2);
-        static::assertNotSame($validEmpty, $composer1);
-        static::assertNotSame($validEmpty, $composer2);
+        self::assertNotNull($composer1);
+        self::assertNotNull($composer2);
+        self::assertSame($composer1, $composer2);
+        self::assertNotSame($validEmpty, $composer1);
+        self::assertNotSame($validEmpty, $composer2);
     }
 
     /**
@@ -246,51 +240,51 @@ final class GitDriverTest extends \PHPUnit\Framework\TestCase
      * @param string $type
      * @param string $filename
      */
-    public function testPublicRepositoryWithCodeCache($type, $filename)
+    public function testPublicRepositoryWithCodeCache(string $type, string $filename)
     {
-        $this->assetRepositoryManager->expects(static::any())
+        $this->assetRepositoryManager->expects(self::any())
             ->method('getConfig')
-            ->willReturn(new \Fxp\Composer\AssetPlugin\Config\Config(array()))
-        ;
+            ->willReturn(new \Fxp\Composer\AssetPlugin\Config\Config([]));
 
         $repoUrl = 'https://github.com/fxpio/composer-asset-plugin.git';
         $identifier = '92bebbfdcde75ef2368317830e54b605bc938123';
-        $repoConfig = array(
+        $repoConfig = [
             'url' => $repoUrl,
             'asset-type' => $type,
             'filename' => $filename,
             'asset-repository-manager' => $this->assetRepositoryManager,
-        );
+        ];
         $io = $this->getMockBuilder('Composer\IO\IOInterface')->getMock();
+        $httpDownloader = $this->getMockBuilder('Composer\Util\HttpDownloader')
+            ->disableOriginalConstructor()
+            ->getMock();
         $process = $this->getMockBuilder('Composer\Util\ProcessExecutor')->getMock();
-        $process->expects(static::any())
+        $process->expects(self::any())
             ->method('splitLines')
-            ->willReturn(array())
-        ;
-        $process->expects(static::any())
+            ->willReturn([]);
+        $process->expects(self::any())
             ->method('execute')
             ->willReturnCallback(function ($command, &$output = null) use ($identifier, $repoConfig) {
                 if ($command === sprintf('git show %s', sprintf('%s:%s', escapeshellarg($identifier), $repoConfig['filename']))) {
                     $output = '{"name": "foo"}';
-                } elseif (false !== strpos($command, 'git log')) {
+                } elseif (str_contains($command, 'git log')) {
                     $date = new \DateTime(null, new \DateTimeZone('UTC'));
                     $output = $date->getTimestamp();
                 }
 
                 return 0;
-            })
-        ;
+            });
 
         /** @var IOInterface $io */
         /** @var ProcessExecutor $process */
-        $gitDriver = new GitDriver($repoConfig, $io, $this->config, $process, null);
+        $gitDriver = new GitDriver($repoConfig, $io, $this->config, $httpDownloader, $process);
         $gitDriver->initialize();
         $composer1 = $gitDriver->getComposerInformation($identifier);
         $composer2 = $gitDriver->getComposerInformation($identifier);
 
-        static::assertNotNull($composer1);
-        static::assertNotNull($composer2);
-        static::assertSame($composer1, $composer2);
+        self::assertNotNull($composer1);
+        self::assertNotNull($composer2);
+        self::assertSame($composer1, $composer2);
     }
 
     /**
@@ -299,53 +293,53 @@ final class GitDriverTest extends \PHPUnit\Framework\TestCase
      * @param string $type
      * @param string $filename
      */
-    public function testPublicRepositoryWithFilesystemCache($type, $filename)
+    public function testPublicRepositoryWithFilesystemCache(string $type, string $filename)
     {
-        $this->assetRepositoryManager->expects(static::any())
+        $this->assetRepositoryManager->expects(self::any())
             ->method('getConfig')
-            ->willReturn(new \Fxp\Composer\AssetPlugin\Config\Config(array()))
-        ;
+            ->willReturn(new \Fxp\Composer\AssetPlugin\Config\Config([]));
 
         $repoUrl = 'https://github.com/fxpio/composer-asset-plugin.git';
         $identifier = '92bebbfdcde75ef2368317830e54b605bc938123';
-        $repoConfig = array(
+        $repoConfig = [
             'url' => $repoUrl,
             'asset-type' => $type,
             'filename' => $filename,
             'asset-repository-manager' => $this->assetRepositoryManager,
-        );
+        ];
         $io = $this->getMockBuilder('Composer\IO\IOInterface')->getMock();
+        $httpDownloader = $this->getMockBuilder('Composer\Util\HttpDownloader')
+            ->disableOriginalConstructor()
+            ->getMock();
         $process = $this->getMockBuilder('Composer\Util\ProcessExecutor')->getMock();
-        $process->expects(static::any())
+        $process->expects(self::any())
             ->method('splitLines')
-            ->willReturn(array())
-        ;
-        $process->expects(static::any())
+            ->willReturn([]);
+        $process->expects(self::any())
             ->method('execute')
             ->willReturnCallback(function ($command, &$output = null) use ($identifier, $repoConfig) {
                 if ($command === sprintf('git show %s', sprintf('%s:%s', escapeshellarg($identifier), $repoConfig['filename']))) {
                     $output = '{"name": "foo"}';
-                } elseif (false !== strpos($command, 'git log')) {
+                } elseif (str_contains($command, 'git log')) {
                     $date = new \DateTime(null, new \DateTimeZone('UTC'));
                     $output = $date->getTimestamp();
                 }
 
                 return 0;
-            })
-        ;
+            });
 
         /** @var IOInterface $io */
         /** @var ProcessExecutor $process */
-        $gitDriver1 = new GitDriver($repoConfig, $io, $this->config, $process, null);
-        $gitDriver2 = new GitDriver($repoConfig, $io, $this->config, $process, null);
+        $gitDriver1 = new GitDriver($repoConfig, $io, $this->config, $httpDownloader, $process);
+        $gitDriver2 = new GitDriver($repoConfig, $io, $this->config, $httpDownloader, $process);
         $gitDriver1->initialize();
         $gitDriver2->initialize();
         $composer1 = $gitDriver1->getComposerInformation($identifier);
         $composer2 = $gitDriver2->getComposerInformation($identifier);
 
-        static::assertNotNull($composer1);
-        static::assertNotNull($composer2);
-        static::assertSame($composer1, $composer2);
+        self::assertNotNull($composer1);
+        self::assertNotNull($composer2);
+        self::assertSame($composer1, $composer2);
     }
 
     /**
@@ -353,35 +347,36 @@ final class GitDriverTest extends \PHPUnit\Framework\TestCase
      *
      * @param string $type
      * @param string $filename
-     *
-     * @expectedException \RuntimeException
-     * @expectedExceptionMessageRegExp /Can not clone https:\/\/github.com\/fxpio\/composer-asset-plugin.git to access package information. The "([\s\S]+)" directory is not writable by the current user./
      */
-    public function testPublicRepositoryWithUnwritableFilesystemCache($type, $filename)
+    public function testPublicRepositoryWithNotWritableFilesystemCache(string $type, string $filename)
     {
-        $this->assetRepositoryManager->expects(static::any())
+        self::expectException('\RuntimeException');
+        self::expectExceptionMessageMatches('/Can not clone https:\/\/github.com\/fxpio\/composer-asset-plugin.git to access package information. The "([\s\S]+)" directory is not writable by the current user./');
+        $this->assetRepositoryManager->expects(self::any())
             ->method('getConfig')
-            ->willReturn(new \Fxp\Composer\AssetPlugin\Config\Config(array()))
-        ;
+            ->willReturn(new \Fxp\Composer\AssetPlugin\Config\Config([]));
 
         chmod($this->config->get('cache-vcs-dir'), 0400);
         $isWritable = is_writable($this->config->get('cache-vcs-dir'));
-        static::assertFalse($isWritable);
+        self::assertFalse($isWritable);
 
         $repoUrl = 'https://github.com/fxpio/composer-asset-plugin.git';
         $identifier = '92bebbfdcde75ef2368317830e54b605bc938123';
-        $repoConfig = array(
+        $repoConfig = [
             'url' => $repoUrl,
             'asset-type' => $type,
             'filename' => $filename,
             'asset-repository-manager' => $this->assetRepositoryManager,
-        );
+        ];
         $io = $this->getMockBuilder('Composer\IO\IOInterface')->getMock();
+        $httpDownloader = $this->getMockBuilder('Composer\Util\HttpDownloader')
+            ->disableOriginalConstructor()
+            ->getMock();
         $process = $this->getMockBuilder('Composer\Util\ProcessExecutor')->getMock();
 
         /** @var IOInterface $io */
         /** @var ProcessExecutor $process */
-        $gitDriver = new GitDriver($repoConfig, $io, $this->config, $process, null);
+        $gitDriver = new GitDriver($repoConfig, $io, $this->config, $httpDownloader, $process);
 
         $gitDriver->initialize();
         $gitDriver->getComposerInformation($identifier);
@@ -392,31 +387,32 @@ final class GitDriverTest extends \PHPUnit\Framework\TestCase
      *
      * @param string $type
      * @param string $filename
-     *
-     * @expectedException \InvalidArgumentException
-     * @expectedExceptionMessage The source URL ssh://git@github.com:port/fxpio/composer-asset-plugin.git is invalid, ssh URLs should have a port number after ":".
      */
-    public function testPublicRepositoryWithInvalidSShUrl($type, $filename)
+    public function testPublicRepositoryWithInvalidSShUrl(string $type, string $filename)
     {
-        $this->assetRepositoryManager->expects(static::any())
+        self::expectException('\InvalidArgumentException');
+        self::expectExceptionMessage('The source URL ssh://git@github.com:port/fxpio/composer-asset-plugin.git is invalid, ssh URLs should have a port number after ":".');
+        $this->assetRepositoryManager->expects(self::any())
             ->method('getConfig')
-            ->willReturn(new \Fxp\Composer\AssetPlugin\Config\Config(array()))
-        ;
+            ->willReturn(new \Fxp\Composer\AssetPlugin\Config\Config([]));
 
         $repoUrl = 'ssh://git@github.com:port/fxpio/composer-asset-plugin.git';
         $identifier = '92bebbfdcde75ef2368317830e54b605bc938123';
-        $repoConfig = array(
+        $repoConfig = [
             'url' => $repoUrl,
             'asset-type' => $type,
             'filename' => $filename,
             'asset-repository-manager' => $this->assetRepositoryManager,
-        );
+        ];
         $io = $this->getMockBuilder('Composer\IO\IOInterface')->getMock();
+        $httpDownloader = $this->getMockBuilder('Composer\Util\HttpDownloader')
+            ->disableOriginalConstructor()
+            ->getMock();
         $process = $this->getMockBuilder('Composer\Util\ProcessExecutor')->getMock();
 
         /** @var IOInterface $io */
         /** @var ProcessExecutor $process */
-        $gitDriver = new GitDriver($repoConfig, $io, $this->config, $process, null);
+        $gitDriver = new GitDriver($repoConfig, $io, $this->config, $httpDownloader, $process);
 
         $gitDriver->initialize();
         $gitDriver->getComposerInformation($identifier);
@@ -428,48 +424,47 @@ final class GitDriverTest extends \PHPUnit\Framework\TestCase
      * @param string $type
      * @param string $filename
      */
-    public function testPublicRepositoryWithFailedToUpdatePackage($type, $filename)
+    public function testPublicRepositoryWithFailedToUpdatePackage(string $type, string $filename)
     {
-        $this->assetRepositoryManager->expects(static::any())
+        $this->assetRepositoryManager->expects(self::any())
             ->method('getConfig')
-            ->willReturn(new \Fxp\Composer\AssetPlugin\Config\Config(array()))
-        ;
+            ->willReturn(new \Fxp\Composer\AssetPlugin\Config\Config([]));
 
         $repoUrl = 'https://github.com/fxpio/composer-asset-plugin.git';
         $identifier = '92bebbfdcde75ef2368317830e54b605bc938123';
-        $repoConfig = array(
+        $repoConfig = [
             'url' => $repoUrl,
             'asset-type' => $type,
             'filename' => $filename,
             'asset-repository-manager' => $this->assetRepositoryManager,
-        );
+        ];
         $io = $this->getMockBuilder('Composer\IO\IOInterface')->getMock();
-        $io->expects(static::at(0))
+        $io->expects(self::at(0))
             ->method('writeError')
-            ->with('<error>Failed to update https://github.com/fxpio/composer-asset-plugin.git, package information from this repository may be outdated</error>')
-        ;
+            ->with('<error>Failed to update https://github.com/fxpio/composer-asset-plugin.git, package information from this repository may be outdated</error>');
 
+        $httpDownloader = $this->getMockBuilder('Composer\Util\HttpDownloader')
+            ->disableOriginalConstructor()
+            ->getMock();
         $process = $this->getMockBuilder('Composer\Util\ProcessExecutor')->getMock();
-        $process->expects(static::atLeastOnce())
+        $process->expects(self::atLeastOnce())
             ->method('splitLines')
-            ->willReturn(array())
-        ;
-        $process->expects(static::atLeastOnce())
+            ->willReturn([]);
+        $process->expects(self::atLeastOnce())
             ->method('execute')
             ->willReturnCallback(static function ($command, &$output = null) {
                 if ('git rev-parse --git-dir' === $command) {
                     $output = '.';
-                } elseif ('git remote set-url origin '.escapeshellarg('https://github.com/fxpio/composer-asset-plugin.git').' && git remote update --prune origin' === $command) {
+                } elseif ('git remote set-url origin ' . escapeshellarg('https://github.com/fxpio/composer-asset-plugin.git') . ' && git remote update --prune origin' === $command) {
                     throw new \Exception('Skip sync mirror');
                 }
 
                 return 0;
-            })
-        ;
+            });
 
         /** @var IOInterface $io */
         /** @var ProcessExecutor $process */
-        $gitDriver = new GitDriver($repoConfig, $io, $this->config, $process, null);
+        $gitDriver = new GitDriver($repoConfig, $io, $this->config, $httpDownloader, $process);
         $gitDriver->initialize();
         $gitDriver->getComposerInformation($identifier);
     }

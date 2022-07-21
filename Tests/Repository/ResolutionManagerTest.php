@@ -24,33 +24,33 @@ final class ResolutionManagerTest extends \PHPUnit\Framework\TestCase
 {
     public function testSolveResolutions()
     {
-        $rm = new ResolutionManager(array(
+        $rm = new ResolutionManager([
             'foo/bar' => '^2.2.0',
-            'bar/foo' => '^0.2.0',
-        ));
+            'bar/foo' => '^0.2.0'
+        ]);
 
-        $data = $rm->solveResolutions(array(
-            'require' => array(
+        $data = $rm->solveResolutions([
+            'require' => [
                 'foo/bar' => '2.0.*',
-                'foo/baz' => '~1.0',
-            ),
-            'require-dev' => array(
+                'foo/baz' => '~1.0'
+            ],
+            'require-dev' => [
                 'bar/foo' => '^0.1.0',
-                'test/dev' => '~1.0@dev',
-            ),
-        ));
+                'test/dev' => '~1.0@dev'
+            ],
+        ]);
 
-        $expected = array(
-            'require' => array(
+        $expected = [
+            'require' => [
                 'foo/bar' => '^2.2.0',
-                'foo/baz' => '~1.0',
-            ),
-            'require-dev' => array(
+                'foo/baz' => '~1.0'
+            ],
+            'require-dev' => [
                 'bar/foo' => '^0.2.0',
-                'test/dev' => '~1.0@dev',
-            ),
-        );
+                'test/dev' => '~1.0@dev'
+            ],
+        ];
 
-        static::assertSame($expected, $data);
+        self::assertSame($expected, $data);
     }
 }

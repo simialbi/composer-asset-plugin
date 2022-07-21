@@ -99,9 +99,9 @@ abstract class AbstractAssetsRepository extends ComposerRepository
     protected Config $config;
 
     /**
-     * @var ProcessExecutor
+     * @var ProcessExecutor|null
      */
-    protected ProcessExecutor $process;
+    protected ?ProcessExecutor $process;
 
     /**
      * @var VersionParser

@@ -14,6 +14,8 @@ namespace Fxp\Composer\AssetPlugin\Tests\Repository;
 use Composer\Config;
 use Composer\EventDispatcher\EventDispatcher;
 use Composer\IO\IOInterface;
+use Composer\Util\HttpDownloader;
+use Fxp\Composer\AssetPlugin\Repository\AbstractAssetsRepository;
 use Fxp\Composer\AssetPlugin\Repository\BowerRepository;
 
 /**
@@ -25,29 +27,29 @@ use Fxp\Composer\AssetPlugin\Repository\BowerRepository;
  */
 final class BowerRepositoryTest extends AbstractAssetsRepositoryTest
 {
-    protected function getType()
+    protected function getType(): string
     {
         return 'bower';
     }
 
-    protected function getRegistry(array $repoConfig, IOInterface $io, Config $config, EventDispatcher $eventDispatcher = null)
+    protected function getRegistry(array $repoConfig, IOInterface $io, Config $config, HttpDownloader $httpDownloader, EventDispatcher $eventDispatcher = null): AbstractAssetsRepository
     {
-        return new BowerRepository($repoConfig, $io, $config, $eventDispatcher);
+        return new BowerRepository($repoConfig, $io, $config, $httpDownloader, $eventDispatcher);
     }
 
-    protected function getMockPackageForVcsConfig()
+    protected function getMockPackageForVcsConfig(): array
     {
-        return array(
-            'url' => 'http://foo.tld',
-        );
+        return [
+            'url' => 'http://foo.tld'
+        ];
     }
 
-    protected function getMockSearchResult($name = 'mock-package')
+    protected function getMockSearchResult(string $name = 'mock-package'): array
     {
-        return array(
-            array(
-                'name' => $name,
-            ),
-        );
+        return [
+            [
+                'name' => $name
+            ]
+        ];
     }
 }

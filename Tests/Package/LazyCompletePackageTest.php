@@ -28,33 +28,33 @@ final class LazyCompletePackageTest extends \PHPUnit\Framework\TestCase
     /**
      * @var LazyPackageInterface
      */
-    protected $package;
+    protected LazyPackageInterface $package;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $this->package = new LazyCompletePackage('foo', '1.0.0.0', '1.0');
     }
 
-    protected function tearDown()
+    protected function tearDown(): void
     {
-        $this->package = null;
+        unset($this->package);
     }
 
-    public function getConfigLazyLoader()
+    public function getConfigLazyLoader(): array
     {
-        return array(
-            array(null),
-            array('lazy'),
-            array('lazy-exception'),
-        );
+        return [
+            [null],
+            ['lazy'],
+            ['lazy-exception'],
+        ];
     }
 
     /**
-     * @param string $lazyType
+     * @param string|null $lazyType
      *
      * @dataProvider getConfigLazyLoader
      */
-    public function testMissingAssetType($lazyType)
+    public function testMissingAssetType(?string $lazyType)
     {
         if (null !== $lazyType) {
             $lp = 'lazy' === $lazyType
@@ -67,51 +67,50 @@ final class LazyCompletePackageTest extends \PHPUnit\Framework\TestCase
 
             $loader = $this->getMockBuilder('Fxp\Composer\AssetPlugin\Package\Loader\LazyLoaderInterface')->getMock();
             $loader
-                ->expects(static::any())
+                ->expects(self::any())
                 ->method('load')
-                ->willReturn($lp)
-            ;
+                ->willReturn($lp);
 
-            /* @var LazyLoaderInterface$loader */
+            /* @var LazyLoaderInterface $loader */
             $this->package->setLoader($loader);
         }
 
-        static::assertSame('library', $this->package->getType());
-        static::assertSame(array(), $this->package->getTransportOptions());
-        static::assertNull($this->package->getTargetDir());
-        static::assertSame(array(), $this->package->getExtra());
-        static::assertSame(array(), $this->package->getBinaries());
-        static::assertNull($this->package->getInstallationSource());
-        static::assertNull($this->package->getSourceType());
-        static::assertNull($this->package->getSourceUrl());
-        static::assertNull($this->package->getSourceReference());
-        static::assertNull($this->package->getSourceMirrors());
-        static::assertSame(array(), $this->package->getSourceUrls());
-        static::assertNull($this->package->getDistType());
-        static::assertNull($this->package->getDistUrl());
-        static::assertNull($this->package->getDistReference());
-        static::assertNull($this->package->getDistSha1Checksum());
-        static::assertNull($this->package->getDistMirrors());
-        static::assertSame(array(), $this->package->getDistUrls());
-        static::assertNull($this->package->getReleaseDate());
-        static::assertSame(array(), $this->package->getRequires());
-        static::assertSame(array(), $this->package->getConflicts());
-        static::assertSame(array(), $this->package->getProvides());
-        static::assertSame(array(), $this->package->getReplaces());
-        static::assertSame(array(), $this->package->getDevRequires());
-        static::assertSame(array(), $this->package->getSuggests());
-        static::assertSame(array(), $this->package->getAutoload());
-        static::assertSame(array(), $this->package->getDevAutoload());
-        static::assertSame(array(), $this->package->getIncludePaths());
-        static::assertNull($this->package->getNotificationUrl());
-        static::assertSame(array(), $this->package->getArchiveExcludes());
-        static::assertSame(array(), $this->package->getScripts());
-        static::assertNull($this->package->getRepositories());
-        static::assertSame(array(), $this->package->getLicense());
-        static::assertNull($this->package->getKeywords());
-        static::assertNull($this->package->getAuthors());
-        static::assertNull($this->package->getDescription());
-        static::assertNull($this->package->getHomepage());
-        static::assertSame(array(), $this->package->getSupport());
+        self::assertSame('library', $this->package->getType());
+        self::assertSame([], $this->package->getTransportOptions());
+        self::assertNull($this->package->getTargetDir());
+        self::assertSame([], $this->package->getExtra());
+        self::assertSame([], $this->package->getBinaries());
+        self::assertNull($this->package->getInstallationSource());
+        self::assertNull($this->package->getSourceType());
+        self::assertNull($this->package->getSourceUrl());
+        self::assertNull($this->package->getSourceReference());
+        self::assertNull($this->package->getSourceMirrors());
+        self::assertSame([], $this->package->getSourceUrls());
+        self::assertNull($this->package->getDistType());
+        self::assertNull($this->package->getDistUrl());
+        self::assertNull($this->package->getDistReference());
+        self::assertNull($this->package->getDistSha1Checksum());
+        self::assertNull($this->package->getDistMirrors());
+        self::assertSame([], $this->package->getDistUrls());
+        self::assertNull($this->package->getReleaseDate());
+        self::assertSame([], $this->package->getRequires());
+        self::assertSame([], $this->package->getConflicts());
+        self::assertSame([], $this->package->getProvides());
+        self::assertSame([], $this->package->getReplaces());
+        self::assertSame([], $this->package->getDevRequires());
+        self::assertSame([], $this->package->getSuggests());
+        self::assertSame([], $this->package->getAutoload());
+        self::assertSame([], $this->package->getDevAutoload());
+        self::assertSame([], $this->package->getIncludePaths());
+        self::assertNull($this->package->getNotificationUrl());
+        self::assertSame([], $this->package->getArchiveExcludes());
+        self::assertSame([], $this->package->getScripts());
+        self::assertSame([], $this->package->getRepositories());
+        self::assertSame([], $this->package->getLicense());
+        self::assertSame([], $this->package->getKeywords());
+        self::assertSame([], $this->package->getAuthors());
+        self::assertNull($this->package->getDescription());
+        self::assertNull($this->package->getHomepage());
+        self::assertSame([], $this->package->getSupport());
     }
 }

@@ -21,7 +21,7 @@ class MockVcsDriverWithException extends MockVcsDriver
     /**
      * @throws
      */
-    public function getTags()
+    public function getTags(): array
     {
         throw new \ErrorException('Error to retrieve the tags');
     }

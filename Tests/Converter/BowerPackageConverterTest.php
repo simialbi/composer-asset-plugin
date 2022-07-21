@@ -23,7 +23,7 @@ use Fxp\Composer\AssetPlugin\Type\AssetTypeInterface;
  */
 final class BowerPackageConverterTest extends AbstractPackageConverterTest
 {
-    protected function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
 
@@ -37,23 +37,23 @@ final class BowerPackageConverterTest extends AbstractPackageConverterTest
     {
         $composer = $this->converter->convert($this->asset);
 
-        static::assertArrayHasKey('name', $composer);
-        static::assertSame('ASSET/'.$this->asset['name'], $composer['name']);
+        self::assertArrayHasKey('name', $composer);
+        self::assertSame('ASSET/'.$this->asset['name'], $composer['name']);
 
-        static::assertArrayHasKey('type', $composer);
-        static::assertSame('ASSET_TYPE', $composer['type']);
+        self::assertArrayHasKey('type', $composer);
+        self::assertSame('ASSET_TYPE', $composer['type']);
 
-        static::assertArrayHasKey('description', $composer);
-        static::assertSame($this->asset['description'], $composer['description']);
+        self::assertArrayHasKey('description', $composer);
+        self::assertSame($this->asset['description'], $composer['description']);
 
-        static::assertArrayHasKey('version', $composer);
-        static::assertSame('1.0.0-pre', $composer['version']);
+        self::assertArrayHasKey('version', $composer);
+        self::assertSame('1.0.0-pre', $composer['version']);
 
-        static::assertArrayHasKey('keywords', $composer);
-        static::assertSame($this->asset['keywords'], $composer['keywords']);
+        self::assertArrayHasKey('keywords', $composer);
+        self::assertSame($this->asset['keywords'], $composer['keywords']);
 
-        static::assertArrayHasKey('require', $composer);
-        static::assertSame(array(
+        self::assertArrayHasKey('require', $composer);
+        self::assertSame(array(
             'ASSET/library1' => '>= 1.0.0',
             'ASSET/library2' => '>= 1.0.0',
             'ASSET/library2-0.9.0' => '0.9.0',
@@ -77,37 +77,37 @@ final class BowerPackageConverterTest extends AbstractPackageConverterTest
             'ASSET/test-library20-file' => '*',
         ), $composer['require']);
 
-        static::assertArrayNotHasKey('require-dev', $composer);
+        self::assertArrayNotHasKey('require-dev', $composer);
 
-        static::assertArrayHasKey('license', $composer);
-        static::assertSame($this->asset['license'], $composer['license']);
+        self::assertArrayHasKey('license', $composer);
+        self::assertSame($this->asset['license'], $composer['license']);
 
-        static::assertArrayHasKey('bin', $composer);
-        static::assertSame($this->asset['bin'], $composer['bin']);
+        self::assertArrayHasKey('bin', $composer);
+        self::assertSame($this->asset['bin'], $composer['bin']);
 
-        static::assertArrayHasKey('extra', $composer);
+        self::assertArrayHasKey('extra', $composer);
 
-        static::assertArrayHasKey('bower-asset-main', $composer['extra']);
-        static::assertSame($this->asset['main'], $composer['extra']['bower-asset-main']);
+        self::assertArrayHasKey('bower-asset-main', $composer['extra']);
+        self::assertSame($this->asset['main'], $composer['extra']['bower-asset-main']);
 
-        static::assertArrayHasKey('bower-asset-ignore', $composer['extra']);
-        static::assertSame($this->asset['ignore'], $composer['extra']['bower-asset-ignore']);
+        self::assertArrayHasKey('bower-asset-ignore', $composer['extra']);
+        self::assertSame($this->asset['ignore'], $composer['extra']['bower-asset-ignore']);
 
-        static::assertArrayHasKey('bower-asset-private', $composer['extra']);
-        static::assertSame($this->asset['private'], $composer['extra']['bower-asset-private']);
+        self::assertArrayHasKey('bower-asset-private', $composer['extra']);
+        self::assertSame($this->asset['private'], $composer['extra']['bower-asset-private']);
 
-        static::assertArrayNotHasKey('homepage', $composer);
-        static::assertArrayNotHasKey('time', $composer);
-        static::assertArrayNotHasKey('authors', $composer);
-        static::assertArrayNotHasKey('support', $composer);
-        static::assertArrayNotHasKey('conflict', $composer);
-        static::assertArrayNotHasKey('replace', $composer);
-        static::assertArrayNotHasKey('provide', $composer);
-        static::assertArrayNotHasKey('suggest', $composer);
-        static::assertArrayNotHasKey('autoload', $composer);
-        static::assertArrayNotHasKey('autoload-dev', $composer);
-        static::assertArrayNotHasKey('include-path', $composer);
-        static::assertArrayNotHasKey('target-dir', $composer);
-        static::assertArrayNotHasKey('archive', $composer);
+        self::assertArrayNotHasKey('homepage', $composer);
+        self::assertArrayNotHasKey('time', $composer);
+        self::assertArrayNotHasKey('authors', $composer);
+        self::assertArrayNotHasKey('support', $composer);
+        self::assertArrayNotHasKey('conflict', $composer);
+        self::assertArrayNotHasKey('replace', $composer);
+        self::assertArrayNotHasKey('provide', $composer);
+        self::assertArrayNotHasKey('suggest', $composer);
+        self::assertArrayNotHasKey('autoload', $composer);
+        self::assertArrayNotHasKey('autoload-dev', $composer);
+        self::assertArrayNotHasKey('include-path', $composer);
+        self::assertArrayNotHasKey('target-dir', $composer);
+        self::assertArrayNotHasKey('archive', $composer);
     }
 }

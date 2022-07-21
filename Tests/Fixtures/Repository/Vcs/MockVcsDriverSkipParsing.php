@@ -18,12 +18,12 @@ namespace Fxp\Composer\AssetPlugin\Tests\Fixtures\Repository\Vcs;
  */
 class MockVcsDriverSkipParsing extends MockVcsDriver
 {
-    public function getRootIdentifier()
+    public function getRootIdentifier(): string
     {
         return 'ROOT';
     }
 
-    public function hasComposerFile($identifier)
+    public function hasComposerFile($identifier): bool
     {
         return true;
     }
@@ -33,7 +33,7 @@ class MockVcsDriverSkipParsing extends MockVcsDriver
      *
      * @throws
      */
-    public function getComposerInformation($identifier)
+    public function getComposerInformation($identifier): ?array
     {
         throw new \Exception('MESSAGE with '.$identifier);
     }

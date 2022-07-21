@@ -23,74 +23,65 @@ use Fxp\Composer\AssetPlugin\Type\AssetTypeInterface;
 abstract class AbstractPackageConverterTest extends \PHPUnit\Framework\TestCase
 {
     /**
-     * @var AssetTypeInterface
+     * @var \PHPUnit\Framework\MockObject\MockObject|AssetTypeInterface
      */
-    protected $type;
+    protected \PHPUnit\Framework\MockObject\MockObject|AssetTypeInterface $type;
 
     /**
      * @var PackageConverterInterface
      */
-    protected $converter;
+    protected PackageConverterInterface $converter;
 
     /**
      * @var array
      */
-    protected $asset;
+    protected array $asset;
 
-    protected function setUp()
+    protected function setUp(): void
     {
         $versionConverter = $this->getMockBuilder('Fxp\Composer\AssetPlugin\Converter\VersionConverterInterface')->getMock();
         $versionConverter->expects(static::any())
             ->method('convertVersion')
             ->willReturnCallback(function ($value) {
                 return $value;
-            })
-        ;
+            });
         $versionConverter->expects(static::any())
             ->method('convertRange')
             ->willReturnCallback(function ($value) {
                 return $value;
-            })
-        ;
+            });
         $type = $this->getMockBuilder('Fxp\Composer\AssetPlugin\Type\AssetTypeInterface')->getMock();
         $type->expects(static::any())
             ->method('getComposerVendorName')
-            ->willReturn('ASSET')
-        ;
+            ->willReturn('ASSET');
         $type->expects(static::any())
             ->method('getComposerType')
-            ->willReturn('ASSET_TYPE')
-        ;
+            ->willReturn('ASSET_TYPE');
         $type->expects(static::any())
             ->method('getVersionConverter')
-            ->willReturn($versionConverter)
-        ;
+            ->willReturn($versionConverter);
         $type->expects(static::any())
             ->method('formatComposerName')
             ->willReturnCallback(function ($value) {
-                return 'ASSET/'.$value;
-            })
-        ;
+                return 'ASSET/' . $value;
+            });
 
         $this->type = $type;
     }
 
-    protected function tearDown()
+    protected function tearDown(): void
     {
-        $this->type = null;
-        $this->converter = null;
-        $this->asset = array();
+        unset($this->type, $this->converter);
+        $this->asset = [];
     }
 
-    /**
-     * @expectedException \Fxp\Composer\AssetPlugin\Exception\InvalidArgumentException
-     */
     public function testConversionWithInvalidKey()
     {
+        self::expectException('\Fxp\Composer\AssetPlugin\Exception\InvalidArgumentException');
         $this->converter = new InvalidPackageConverter($this->type);
 
-        $this->converter->convert(array(
+        $this->converter->convert([
             'name' => 'foo',
-        ));
+        ]);
     }
 }

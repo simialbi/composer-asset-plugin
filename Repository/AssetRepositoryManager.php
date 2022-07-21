@@ -139,7 +139,7 @@ class AssetRepositoryManager
      */
     public function solveResolutions(array $data): array
     {
-        return $this->resolutionManager?->solveResolutions($data) ?? $data;
+        return isset($this->resolutionManager) ? $this->resolutionManager->solveResolutions($data) : $data;
     }
 
     /**

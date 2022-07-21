@@ -24,7 +24,7 @@ abstract class AbstractLazyCompletePackage extends CompletePackage implements La
     /**
      * @var LazyLoaderInterface|null
      */
-    protected ?LazyLoaderInterface $lazyLoader;
+    protected ?LazyLoaderInterface $lazyLoader = null;
 
     /**
      * {@inheritDoc}

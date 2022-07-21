@@ -22,20 +22,20 @@ use Fxp\Composer\AssetPlugin\Type\NpmAssetType;
  */
 final class NpmAssetTypeTest extends AbstractAssetTypeTest
 {
-    protected function setUp()
+    protected function setUp(): void
     {
         parent::setUp();
 
         $this->type = new NpmAssetType($this->packageConverter, $this->versionConverter);
     }
 
-    public function testInformations()
+    public function testInformation()
     {
-        static::assertSame('npm', $this->type->getName());
-        static::assertSame('npm-asset', $this->type->getComposerVendorName());
-        static::assertSame('npm-asset-library', $this->type->getComposerType());
-        static::assertSame('package.json', $this->type->getFilename());
-        static::assertSame('npm-asset/foobar', $this->type->formatComposerName('foobar'));
-        static::assertSame('npm-asset/foobar', $this->type->formatComposerName('npm-asset/foobar'));
+        self::assertSame('npm', $this->type->getName());
+        self::assertSame('npm-asset', $this->type->getComposerVendorName());
+        self::assertSame('npm-asset-library', $this->type->getComposerType());
+        self::assertSame('package.json', $this->type->getFilename());
+        self::assertSame('npm-asset/foobar', $this->type->formatComposerName('foobar'));
+        self::assertSame('npm-asset/foobar', $this->type->formatComposerName('npm-asset/foobar'));
     }
 }

@@ -22,45 +22,45 @@ use Fxp\Composer\AssetPlugin\Repository\Util;
  */
 final class UtilTest extends \PHPUnit\Framework\TestCase
 {
-    public function getPackageNames()
+    public function getPackageNames(): array
     {
-        return array(
-            array('vendor/package',        'vendor/package'),
-            array('vendor/package-name',   'vendor/package-name'),
-            array('vendor/package_name',   'vendor/package_name'),
-            array('vendor/package-1',      'vendor/package-1'),
-            array('vendor/package_1',      'vendor/package_1'),
-            array('vendor/package-name-1', 'vendor/package-name-1'),
-            array('vendor/package_name_1', 'vendor/package_name_1'),
-            array('vendor/package-1.0',    'vendor/package'),
-            array('vendor/package-1.x',    'vendor/package'),
-            array('vendor/package-1.X',    'vendor/package'),
-            array('vendor/package-1.0.0',  'vendor/package'),
-            array('vendor/package-1.0.x',  'vendor/package'),
-            array('vendor/package-1.0.X',  'vendor/package'),
+        return [
+            ['vendor/package', 'vendor/package'],
+            ['vendor/package-name', 'vendor/package-name'],
+            ['vendor/package_name', 'vendor/package_name'],
+            ['vendor/package-1', 'vendor/package-1'],
+            ['vendor/package_1', 'vendor/package_1'],
+            ['vendor/package-name-1', 'vendor/package-name-1'],
+            ['vendor/package_name_1', 'vendor/package_name_1'],
+            ['vendor/package-1.0', 'vendor/package'],
+            ['vendor/package-1.x', 'vendor/package'],
+            ['vendor/package-1.X', 'vendor/package'],
+            ['vendor/package-1.0.0', 'vendor/package'],
+            ['vendor/package-1.0.x', 'vendor/package'],
+            ['vendor/package-1.0.X', 'vendor/package'],
 
-            array('vendor-name/package',        'vendor-name/package'),
-            array('vendor-name/package-name',   'vendor-name/package-name'),
-            array('vendor-name/package-1',      'vendor-name/package-1'),
-            array('vendor-name/package-name-1', 'vendor-name/package-name-1'),
-            array('vendor-name/package-1.0',    'vendor-name/package'),
-            array('vendor-name/package-1.x',    'vendor-name/package'),
-            array('vendor-name/package-1.X',    'vendor-name/package'),
-            array('vendor-name/package-1.0.0',  'vendor-name/package'),
-            array('vendor-name/package-1.0.x',  'vendor-name/package'),
-            array('vendor-name/package-1.0.X',  'vendor-name/package'),
+            ['vendor-name/package', 'vendor-name/package'],
+            ['vendor-name/package-name', 'vendor-name/package-name'],
+            ['vendor-name/package-1', 'vendor-name/package-1'],
+            ['vendor-name/package-name-1', 'vendor-name/package-name-1'],
+            ['vendor-name/package-1.0', 'vendor-name/package'],
+            ['vendor-name/package-1.x', 'vendor-name/package'],
+            ['vendor-name/package-1.X', 'vendor-name/package'],
+            ['vendor-name/package-1.0.0', 'vendor-name/package'],
+            ['vendor-name/package-1.0.x', 'vendor-name/package'],
+            ['vendor-name/package-1.0.X', 'vendor-name/package'],
 
-            array('vendor_name/package',        'vendor_name/package'),
-            array('vendor_name/package-name',   'vendor_name/package-name'),
-            array('vendor_name/package-1',      'vendor_name/package-1'),
-            array('vendor_name/package-name-1', 'vendor_name/package-name-1'),
-            array('vendor_name/package-1.0',    'vendor_name/package'),
-            array('vendor_name/package-1.x',    'vendor_name/package'),
-            array('vendor_name/package-1.X',    'vendor_name/package'),
-            array('vendor_name/package-1.0.0',  'vendor_name/package'),
-            array('vendor_name/package-1.0.x',  'vendor_name/package'),
-            array('vendor_name/package-1.0.X',  'vendor_name/package'),
-        );
+            ['vendor_name/package', 'vendor_name/package'],
+            ['vendor_name/package-name', 'vendor_name/package-name'],
+            ['vendor_name/package-1', 'vendor_name/package-1'],
+            ['vendor_name/package-name-1', 'vendor_name/package-name-1'],
+            ['vendor_name/package-1.0', 'vendor_name/package'],
+            ['vendor_name/package-1.x', 'vendor_name/package'],
+            ['vendor_name/package-1.X', 'vendor_name/package'],
+            ['vendor_name/package-1.0.0', 'vendor_name/package'],
+            ['vendor_name/package-1.0.x', 'vendor_name/package'],
+            ['vendor_name/package-1.0.X', 'vendor_name/package']
+        ];
     }
 
     /**
@@ -69,8 +69,8 @@ final class UtilTest extends \PHPUnit\Framework\TestCase
      * @param string $name
      * @param string $validName
      */
-    public function testConvertAliasName($name, $validName)
+    public function testConvertAliasName(string $name, string $validName)
     {
-        static::assertSame($validName, Util::convertAliasName($name));
+        self::assertSame($validName, Util::convertAliasName($name));
     }
 }

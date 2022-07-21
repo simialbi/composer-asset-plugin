@@ -27,7 +27,7 @@ final class NpmPackageUtilTest extends AbstractPackageConverterTest
         $packageName = '@vendor/package';
         $expected = 'vendor--package';
 
-        static::assertSame($expected, NpmPackageUtil::convertName($packageName));
+        self::assertSame($expected, NpmPackageUtil::convertName($packageName));
     }
 
     public function testRevertName()
@@ -35,18 +35,18 @@ final class NpmPackageUtilTest extends AbstractPackageConverterTest
         $packageName = 'vendor--package';
         $expected = '@vendor/package';
 
-        static::assertSame($expected, NpmPackageUtil::revertName($packageName));
+        self::assertSame($expected, NpmPackageUtil::revertName($packageName));
     }
 
-    public function getLicenses()
+    public function getLicenses(): array
     {
-        return array(
-            array(array('MIT'), array('MIT')),
-            array(array('type' => 'MIT'), array('MIT')),
-            array(array('name' => 'MIT'), array('MIT')),
-            array(array(array('type' => 'MIT')), array('MIT')),
-            array(array(array('name' => 'MIT')), array('MIT')),
-        );
+        return [
+            [['MIT'], ['MIT']],
+            [['type' => 'MIT'], ['MIT']],
+            [['name' => 'MIT'], ['MIT']],
+            [[['type' => 'MIT']], ['MIT']],
+            [[['name' => 'MIT']], ['MIT']],
+        ];
     }
 
     /**
@@ -55,8 +55,8 @@ final class NpmPackageUtilTest extends AbstractPackageConverterTest
      * @param array|string $licenses
      * @param array|string $expected
      */
-    public function testLicenses($licenses, $expected)
+    public function testLicenses(array|string $licenses, array|string $expected)
     {
-        static::assertSame($expected, NpmPackageUtil::convertLicenses($licenses));
+        self::assertSame($expected, NpmPackageUtil::convertLicenses($licenses));
     }
 }
