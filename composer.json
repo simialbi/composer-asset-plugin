@@ -41,8 +41,8 @@
         ]
     },
     "autoload-dev": {
-        "psr-0": {
-            "Composer\\Test": "vendor/composer/composer/tests/"
+        "psr-4": {
+            "Fxp\\Composer\\AssetPlugin\\Tests": "Tests"
         }
     },
     "extra": {
