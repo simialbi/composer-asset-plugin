@@ -49,7 +49,7 @@
         "class": "Fxp\\Composer\\AssetPlugin\\FxpAssetPlugin",
         "plugin-modifies-downloads": true,
         "branch-alias": {
-            "dev-main": "2.0.x-dev"
+            "dev-master": "2.0.x-dev"
         }
     }
 }
