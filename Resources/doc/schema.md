@@ -236,7 +236,7 @@ because of the differences in operation between NPM/Bower and Composer.
 | {URL}#{branch}    | dev-{branch}                                        |
 | {URL}#{sha}       | dev-default#{sha}                                   |
 
-##### Multiple versions of a depdendency in the same project
+##### Multiple versions of a dependency in the same project
 
 NPM and Bower can add multiple versions of the same dependency, which is not the case for Composer.
 To overcome this limitation, the plugin adds a VCS repository for each required version, with the
