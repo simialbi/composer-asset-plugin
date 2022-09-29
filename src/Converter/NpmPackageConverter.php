@@ -123,6 +123,13 @@ class NpmPackageConverter extends AbstractPackageConverter
     /**
      * {@inheritDoc}
      */
+    protected function convertDependencies(array $asset, string $assetKey, array &$composer, string $composerKey, array &$vcsRepos = []): void
+    {
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     protected function convertDependency(string $dependency, string $version, array &$vcsRepos, array $composer): array
     {
         $dependency = NpmPackageUtil::convertName($dependency);
