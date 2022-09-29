@@ -103,20 +103,6 @@ class AssetRepositoryManager
     }
 
     /**
-     * Set the pool.
-     *
-     * @param Pool $pool The pool
-     *
-     * @return static
-     */
-    public function setPool(Pool $pool): static
-    {
-        $this->pool = $pool;
-
-        return $this;
-    }
-
-    /**
      * Set the dependency resolution manager.
      *
      * @param ResolutionManager $resolutionManager The dependency resolution manager

@@ -16,7 +16,6 @@ use Composer\EventDispatcher\EventDispatcher;
 use Composer\IO\IOInterface;
 use Composer\Package\CompletePackageInterface;
 use Composer\Package\Loader\ArrayLoader;
-use Composer\Repository\ArrayRepository;
 use Composer\Util\HttpDownloader;
 use Composer\Util\ProcessExecutor;
 use Fxp\Composer\AssetPlugin\Converter\NpmPackageUtil;

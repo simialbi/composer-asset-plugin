@@ -16,10 +16,10 @@ use Composer\Downloader\TransportException;
 use Composer\EventDispatcher\EventDispatcher;
 use Composer\IO\IOInterface;
 use Composer\Package\AliasPackage;
-use Composer\Package\BasePackage;
 use Composer\Pcre\Preg;
 use Composer\Repository\ComposerRepository;
 use Composer\Repository\RepositoryManager;
+use Composer\Repository\RepositorySecurityException;
 use Composer\Semver\Constraint\Constraint;
 use Composer\Semver\Constraint\ConstraintInterface;
 use Composer\Util\HttpDownloader;
@@ -238,23 +238,24 @@ abstract class AbstractAssetsRepository extends ComposerRepository
     /**
      * Search package by name
      * @param string $name
-     * @param ConstraintInterface $constraint
+     * @param ConstraintInterface|null $constraint
      * @param array|null $acceptableStability
      * @param array|null $stabilityFlags
      * @param array $alreadyLoaded
      *
-     * @return BasePackage[]
-     * @throws \Composer\Repository\RepositorySecurityException
+     * @return array
+     * @throws RepositorySecurityException
      */
     protected function whatProvides(
-        string              $name,
-        ConstraintInterface $constraint,
-        ?array              $acceptableStability = null,
-        ?array              $stabilityFlags = null,
-        array               $alreadyLoaded = []
+        string               $name,
+        ?ConstraintInterface $constraint = null,
+        ?array               $acceptableStability = null,
+        ?array               $stabilityFlags = null,
+        array                $alreadyLoaded = []
     ): array
     {
-        if (!str_starts_with($name, "{$this->getType()}-asset/")) {
+        $type = str_replace('-artifactory', '', $this->getType());
+        if (!str_starts_with($name, "$type-asset/")) {
             return [];
         }
 

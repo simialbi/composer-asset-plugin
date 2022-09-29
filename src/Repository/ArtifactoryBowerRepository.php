@@ -15,6 +15,7 @@ use Composer\Downloader\TransportException;
 use Composer\EventDispatcher\EventDispatcher;
 use Composer\IO\IOInterface;
 use Composer\Json\JsonFile;
+use Composer\Pcre\Preg;
 use Composer\Semver\Constraint\ConstraintInterface;
 use Composer\Util\HttpDownloader;
 use Composer\Util\ProcessExecutor;
@@ -41,6 +42,14 @@ class ArtifactoryBowerRepository extends BowerRepository
         $this->url = $repoConfig['registry-url'] ?? null;
 
         parent::__construct($repoConfig, $io, $config, $httpDownloader, $eventDispatcher, $process);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    protected function getType(): string
+    {
+        return 'bower-artifactory';
     }
 
     /**
@@ -116,11 +125,11 @@ class ArtifactoryBowerRepository extends BowerRepository
      * {@inheritDoc}
      */
     protected function whatProvides(
-        string $name,
-        ConstraintInterface $constraint,
-        ?array $acceptableStability = null,
-        ?array $stabilityFlags = null,
-        array $alreadyLoaded = []
+        string               $name,
+        ?ConstraintInterface $constraint = null,
+        ?array               $acceptableStability = null,
+        ?array               $stabilityFlags = null,
+        array                $alreadyLoaded = []
     ): array
     {
         if (!str_starts_with($name, "{$this->getType()}-asset/")) {
@@ -144,7 +153,7 @@ class ArtifactoryBowerRepository extends BowerRepository
                 $refs = preg_split('/[\r\n]+/', $response->getBody());
 
                 foreach ($refs as $ref) {
-                    if (preg_match('/^([a-f\d]{44})\s+refs\/tags\/(\S+)/', $ref, $matches)) {
+                    if (Preg::match('/^([a-f\d]{44})\s+refs\/tags\/(\S+)/', $ref, $matches)) {
                         try {
                             $packages[] = $this->assetType->getPackageConverter()->convert([
                                 'name' => $name,

@@ -11,14 +11,15 @@
 
 namespace Fxp\Composer\AssetPlugin\Repository;
 
+use Composer\Downloader\TransportException;
 use Composer\Package\AliasPackage;
 use Composer\Package\BasePackage;
 use Composer\Package\CompletePackageInterface;
 use Composer\Package\Loader\ArrayLoader;
-use Composer\Package\Loader\InvalidPackageException;
 use Composer\Package\PackageInterface;
 use Composer\Repository\InvalidRepositoryException;
 use Composer\Repository\Vcs\VcsDriverInterface;
+use Fxp\Composer\AssetPlugin\Exception\InvalidArgumentException;
 use Fxp\Composer\AssetPlugin\Package\LazyCompletePackage;
 use Fxp\Composer\AssetPlugin\Package\Version\VersionParser;
 use Fxp\Composer\AssetPlugin\Util\Validator;
@@ -61,7 +62,7 @@ class AssetVcsRepository extends AbstractAssetVcsRepository
             $this->initTags($driver);
             $this->initBranches($driver);
             $driver->cleanup();
-        } catch (\InvalidArgumentException|InvalidPackageException|InvalidRepositoryException) {
+        } catch (InvalidArgumentException|TransportException) {
         }
     }
 

@@ -123,7 +123,7 @@ final class ConfigTest extends \PHPUnit\Framework\TestCase
                 ],
             ]);
 
-        if (0 === strpos($key, 'global-')) {
+        if (str_starts_with($key, 'global-')) {
             $this->io->expects(self::atLeast(2))
                 ->method('isDebug')
                 ->willReturn(true);

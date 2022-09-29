@@ -42,7 +42,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Fxp\\Composer\\AssetPlugin\\Tests": "tests"
+            "Fxp\\Composer\\AssetPlugin\\Tests\\": "tests"
         }
     },
     "extra": {
