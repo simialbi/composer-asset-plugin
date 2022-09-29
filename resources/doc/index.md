@@ -13,7 +13,7 @@ to know the Composer version required.
 ### Global scope (per user) installation
 
 ```shell
-$ composer global require "simialbi/composer-asset-plugin:2.0.0-beta.2"
+$ composer global require "simialbi/composer-asset-plugin:2.0.0-beta.4"
 ```
 
 ### Project scope installation
