@@ -132,7 +132,8 @@ class ArtifactoryBowerRepository extends BowerRepository
         array                $alreadyLoaded = []
     ): array
     {
-        if (!str_starts_with($name, "{$this->getType()}-asset/")) {
+        $type = str_replace('-artifactory', '', $this->getType());
+        if (!str_starts_with($name, "$type-asset/")) {
             return [];
         }
 
