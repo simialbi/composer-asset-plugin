@@ -1,0 +1,142 @@
+<?php
+/**
+ * @package composer-asset-plugin
+ * @author Simon Karlen <simi.albi@outlook.com>
+ */
+
+namespace Fxp\Composer\AssetPlugin\Repository;
+
+use Composer\Pcre\Preg;
+use JetBrains\PhpStorm\ArrayShape;
+
+class BowerRepository extends AbstractAssetRepository
+{
+    protected ?array $rootData = null;
+
+    /**
+     * {@inheritDoc}
+     *
+     * @throws \ErrorException|\Seld\JsonLint\ParsingException
+     */
+    #[ArrayShape([
+        'namesFound' => 'array',
+        'packages' => 'array'
+    ])] public function loadPackages(array $packageNameMap, array $acceptableStabilities, array $stabilityFlags, array $alreadyLoaded = []): array
+    {
+        $this->loadRootServerFile(600);
+
+        $packages = [];
+        foreach ($packageNameMap as $name => $constraint) {
+            if (!Preg::match('#^bower-asset/#', $name)) {
+                continue;
+            }
+            if (isset($this->packageMap[$name])) {
+                $cleanName = str_replace('bower-asset/', '', $name);
+                /** @var VcsRepository $repo */
+                $repo = $this->composer->getRepositoryManager()->createRepository('bower+github', [
+                    'asset-package-name' => $name,
+                    'url' => $this->packageMap[$name]
+                ], $cleanName);
+                if ($this->io->isVerbose()) {
+                    $this->io->write('Adding Vsc repository <info>' . $cleanName . '</info>');
+                }
+                $this->composer->getRepositoryManager()->addRepository($repo);
+                $packages = array_merge_recursive($repo->loadPackages($packageNameMap, $acceptableStabilities, $stabilityFlags, $alreadyLoaded));
+            }
+        }
+
+        return $packages;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getRepoName(): string
+    {
+        return 'bower.io repo (' . $this->getUrl() . ')';
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getRepoType(): string
+    {
+        return 'bower';
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getUrl(): string
+    {
+        return 'https://registry.bower.io/packages';
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getLazyLoadUrl(): ?string
+    {
+        return 'https://registry.bower.io/packages/%package%';
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getSearchUrl(): ?string
+    {
+        return null;
+    }
+
+    /**
+     * Load packages file
+     *
+     * @param int|null $rootMaxAge
+     * @return array
+     *
+     * @throws \ErrorException|\Seld\JsonLint\ParsingException
+     */
+    protected function loadRootServerFile(?int $rootMaxAge = null): array
+    {
+        if (null !== $this->rootData) {
+            return $this->rootData;
+        }
+
+        if (!extension_loaded('openssl') && str_starts_with($this->getUrl(), 'https')) {
+            throw new \RuntimeException('You must enable the openssl extension in your php.ini to load information from ' . $this->getUrl());
+        }
+
+        if ($cachedData = $this->cache->read('bower-packages.json')) {
+            $cachedData = json_decode($cachedData, true);
+            if ($rootMaxAge !== null && ($age = $this->cache->getAge('bower-packages.json')) !== false && $age <= $rootMaxAge) {
+                $data = $cachedData;
+            } elseif (isset($cachedData['last-modified'])) {
+                $response = $this->fetchFileIfLastModified($this->getUrl(), 'bower-packages.json', $cachedData['last-modified']);
+                $data = true === $response ? $cachedData : $response;
+            }
+        }
+
+        if (!isset($data)) {
+            $data = $this->fetchFile($this->getUrl(), 'bower-packages.json', true);
+        }
+
+        unset($data['last-modified']);
+
+        foreach ($data as $item) {
+            if (!is_array($item)) {
+                continue;
+            }
+            $this->packageMap['bower-asset/' . $item['name']] = $item['url'];
+        }
+
+        return $this->rootData = $data;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    protected function convertResultItem(array $item): array
+    {
+        return [];
+    }
+}
