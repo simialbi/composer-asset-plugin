@@ -17,7 +17,6 @@ use Fxp\Composer\AssetPlugin\Repository\NpmRepository;
 class FxpAssetPlugin implements PluginInterface
 {
     protected Composer $composer;
-
     protected IOInterface $io;
 
     /**
@@ -58,11 +57,14 @@ class FxpAssetPlugin implements PluginInterface
                 ));
             }
 
-//            foreach ($composer->getConfig()->getRepositories() as $repository) {
-//
-//            }
-
-//            var_dump($composer->getRepositoryManager()->getRepositories()); exit;
+            if (isset($config['repositories']) && is_array($config['repositories']))
+            foreach ($config['repositories'] as $repository) {
+                $type = $repository['type'];
+                unset($repository['type']);
+                $composer->getRepositoryManager()->addRepository(
+                    $composer->getRepositoryManager()->createRepository($type, $repository)
+                );
+            }
         }
     }
 
