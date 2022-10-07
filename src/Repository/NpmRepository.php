@@ -6,74 +6,17 @@
 
 namespace Fxp\Composer\AssetPlugin\Repository;
 
-use Composer\Pcre\Preg;
 use Composer\Semver\VersionParser;
-use JetBrains\PhpStorm\ArrayShape;
 
 class NpmRepository extends AbstractAssetRepository
 {
-    /**
-     * @inheritDoc
-     */
-    #[ArrayShape([
-        'namesFound' => 'array',
-        'packages' => 'array'
-    ])] public function loadPackages(array $packageNameMap, array $acceptableStabilities, array $stabilityFlags, array $alreadyLoaded = []): array
-    {
-        $namesFound = [];
-        $packages = [];
-        foreach ($packageNameMap as $name => $constraint) {
-            if (!Preg::match('#^npm-asset/#', $name)) {
-                continue;
-            }
-            try {
-                if (empty($this->packages)) {
-                    $cleanName = str_replace('npm-asset/', '', $name);
-                    $url = str_replace('%package%', $cleanName, $this->getLazyLoadUrl());
-                    if ($cachedData = $this->cache->read('npm-' . $cleanName . '.json')) {
-                        $cachedData = json_decode($cachedData, true);
-                        if (($age = $this->cache->getAge('npm-' . $cleanName . '.json')) && $age <= 900) {
-                            $data = $cachedData;
-                        } elseif (isset($cachedData['last-modified'])) {
-                            $response = $this->fetchFileIfLastModified($url, 'npm-' . $cleanName . '.json', $cachedData['last-modified']);
-                            $data = true === $response ? $cachedData : $response;
-                        }
-                    }
+    protected string $url = 'https://registry.npmjs.org';
+    protected string|null $lazyLoadUrl = 'https://registry.npmjs.org/%package%';
+    protected string|null $searchUrl = 'https://www.npmjs.com/search/suggestions?q=%query%';
 
-                    if (!isset($data)) {
-                        $data = $this->fetchFile($url, 'npm-' . $cleanName . '.json', true);
-                    }
-                    unset($data['last-modified']);
-
-                    $namesFound[$name] = true;
-                    foreach ($this->convertNpmPackage($data) as $item) {
-                        $this->addPackage($this->loader->load($item));
-                    }
-                }
-                foreach ($this->packages as $package) {
-                    /** @var \Composer\Package\CompletePackage $package */
-                    if ($this->isVersionAcceptable(
-                        $constraint,
-                        $name,
-                        ['version' => $package->getVersion(), 'version_normalized' => $package->getPrettyVersion()],
-                        $acceptableStabilities,
-                        $stabilityFlags)) {
-                        $packages[] = $package;
-                    }
-                }
-            } catch (\ErrorException|\Seld\JsonLint\ParsingException) {
-                return ['namesFound' => [], 'packages' => []];
-            }
-        }
-
-        return [
-            'namesFound' => $namesFound,
-            'packages' => $packages
-        ];
-    }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function getRepoName(): string
     {
@@ -81,7 +24,7 @@ class NpmRepository extends AbstractAssetRepository
     }
 
     /**
-     * @inheritDoc
+     * {@inheritDoc}
      */
     public function getRepoType(): string
     {
@@ -89,31 +32,7 @@ class NpmRepository extends AbstractAssetRepository
     }
 
     /**
-     * @inheritDoc
-     */
-    public function getUrl(): string
-    {
-        return 'https://registry.npmjs.org';
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function getLazyLoadUrl(): ?string
-    {
-        return 'https://registry.npmjs.org/%package%';
-    }
-
-    /**
      * {@inheritDoc}
-     */
-    public function getSearchUrl(): ?string
-    {
-        return 'https://www.npmjs.com/search/suggestions?q=%query%';
-    }
-
-    /**
-     * @inheritDoc
      */
     protected function convertResultItem(array $item): array
     {
@@ -124,7 +43,10 @@ class NpmRepository extends AbstractAssetRepository
         ];
     }
 
-    final protected function convertNpmPackage(array $item): array
+    /**
+     * {@inheritDoc}
+     */
+    protected function convertPackage(array $item): array
     {
         $results = [];
         $versionParser = new VersionParser();

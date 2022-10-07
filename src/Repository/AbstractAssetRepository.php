@@ -48,6 +48,10 @@ abstract class AbstractAssetRepository implements ConfigurableRepositoryInterfac
     protected array $packageMap = [];
     protected Cache $cache;
 
+    protected string $url;
+    protected string|null $lazyLoadUrl = null;
+    protected string|null $searchUrl = null;
+
     /**
      * Create a new asset repository
      *
@@ -70,7 +74,16 @@ abstract class AbstractAssetRepository implements ConfigurableRepositoryInterfac
         $this->cache = new Cache($io, $config->get('cache-repo-dir') . '/' . Preg::replace('{[^a-z0-9.]}i', '-', Url::sanitize($this->getUrl())), 'a-z0-9.$~');
         $this->cache->setReadOnly($config->get('cache-read-only'));
         if (isset($repoConfig['options'])) {
-            $this->options = [];
+            $this->options = $repoConfig['options'];
+        }
+        if (isset($repoConfig['url'])) {
+            $this->url = $repoConfig['url'];
+        }
+        if (isset($repoConfig['lazy-load-url'])) {
+            $this->lazyLoadUrl = $repoConfig['lazy-load-url'];
+        }
+        if (isset($repoConfig['search-url'])) {
+            $this->searchUrl = $repoConfig['search-url'];
         }
     }
 
@@ -181,14 +194,70 @@ abstract class AbstractAssetRepository implements ConfigurableRepositoryInterfac
         }
     }
 
+
     /**
      * {@inheritDoc}
      */
     #[ArrayShape([
         'namesFound' => 'array',
         'packages' => 'array'
-    ])]
-    abstract public function loadPackages(array $packageNameMap, array $acceptableStabilities, array $stabilityFlags, array $alreadyLoaded = []): array;
+    ])] public function loadPackages(array $packageNameMap, array $acceptableStabilities, array $stabilityFlags, array $alreadyLoaded = []): array
+    {
+        $namesFound = [];
+        $packages = [];
+        foreach ($packageNameMap as $name => $constraint) {
+            if (!Preg::match('#^' . $this->getRepoType() . '-asset/#', $name)) {
+                continue;
+            }
+            try {
+                if (!isset($this->packageMap[$name])) {
+                    $cleanName = str_replace( $this->getRepoType() . '-asset/', '', $name);
+                    $url = str_replace('%package%', $cleanName, $this->getLazyLoadUrl());
+
+                    if ($cachedData = $this->cache->read($this->getRepoType(). '-' . $cleanName . '.json')) {
+                        $cachedData = json_decode($cachedData, true);
+                        if (($age = $this->cache->getAge($this->getRepoType(). '-' . $cleanName . '.json')) && $age <= 900) {
+                            $data = $cachedData;
+                        } elseif (isset($cachedData['last-modified'])) {
+                            $response = $this->fetchFileIfLastModified($url, $this->getRepoType(). '-' . $cleanName . '.json', $cachedData['last-modified']);
+                            $data = true === $response ? $cachedData : $response;
+                        }
+                    }
+
+                    if (!isset($data)) {
+                        $data = $this->fetchFile($url, $this->getRepoType(). '-' . $cleanName . '.json', true);
+                    }
+                    unset($data['last-modified']);
+
+                    $this->packageMap[$name] = $url;
+
+                    foreach ($this->convertPackage($data) as $item) {
+                        $this->addPackage($this->loader->load($item));
+                    }
+                }
+
+                foreach ($this->packages as $package) {
+                    /** @var \Composer\Package\CompletePackage $package */
+                    if ($name === $package->getName() && $this->isVersionAcceptable(
+                            $constraint,
+                            $package->getName(),
+                            ['version' => $package->getVersion(), 'version_normalized' => $package->getPrettyVersion()],
+                            $acceptableStabilities,
+                            $stabilityFlags)) {
+                        $namesFound[$package->getName()] = true;
+                        $packages[] = $package;
+                    }
+                }
+            } catch (\ErrorException|\Seld\JsonLint\ParsingException) {
+                continue;
+            }
+        }
+
+        return [
+            'namesFound' => $namesFound,
+            'packages' => $packages
+        ];
+    }
 
     /**
      * {@inheritDoc}
@@ -242,21 +311,27 @@ abstract class AbstractAssetRepository implements ConfigurableRepositoryInterfac
      *
      * @return string
      */
-    abstract public function getUrl(): string;
+    public function getUrl(): string {
+        return $this->url;
+    }
 
     /**
      * Get the lazy load package url.
      *
      * @return string|null
      */
-    abstract public function getLazyLoadUrl(): ?string;
+    public function getLazyLoadUrl(): ?string {
+        return $this->lazyLoadUrl;
+    }
 
     /**
      * Get the search url (if is one).
      *
      * @return string|null
      */
-    abstract public function getSearchUrl(): ?string;
+    public function getSearchUrl(): ?string {
+        return $this->searchUrl;
+    }
 
     /**
      * Convert registry search result item.
@@ -266,6 +341,15 @@ abstract class AbstractAssetRepository implements ConfigurableRepositoryInterfac
      * @return array
      */
     abstract protected function convertResultItem(array $item): array;
+
+    /**
+     * Convert package information to composer format.
+     *
+     * @param array $item The json decoded package information.
+     *
+     * @return array
+     */
+    abstract protected function convertPackage(array $item): array;
 
     /**
      * Fetch a file or return data from cache according to timestamp passed.

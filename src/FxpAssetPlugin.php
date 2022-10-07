@@ -30,6 +30,9 @@ class FxpAssetPlugin implements PluginInterface
         if (!isset($config['enabled']) || $config['enabled']) {
             $this->composer = $composer;
             $this->io = $io;
+            $composer->getRepositoryManager()->setRepositoryClass('npm', '\Fxp\Composer\AssetPlugin\Repository\NpmRepository');
+            $composer->getRepositoryManager()->setRepositoryClass('bower', '\Fxp\Composer\AssetPlugin\Repository\BowerRepository');
+            $composer->getRepositoryManager()->setRepositoryClass('bower-artifactory', '\Fxp\Composer\AssetPlugin\Repository\BowerArtifactoryRepository');
             if (!isset($config['registry-options']['npm-enabled']) || $config['registry-options']['npm-enabled']) {
                 $composer->getInstallationManager()->addInstaller(new NpmInstaller($this->io, $this->composer, 'npm-asset'));
                 $composer->getRepositoryManager()->addRepository(new NpmRepository(
@@ -54,6 +57,10 @@ class FxpAssetPlugin implements PluginInterface
                     $composer->getEventDispatcher()
                 ));
             }
+
+//            foreach ($composer->getConfig()->getRepositories() as $repository) {
+//
+//            }
 
 //            var_dump($composer->getRepositoryManager()->getRepositories()); exit;
         }

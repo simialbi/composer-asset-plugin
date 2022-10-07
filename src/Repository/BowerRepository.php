@@ -12,6 +12,8 @@ use JetBrains\PhpStorm\ArrayShape;
 class BowerRepository extends AbstractAssetRepository
 {
     protected ?array $rootData = null;
+    protected string $url = 'https://registry.bower.io/packages';
+    protected string|null $lazyLoadUrl = 'https://registry.bower.io/packages/%package%';
 
     /**
      * {@inheritDoc}
@@ -25,7 +27,10 @@ class BowerRepository extends AbstractAssetRepository
     {
         $this->loadRootServerFile(600);
 
-        $packages = [];
+        $packages = [
+            'namesFound' => [],
+            'packages' => []
+        ];
         foreach ($packageNameMap as $name => $constraint) {
             if (!Preg::match('#^bower-asset/#', $name)) {
                 continue;
@@ -62,30 +67,6 @@ class BowerRepository extends AbstractAssetRepository
     public function getRepoType(): string
     {
         return 'bower';
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getUrl(): string
-    {
-        return 'https://registry.bower.io/packages';
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getLazyLoadUrl(): ?string
-    {
-        return 'https://registry.bower.io/packages/%package%';
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public function getSearchUrl(): ?string
-    {
-        return null;
     }
 
     /**
@@ -136,6 +117,14 @@ class BowerRepository extends AbstractAssetRepository
      * {@inheritDoc}
      */
     protected function convertResultItem(array $item): array
+    {
+        return [];
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    protected function convertPackage(array $item): array
     {
         return [];
     }
