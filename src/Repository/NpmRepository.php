@@ -51,11 +51,16 @@ class NpmRepository extends AbstractAssetRepository
         $results = [];
         $versionParser = new VersionParser();
         foreach ($item['versions'] as $version => $data) {
+            try {
+                $v = $versionParser->normalize($version);
+            } catch (\UnexpectedValueException) {
+                continue;
+            }
             $results[] = [
                 'name' => 'npm-asset/' . $item['name'],
                 'type' => 'npm-asset-library',
                 'version' => $version,
-                'version_normalized' => $versionParser->normalize($version),
+                'version_normalized' => $v,
                 'description' => $data['description'] ?? $item['description'] ?? null,
                 'keywords' => $data['keywords'] ?? $item['keywords'] ?? [],
                 'homepage' => $item['homepage'] ?? null,

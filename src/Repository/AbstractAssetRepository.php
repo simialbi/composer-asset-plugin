@@ -209,6 +209,7 @@ abstract class AbstractAssetRepository implements ConfigurableRepositoryInterfac
             if (!Preg::match('#^' . $this->getRepoType() . '-asset/#', $name)) {
                 continue;
             }
+            unset($data);
             try {
                 if (!isset($this->packageMap[$name])) {
                     $cleanName = str_replace( $this->getRepoType() . '-asset/', '', $name);
@@ -241,14 +242,14 @@ abstract class AbstractAssetRepository implements ConfigurableRepositoryInterfac
                     if ($name === $package->getName() && $this->isVersionAcceptable(
                             $constraint,
                             $package->getName(),
-                            ['version' => $package->getVersion(), 'version_normalized' => $package->getPrettyVersion()],
+                            ['version' => $package->getPrettyVersion(), 'version_normalized' => $package->getVersion()],
                             $acceptableStabilities,
                             $stabilityFlags)) {
                         $namesFound[$package->getName()] = true;
                         $packages[] = $package;
                     }
                 }
-            } catch (\ErrorException|\Seld\JsonLint\ParsingException) {
+            } catch (\ErrorException|\Seld\JsonLint\ParsingException|\InvalidArgumentException) {
                 continue;
             }
         }

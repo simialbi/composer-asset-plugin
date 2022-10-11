@@ -7,6 +7,7 @@
 namespace Fxp\Composer\AssetPlugin\Repository;
 
 use Composer\Pcre\Preg;
+use Fxp\Composer\AssetPlugin\Util\ArrayHelper;
 use JetBrains\PhpStorm\ArrayShape;
 
 class BowerRepository extends AbstractAssetRepository
@@ -49,7 +50,13 @@ class BowerRepository extends AbstractAssetRepository
                                 'version' => $package->getVersion(),
                                 'version_normalized' => $package->getPrettyVersion()
                             ], $acceptableStabilities, $stabilityFlags)) {
-//                                $this->io->write('Added already added package <info>' . $package->getName() . '</info> (<warning>' . $package->getPrettyVersion() . '</warning>)');
+                                if ($this->io->isVeryVerbose()) {
+                                    $this->io->write(sprintf(
+                                        'Added already added package <info>%s</info> (<comment>%s</comment>)',
+                                        $package->getName(),
+                                        $package->getPrettyVersion()
+                                    ));
+                                }
                                 $packages['namesFound'][$name] = true;
                                 $packages['packages'][] = $package;
                             }
@@ -64,15 +71,9 @@ class BowerRepository extends AbstractAssetRepository
                     $this->io->write('Adding Vcs repository <info>' . $cleanName . '</info>');
                 }
                 $this->composer->getRepositoryManager()->addRepository($repo);
-                $packages = array_merge_recursive($repo->loadPackages($packageNameMap, $acceptableStabilities, $stabilityFlags, $alreadyLoaded));
+                $packages = ArrayHelper::merge($packages, $repo->loadPackages($packageNameMap, $acceptableStabilities, $stabilityFlags, $alreadyLoaded));
             }
         }
-
-//        foreach ($packages['packages'] as $p) {
-//            /** @var \Composer\Package\BasePackage $p */
-//            var_dump($p->getId(), $p->getName(), $p->getPrettyVersion());
-//        }
-//        exit();
 
         return $packages;
     }
