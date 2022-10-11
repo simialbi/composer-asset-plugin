@@ -42,13 +42,37 @@ class BowerRepository extends AbstractAssetRepository
                     'asset-package-name' => $name,
                     'url' => $this->packageMap[$name]
                 ], $cleanName);
+                foreach ($this->composer->getRepositoryManager()->getRepositories() as $repository) {
+                    if ($repo->getRepoName() === $repository->getRepoName()) {
+                        foreach ($repository->getPackages() as $package) {
+                            if ($this->isVersionAcceptable($constraint, $package->getName(), [
+                                'version' => $package->getVersion(),
+                                'version_normalized' => $package->getPrettyVersion()
+                            ], $acceptableStabilities, $stabilityFlags)) {
+//                                $this->io->write('Added already added package <info>' . $package->getName() . '</info> (<warning>' . $package->getPrettyVersion() . '</warning>)');
+                                $packages['namesFound'][$name] = true;
+                                $packages['packages'][] = $package;
+                            }
+                        }
+                        if ($this->io->isVerbose()) {
+                            $this->io->write('Repository <info>' . $cleanName . '</info> already added. Skipping...');
+                            continue 2;
+                        }
+                    }
+                }
                 if ($this->io->isVerbose()) {
-                    $this->io->write('Adding Vsc repository <info>' . $cleanName . '</info>');
+                    $this->io->write('Adding Vcs repository <info>' . $cleanName . '</info>');
                 }
                 $this->composer->getRepositoryManager()->addRepository($repo);
                 $packages = array_merge_recursive($repo->loadPackages($packageNameMap, $acceptableStabilities, $stabilityFlags, $alreadyLoaded));
             }
         }
+
+//        foreach ($packages['packages'] as $p) {
+//            /** @var \Composer\Package\BasePackage $p */
+//            var_dump($p->getId(), $p->getName(), $p->getPrettyVersion());
+//        }
+//        exit();
 
         return $packages;
     }

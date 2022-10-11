@@ -39,7 +39,7 @@ class BowerArtifactoryRepository extends AbstractAssetRepository
      */
     public function getRepoName(): string
     {
-        return 'artifactory rep (' . Url::sanitize($this->getUrl()) . ')';
+        return 'artifactory repo (' . Url::sanitize($this->getUrl()) . ')';
     }
 
     /**

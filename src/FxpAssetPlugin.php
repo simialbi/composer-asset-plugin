@@ -11,6 +11,7 @@ use Composer\IO\IOInterface;
 use Composer\Plugin\PluginInterface;
 use Fxp\Composer\AssetPlugin\Installer\BowerInstaller;
 use Fxp\Composer\AssetPlugin\Installer\NpmInstaller;
+use Fxp\Composer\AssetPlugin\Repository\BowerArtifactoryRepository;
 use Fxp\Composer\AssetPlugin\Repository\BowerRepository;
 use Fxp\Composer\AssetPlugin\Repository\NpmRepository;
 
@@ -29,9 +30,6 @@ class FxpAssetPlugin implements PluginInterface
         if (!isset($config['enabled']) || $config['enabled']) {
             $this->composer = $composer;
             $this->io = $io;
-            $composer->getRepositoryManager()->setRepositoryClass('npm', '\Fxp\Composer\AssetPlugin\Repository\NpmRepository');
-            $composer->getRepositoryManager()->setRepositoryClass('bower', '\Fxp\Composer\AssetPlugin\Repository\BowerRepository');
-            $composer->getRepositoryManager()->setRepositoryClass('bower-artifactory', '\Fxp\Composer\AssetPlugin\Repository\BowerArtifactoryRepository');
             if (!isset($config['registry-options']['npm-enabled']) || $config['registry-options']['npm-enabled']) {
                 $composer->getInstallationManager()->addInstaller(new NpmInstaller($this->io, $this->composer, 'npm-asset'));
                 $composer->getRepositoryManager()->addRepository(new NpmRepository(
@@ -61,9 +59,41 @@ class FxpAssetPlugin implements PluginInterface
             foreach ($config['repositories'] as $repository) {
                 $type = $repository['type'];
                 unset($repository['type']);
-                $composer->getRepositoryManager()->addRepository(
-                    $composer->getRepositoryManager()->createRepository($type, $repository)
-                );
+                switch ($type) {
+                    case 'npm':
+                        $repo = new NpmRepository(
+                            $repository,
+                            $composer,
+                            $io,
+                            $composer->getConfig(),
+                            $composer->getLoop()->getHttpDownloader(),
+                            $composer->getEventDispatcher()
+                        );
+                        break;
+                    case 'bower':
+                        $repo = new BowerRepository(
+                            $repository,
+                            $composer,
+                            $io,
+                            $composer->getConfig(),
+                            $composer->getLoop()->getHttpDownloader(),
+                            $composer->getEventDispatcher()
+                        );
+                        break;
+                    case 'bower-artifactory':
+                        $repo = new BowerArtifactoryRepository(
+                            $repository,
+                            $composer,
+                            $io,
+                            $composer->getConfig(),
+                            $composer->getLoop()->getHttpDownloader(),
+                            $composer->getEventDispatcher()
+                        );
+                        break;
+                    default:
+                        continue 2;
+                }
+                $composer->getRepositoryManager()->addRepository($repo);
             }
         }
     }
