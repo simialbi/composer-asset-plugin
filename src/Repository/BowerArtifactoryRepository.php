@@ -74,10 +74,15 @@ class BowerArtifactoryRepository extends AbstractAssetRepository
 
         foreach ($refs as $ref) {
             if (Preg::match('#^([a-f\d]{44})\s+refs/tags/(\S+)#', $ref, $matches)) {
+                try {
+                    $v = $versionParser->normalize($matches[2]);
+                } catch (\UnexpectedValueException) {
+                    continue;
+                }
                 $results[] = [
                     'name' => 'bower-asset/' . $item['name'],
                     'version' => $matches[2],
-                    'version_normalized' => $versionParser->normalize($matches[2]),
+                    'version_normalized' => $v,
                     'dist' => [
                         'type' => 'tar',
                         'url' => $this->getUrl() . '/binaries/' . $cleanedUrl . '.git/' . $matches[2]

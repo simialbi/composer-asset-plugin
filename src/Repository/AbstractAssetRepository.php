@@ -64,15 +64,6 @@ abstract class AbstractAssetRepository implements ConfigurableRepositoryInterfac
      */
     public function __construct(array $repoConfig, PartialComposer $composer, IOInterface $io, Config $config, HttpDownloader $httpDownloader, ?EventDispatcher $eventDispatcher)
     {
-        $this->repoConfig = $repoConfig;
-        $this->composer = $composer;
-        $this->io = $io;
-        $this->config = $config;
-        $this->httpDownloader = $httpDownloader;
-        $this->eventDispatcher = $eventDispatcher;
-        $this->loader = new ArrayLoader();
-        $this->cache = new Cache($io, $config->get('cache-repo-dir') . '/' . Preg::replace('{[^a-z0-9.]}i', '-', Url::sanitize($this->getUrl())), 'a-z0-9.$~');
-        $this->cache->setReadOnly($config->get('cache-read-only'));
         if (isset($repoConfig['options'])) {
             $this->options = $repoConfig['options'];
         }
@@ -85,6 +76,15 @@ abstract class AbstractAssetRepository implements ConfigurableRepositoryInterfac
         if (isset($repoConfig['search-url'])) {
             $this->searchUrl = $repoConfig['search-url'];
         }
+        $this->repoConfig = $repoConfig;
+        $this->composer = $composer;
+        $this->io = $io;
+        $this->config = $config;
+        $this->httpDownloader = $httpDownloader;
+        $this->eventDispatcher = $eventDispatcher;
+        $this->loader = new ArrayLoader();
+        $this->cache = new Cache($io, $config->get('cache-repo-dir') . '/' . Preg::replace('{[^a-z0-9.]}i', '-', Url::sanitize($this->getUrl())), 'a-z0-9.$~');
+        $this->cache->setReadOnly($config->get('cache-read-only'));
     }
 
     /**
